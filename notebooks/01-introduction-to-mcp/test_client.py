@@ -18,19 +18,19 @@ https://github.com/modelcontextprotocol/python-sdk
 
 import asyncio
 from mcp import ClientSession
-from mcp.client.sse import sse_client
+from mcp.client.streamable_http import streamablehttp_client
 
 async def test_mcp_server():
     """Test the basic MCP server functionality."""
     
-    server_url = "http://localhost:8000/sse"
+    server_url = "http://localhost:8000/mcp"
     
     print("🔌 Connecting to MCP server...")
     print(f"📡 Server URL: {server_url}")
     
     try:
-        # Connect to the MCP server using SSE transport
-        async with sse_client(server_url) as (read, write):
+        # Connect to the MCP server using Streamable HTTP transport
+        async with streamablehttp_client(server_url) as (read, write, _):
             async with ClientSession(read, write) as session:
                 # Initialize the connection
                 await session.initialize()
@@ -87,7 +87,7 @@ async def test_mcp_server():
     except Exception as e:
         print(f"❌ Error connecting to server: {e}")
         print("\n💡 Make sure the server is running:")
-        print("   python basic_server.py")
+        print("   uv run ./basic_server.py")
 
 if __name__ == "__main__":
     print("🧪 MCP Server Test Client")
