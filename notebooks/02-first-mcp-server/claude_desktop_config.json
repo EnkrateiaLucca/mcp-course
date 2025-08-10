@@ -1,21 +1,13 @@
 {
   "mcpServers": {
-    "weather-assistant": {
-      "command": "python",
+    "obsidian-vault": {
+      "command": "absolute/path/to/python",
       "args": [
-        "/Users/greatmaster/Desktop/projects/oreilly-live-trainings/mcp-course/notebooks/02-first-mcp-server/weather_server.py"
+        "absolute/path/to/obsidian_vault_server.py"
       ],
       "env": {
-        "PYTHONPATH": "/Users/greatmaster/Desktop/projects/oreilly-live-trainings/mcp-course/notebooks/02-first-mcp-server"
-      }
-    },
-    "file-manager": {
-      "command": "python",
-      "args": [
-        "/Users/greatmaster/Desktop/projects/oreilly-live-trainings/mcp-course/notebooks/02-first-mcp-server/file_manager_server.py"
-      ],
-      "env": {
-        "PYTHONPATH": "/Users/greatmaster/Desktop/projects/oreilly-live-trainings/mcp-course/notebooks/02-first-mcp-server"
+        "PYTHONPATH": "absolute/path/to/python",
+        "OBSIDIAN_VAULT_PATH": "absolute/path/to/sample_vault_notes"
       }
     }
   }

@@ -1,0 +1,2 @@
+![[Pasted image 20240829135847.png]]
+Figure 1: (A) The scientific knowledge used for research idea  generation consists of a paper, its relationships over an academic graph, and entities within a knowledge store extracted  from numerous papers. (B) Given them, the proposed research idea generation process involves problem identification,  method development, and experiment design. Those are also  iteratively refined by reviews and feedback from reviewing  agents, aligned with criteria induced from human judgements

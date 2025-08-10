@@ -1,0 +1,8 @@
+- Construct an argument
+- Validate with evidence
+- Generate hypothesis
+- Investigate query
+- From diagram/sketch image to ...? (semelhante ao que o Mattia fazia cmg)
+- Argument Support
+- Cross checking
+- Referencing

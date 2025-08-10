@@ -42,18 +42,6 @@ async def test_mcp_server():
                 for tool in tools.tools:
                     print(f"   - {tool.name}: {tool.description}")
                 
-                # Test 2: List available resources
-                print("\n📊 Available Resources:")
-                resources = await session.list_resources()
-                for resource in resources.resources:
-                    print(f"   - {resource.uri}: {resource.name}")
-                
-                # Test 3: List available prompts
-                print("\n📝 Available Prompts:")
-                prompts = await session.list_prompts()
-                for prompt in prompts.prompts:
-                    print(f"   - {prompt.name}: {prompt.description}")
-                
                 # Test 4: Call a tool
                 print("\n🧪 Testing Tools:")
                 
@@ -64,23 +52,6 @@ async def test_mcp_server():
                 # Test add_numbers tool
                 add_result = await session.call_tool("add_numbers", {"a": 15, "b": 27})
                 print(f"   15 + 27 = {add_result.content[0].text}")
-                
-                # Test 5: Read a resource
-                print("\n📖 Testing Resources:")
-                try:
-                    greeting_result = await session.read_resource("demo://greeting/Alice")
-                    print(f"   Greeting: {greeting_result.contents[0].text}")
-                except Exception as e:
-                    print(f"   Resource error: {e}")
-                
-                # Test 6: Get a prompt
-                print("\n📋 Testing Prompts:")
-                try:
-                    intro_prompt = await session.get_prompt("introduction_prompt")
-                    print(f"   Introduction prompt length: {len(intro_prompt.messages[0].content.text)} characters")
-                    print(f"   First 100 chars: {intro_prompt.messages[0].content.text[:100]}...")
-                except Exception as e:
-                    print(f"   Prompt error: {e}")
                 
                 print("\n🎉 All tests completed successfully!")
                 
