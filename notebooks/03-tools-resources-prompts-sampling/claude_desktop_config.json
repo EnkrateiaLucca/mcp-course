@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "comprehensive-mcp-demo": {
-      "command": "python",
-      "args": ["/path/to/your/comprehensive_mcp_server.py"],
-      "env": {}
-    }
-  }
-}
