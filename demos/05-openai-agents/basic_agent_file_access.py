@@ -17,6 +17,7 @@ from agents.mcp import MCPServer, MCPServerStdio
 async def run(mcp_server: MCPServer):
     agent = Agent(
         name="Assistant",
+        model="gpt-5",
         instructions="Use the tools to read the filesystem and answer questions based on those files.",
         mcp_servers=[mcp_server],
     )

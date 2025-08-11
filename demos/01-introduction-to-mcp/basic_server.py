@@ -10,6 +10,7 @@ from starlette.routing import Mount
 from contextlib import AsyncExitStack, asynccontextmanager
 from mcp.server.fastmcp import FastMCP
 
+# Can you read this comment?
 mcp = FastMCP("basic-demo")
 
 @mcp.tool()
