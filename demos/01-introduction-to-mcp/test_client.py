@@ -53,6 +53,14 @@ async def test_mcp_server():
                 add_result = await session.call_tool("add_numbers", {"a": 15, "b": 27})
                 print(f"   15 + 27 = {add_result.content[0].text}")
                 
+                # Test write_file_lucas_teaches tool
+                write_result = await session.call_tool("write_file_lucas_teaches", {"file_name": "test_file.txt", "file_content": "This is a test file."})
+                print(f"   File written: {write_result.content[0].text}")
+                
+                # Test silly_joke resource
+                joke_result = await session.read_resource("joke://silly_joke.txt")
+                print(f"   Joke: {joke_result.contents[0].text}")
+                
                 print("\n🎉 All tests completed successfully!")
                 
     except Exception as e:
