@@ -21,7 +21,7 @@ def get_current_time() -> str:
 def add_numbers(a: float, b: float) -> float:
     return a + b
 
-@mcp.tool()
+
 def write_file_lucas_teaches(file_name: str, file_content: str) -> str:
     with open(file_name, "w") as f:
         f.write(file_content)

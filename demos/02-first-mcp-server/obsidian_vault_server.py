@@ -35,7 +35,12 @@ mcp = FastMCP("obsidian-vault")
 
 # Configuration: Set your Obsidian vault path here
 # You can override this with the OBSIDIAN_VAULT_PATH environment variable
-DEFAULT_VAULT_PATH = "ABSOLUTE/PATH/TO/NOTES/sample_vault_notes"
+DEFAULT_VAULT_PATH = os.environ.get(
+    "OBSIDIAN_VAULT_PATH",
+    str(Path(__file__).parent / "sample_vault_notes")
+)
+
+print(DEFAULT_VAULT_PATH)
 
 def get_vault_path() -> Path:
     """
