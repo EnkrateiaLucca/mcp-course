@@ -52,31 +52,6 @@ async def test_tools(session: ClientSession):
     })
     print(result.content[0].text)
 
-# Commented this out because mcp is having issues with resource implementations
-# async def test_resources(session: ClientSession):
-#     """Test MCP Resources functionality."""
-#     print("\n📊 TESTING RESOURCES")
-#     print("=" * 50)
-    
-#     # List available resources
-#     resources = await session.list_resources()
-#     print(f"Available resources: {[resource.name for resource in resources.resources]}")
-    
-#     # Test document resource
-#     print("\n1. Reading project_plan.md:")
-#     content = await session.read_resource("document://project_plan.md")
-#     print(content.contents[0].text)
-    
-#     # Test database resource
-#     print("\n2. Reading employee database:")
-#     content = await session.read_resource("database://employees")
-#     print(content.contents[0].text)
-    
-#     # Test system status resource
-#     print("\n3. Reading system status:")
-#     content = await session.read_resource("system://status")
-#     print(content.contents[0].text)
-
 async def test_prompts(session: ClientSession):
     """Test MCP Prompts functionality."""
     print("\n📝 TESTING PROMPTS")
