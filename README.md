@@ -14,6 +14,31 @@ The Model Context Protocol (MCP) is revolutionizing how AI applications connect 
 - **Consumer Applications**: Using MCP with Claude Desktop and Cursor IDE
 - **Security Best Practices**: Securing MCP implementations and preventing attacks
 
+## 🚀 Quick Start with UV
+
+### Using UV Package Manager (Recommended)
+
+Most demo scripts in this course include UV inline metadata and can be run directly with [UV](https://github.com/astral-sh/uv), a fast Python package manager:
+
+```bash
+# Install UV (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Run any demo script directly - UV handles dependencies automatically
+uv run notebooks/01-introduction-to-mcp/basic_server.py
+uv run notebooks/03-tools-resources-prompts-sampling/comprehensive_mcp_server.py
+
+# Or navigate to a demo directory and run
+cd notebooks/02-first-mcp-server
+uv run obsidian_vault_server.py
+```
+
+**Benefits of using UV:**
+- No need to manage virtual environments manually
+- Dependencies are installed automatically from inline script metadata
+- Faster dependency resolution and installation
+- Consistent environment across all demos
+
 ## 📁 Repository Structure
 
 ```
@@ -35,7 +60,7 @@ mcp-course/
     └── assets-resources/             # Images and supporting materials
 ```
 
-## 🚀 Quick Start
+## 🔧 Alternative Setup (Traditional Approach)
 
 ### Prerequisites
 
