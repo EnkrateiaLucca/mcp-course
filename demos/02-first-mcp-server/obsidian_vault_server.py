@@ -18,6 +18,17 @@ Perfect for integrating your personal knowledge management system with AI assist
 
 Based on MCP Python SDK documentation:
 https://github.com/modelcontextprotocol/python-sdk
+
+MCP server config reference:
+"obsidian-vault": {
+      "command": "uv"
+      "args": [
+        "--directory",
+        "/Users/greatmaster/Desktop/projects/oreilly-live-trainings/mcp-course/demos/02-first-mcp-server/"
+        "run",
+        "obsidian_vault_server.py"
+      ]
+    }
 """
 
 import asyncio

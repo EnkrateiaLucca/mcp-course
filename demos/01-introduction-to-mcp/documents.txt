@@ -1,0 +1,127 @@
+.
+├── CLAUDE.md
+├── demos
+│   ├── 01-introduction-to-mcp
+│   │   ├── __pycache__
+│   │   │   └── basic_server.cpython-311.pyc
+│   │   ├── basic_server.py
+│   │   ├── lucas-solved-the-debug-issue.md
+│   │   ├── README.md
+│   │   ├── requirements.txt
+│   │   ├── silly_joke.txt
+│   │   ├── test_client.py
+│   │   └── test_file.txt
+│   ├── 02-first-mcp-server
+│   │   ├── __pycache__
+│   │   │   ├── obsidian_vault_server.cpython-311.pyc
+│   │   │   └── weather_server.cpython-311.pyc
+│   │   ├── claude_desktop_config.json
+│   │   ├── obsidian_vault_server.py
+│   │   ├── README.md
+│   │   └── sample_vault_notes
+│   │       ├── 12 Factors for building agents.md
+│   │       ├── add a retrieval step to give an agent many tools at once.md
+│   │       ├── agent use cases.md
+│   │       ├── agentic workflows and patterns for research.md
+│   │       ├── agents-insights-summary.md
+│   │       ├── ambient agents.md
+│   │       ├── Augmented Explanations with Manim and ChatGPT.md
+│   │       ├── benefits of working with deterministic workflows in agents.md
+│   │       ├── Economic impact of agents in research.md
+│   │       ├── lucas-test-note.md
+│   │       ├── paper - agents long tasks.md
+│   │       ├── Paper - Improving Factuality and Reasoning in LanguageModels through Multiagent Debate.md
+│   │       ├── Points on memory for agents.md
+│   │       ├── Potential tools for useful agents.md
+│   │       ├── reference
+│   │       │   └── 12 Factors for Building Agents - Compressed.md
+│   │       ├── Research idea generation with research agent.md
+│   │       └── Sample principles for good LLM agent implementations from anthropic.md
+│   ├── 03-tools-resources-prompts-sampling
+│   │   ├── __pycache__
+│   │   │   └── comprehensive_mcp_server.cpython-311.pyc
+│   │   ├── claude_desktop_config.json
+│   │   ├── comprehensive_mcp_server.py
+│   │   ├── README.md
+│   │   └── test_client.py
+│   ├── 04-google-adk-agents
+│   │   ├── adk-agent
+│   │   │   ├── __init__.py
+│   │   │   ├── __pycache__
+│   │   │   │   ├── __init__.cpython-311.pyc
+│   │   │   │   └── agent.cpython-311.pyc
+│   │   │   └── agent.py
+│   │   ├── README_SIMPLE.md
+│   │   ├── README.md
+│   │   ├── run_demo.py
+│   │   ├── simple_adk_agent.py
+│   │   ├── simple_mcp_server_v2.py
+│   │   ├── simple_mcp_server.py
+│   │   └── test_integration.py
+│   ├── 05-openai-agents
+│   │   ├── basic_agent_file_access.py
+│   │   ├── chocolate_pancake_recipe.txt
+│   │   ├── chocolate_pancakes_recipe.txt
+│   │   ├── mcp_server_for_openai_agent.py
+│   │   ├── pancakes_agent.py
+│   │   └── sample_files
+│   │       ├── books.md
+│   │       └── music.md
+│   ├── 06-claude-desktop-cursor-demos
+│   │   ├── claude_desktop_configs
+│   │   │   ├── basic.json
+│   │   │   ├── development.json
+│   │   │   └── production.json
+│   │   ├── development_mcp_server.py
+│   │   ├── mcp_demo_workflow.py
+│   │   └── README.md
+│   ├── 07-security-tips
+│   │   └── security_auth_mcp.md
+│   ├── 08-langgraph-agent-mcp
+│   │   ├── agent_demo.py
+│   │   ├── mcp_server.py
+│   │   └── README.md
+│   ├── assets-resources
+│   │   ├── 2025-06-07-11-23-10.png
+│   │   ├── 2025-06-09-11-33-37.png
+│   │   ├── 2025-06-09-11-35-04.png
+│   │   ├── 2025-06-09-11-35-27.png
+│   │   ├── 2025-09-14-18-52-56.png
+│   │   ├── 2025-09-14-18-53-12.png
+│   │   ├── 2025-09-14-18-53-38.png
+│   │   ├── agent-loop.png
+│   │   ├── agent-loop2.png
+│   │   ├── agent-loop3.png
+│   │   ├── agent-loop4.png
+│   │   ├── mcp-core1.png
+│   │   ├── mcp-core2.png
+│   │   ├── mcp-core3.png
+│   │   ├── mcp-core4.png
+│   │   ├── mcp-core5.png
+│   │   ├── mcp-core6.png
+│   │   ├── mcp-intro1.png
+│   │   ├── mcp-market-map.png
+│   │   ├── mcp-stars-on-github.png
+│   │   ├── mn-1.png
+│   │   ├── mn-2.png
+│   │   └── mn-3.png
+│   └── live-demos
+│       ├── __pycache__
+│       │   └── my_mcp_servers.cpython-311.pyc
+│       ├── host_client.py
+│       ├── intro-agents-basic.ipynb
+│       └── my_mcp_servers.py
+├── Makefile
+├── MCP_TECHNICAL_CHEATSHEET.md
+├── mcp-course.md
+├── presentation
+│   ├── mcp-talk.pdf
+│   ├── presentation-mcp.pdf
+│   └── presentation.html
+├── README.md
+├── requirements
+│   ├── requirements.in
+│   └── requirements.txt
+└── requirements.txt
+
+24 directories, 101 files

@@ -23,10 +23,17 @@ mcp = FastMCP("example-pancakes-server")
 
 
 @mcp.tool()
-def create_pancake_recipe(file_name: str) -> str:
+def create_pancake_recipe(file_name: str, file_contents: str) -> str:
+    """
+    Create a pancake recipe in a file.
+
+    Args:
+        file_name: The name of the file to create pancake related.
+        file_contents: The contents of the file to create which should contain some form of a pancake recipe.
+    """
     print(f"Creating pancake recipe in {file_name}")
     with open(file_name, "w") as f:
-        f.write("This is a pancake recipe.")
+        f.write(f"{file_contents}")
     print(f"Pancake recipe created in {file_name}")
     return file_name
 

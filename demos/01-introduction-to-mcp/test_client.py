@@ -3,72 +3,157 @@
 # requires-python = ">=3.9"
 # dependencies = [
 #     "mcp[cli]==1.9.3",
-#     "httpx"
+#     "anthropic",
+#     "python-dotenv",
+#     "rich"
 # ]
 # ///
 
-"""
-Test Client for Basic MCP Server Demo
-
-This script demonstrates how to connect to an MCP server and use its capabilities.
-
-Based on MCP Python SDK documentation:
-https://github.com/modelcontextprotocol/python-sdk
-"""
-
+# Main source from the mcp docs: https://modelcontextprotocol.io/docs/develop/build-client
 import asyncio
-from mcp import ClientSession
-from mcp.client.streamable_http import streamablehttp_client
+from typing import Optional
+from contextlib import AsyncExitStack
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
 
-async def test_mcp_server():
-    """Test the basic MCP server functionality."""
+class SimpleMCPClient:
+    def __init__(self):
+        self.session: Optional[ClientSession] = None
+        self.exit_stack = AsyncExitStack()
     
-    server_url = "http://localhost:8000/mcp"
+    async def connect_to_server(self, server_path: str):
+        """Connect to your basic MCP server"""
+        print(f"Connecting to server: {server_path}")
+        
+        # Set up server parameters for Python script
+        server_params = StdioServerParameters(
+            command="python",
+            args=[server_path],
+            env=None
+        )
+        
+        # Use AsyncExitStack to manage the connection lifecycle
+        # This ensures the connection is properly closed when done
+        stdio_transport = await self.exit_stack.enter_async_context(
+            stdio_client(server_params)
+        )
+        
+        # Get the read/write streams
+        self.stdio, self.write = stdio_transport
+        
+        # Create and initialize the session
+        self.session = await self.exit_stack.enter_async_context(
+            ClientSession(self.stdio, self.write)
+        )
+        
+        await self.session.initialize()
+        
+        # List available tools
+        response = await self.session.list_tools()
+        tools = response.tools
+        print(f"✅ Connected! Available tools: {[tool.name for tool in tools]}")
+        
+        # List available resources
+        resources_response = await self.session.list_resources()
+        resources = resources_response.resources
+        print(f"📚 Available resources: {[r.uri for r in resources]}")
     
-    print("🔌 Connecting to MCP server...")
-    print(f"📡 Server URL: {server_url}")
+    async def call_tool(self, tool_name: str, arguments: dict):
+        """Call a tool on the server"""
+        if not self.session:
+            raise RuntimeError("Not connected to server")
+        
+        print(f"Calling tool: {tool_name} with args: {arguments}")
+        result = await self.session.call_tool(tool_name, arguments)
+        return result
+    
+    async def read_resource(self, resource_uri: str):
+        """Read a resource from the server"""
+        if not self.session:
+            raise RuntimeError("Not connected to server")
+        
+        print(f"Reading resource: {resource_uri}")
+        result = await self.session.read_resource(resource_uri)
+        return result
+    
+    async def interactive_mode(self):
+        """Simple interactive loop to test the tools"""
+        print("\n🤖 Interactive Mode - Type 'help' for commands or 'quit' to exit")
+        
+        while True:
+            try:
+                command = input("\n> ").strip().lower()
+                
+                if command == 'quit':
+                    break
+                elif command == 'help':
+                    print("""
+Available commands:
+  time          - Get current time
+  add X Y       - Add two numbers
+  write F C     - Write to file C content F
+  read          - Read the documents resource
+  help          - Show this help
+  quit          - Exit
+                    """)
+                elif command == 'time':
+                    result = await self.call_tool('get_current_time', {})
+                    print(f"Current time: {result.content}")
+                elif command.startswith('add '):
+                    parts = command.split()
+                    if len(parts) == 3:
+                        a, b = float(parts[1]), float(parts[2])
+                        result = await self.call_tool('add_numbers', {'a': a, 'b': b})
+                        print(f"Result: {result.content}")
+                    else:
+                        print("Usage: add <number1> <number2>")
+                elif command.startswith('write '):
+                    parts = command.split(maxsplit=2)
+                    if len(parts) == 3:
+                        filename = parts[1]
+                        content = parts[2]
+                        result = await self.call_tool('write_file', {
+                            'file_name': filename,
+                            'file_content': content
+                        })
+                        print(f"File written: {result.content}")
+                    else:
+                        print("Usage: write <filename> <content>")
+                elif command == 'read':
+                    result = await self.read_resource('docs://documents.txt')
+                    print(f"Document content:\n{result.contents[0].text if result.contents else 'No content'}")
+                else:
+                    print("Unknown command. Type 'help' for available commands.")
+                    
+            except Exception as e:
+                print(f"Error: {e}")
+    
+    async def cleanup(self):
+        """Clean up resources - AsyncExitStack handles this automatically"""
+        await self.exit_stack.aclose()
+
+async def main():
+    import sys
+    
+    if len(sys.argv) < 2:
+        print("Usage: python client.py <path_to_server.py>")
+        print("Example: python client.py ./basic_server.py")
+        sys.exit(1)
+    
+    server_path = sys.argv[1]
+    client = SimpleMCPClient()
     
     try:
-        # Connect to the MCP server using Streamable HTTP transport
-        async with streamablehttp_client(server_url) as (read, write, _):
-            async with ClientSession(read, write) as session:
-                # Initialize the connection
-                await session.initialize()
-                print("✅ Connected successfully!")
-                
-                # Test 1: List available tools
-                print("\n🛠️  Available Tools:")
-                tools = await session.list_tools()
-                for tool in tools.tools:
-                    print(f"   - {tool.name}: {tool.description}")
-                
-                # Test 4: Call a tool
-                print("\n🧪 Testing Tools:")
-                
-                # Test get_current_time tool
-                time_result = await session.call_tool("get_current_time", {})
-                print(f"   Current time: {time_result.content[0].text}")
-                
-                # Test add_numbers tool
-                add_result = await session.call_tool("add_numbers", {"a": 15, "b": 27})
-                print(f"   15 + 27 = {add_result.content[0].text}")
-                
-                # Test write_file_lucas_teaches tool
-                write_result = await session.call_tool("write_file_lucas_teaches", {"file_name": "test_file.txt", "file_content": "This is a test file."})
-                print(f"   File written: {write_result.content[0].text}")
-                
-                # Test silly_joke resource
-                joke_result = await session.read_resource("joke://silly_joke.txt")
-                print(f"   Joke: {joke_result.contents[0].text}")
-                
-                print("\n🎉 All tests completed successfully!")
-                
-    except Exception as e:
-        print(f"❌ Error connecting to server: {e}")
-        print("\n💡 Make sure the server is running:")
-        print("   uv run ./basic_server.py")
+        # Connect to server
+        await client.connect_to_server(server_path)
+        
+        # Run interactive mode
+        await client.interactive_mode()
+        
+    finally:
+        # Clean up - AsyncExitStack ensures all resources are properly closed
+        await client.cleanup()
+        print("\n👋 Goodbye!")
 
 if __name__ == "__main__":
-    print("🧪 MCP Server Test Client")
-    print("=" * 40)
-    asyncio.run(test_mcp_server())
+    asyncio.run(main())

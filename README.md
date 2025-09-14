@@ -80,7 +80,7 @@ Depending on which demos you want to run:
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/EnkrateiaLucca/mcp-course.git
 cd mcp-course
 
 # Create a virtual environment
