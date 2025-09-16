@@ -37,7 +37,7 @@ if __name__ == "__main__":
     mcp.run(transport="stdio")
     
     # run it with:
-    # uv run ./basic_server.py
+    # uv run ./mcp_server.py
     # run the inspector with:
-    # mcp dev ./basic_server.py
+    # mcp dev ./mcp_server.py
     

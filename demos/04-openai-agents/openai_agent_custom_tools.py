@@ -16,16 +16,18 @@ from agents.mcp import MCPServer, MCPServerStdio
 async def run(mcp_server: MCPServer):
     agent = Agent(
         name="Note Taker",
-        model="gpt-5",
+        model="gpt-5-mini",
         instructions="You are a note taker with access to a silly function to create a pancake recipe. You will be given a task and you will take notes on it.",
         mcp_servers=[mcp_server],
     )
 
-    # Ask a question that reads then reasons.
-    message = "Create a pancake recipe for a chocolate pancake."
-    print(f"\n\nRunning: {message}")
-    result = await Runner.run(starting_agent=agent, input=message)
-    print(result.final_output)
+    while True:
+        message = input("Enter a message: ")
+        if message == "exit" or message == "quit":
+            break
+        print(f"\n\nRunning: {message}")
+        result = await Runner.run(starting_agent=agent, input=message)
+        print(result.final_output)
 
 async def main():
     async with MCPServerStdio(

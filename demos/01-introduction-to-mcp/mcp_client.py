@@ -15,6 +15,7 @@ from typing import Optional
 from contextlib import AsyncExitStack
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
+from mcp import types
 
 class SimpleMCPClient:
     def __init__(self):
@@ -49,8 +50,8 @@ class SimpleMCPClient:
         await self.session.initialize()
         
         # List available tools
-        response = await self.session.list_tools()
-        tools = response.tools
+        tools = await self.list_tools()
+        
         print(f"✅ Connected! Available tools: {[tool.name for tool in tools]}")
         
         # List available resources
@@ -58,7 +59,19 @@ class SimpleMCPClient:
         resources = resources_response.resources
         print(f"📚 Available resources: {[r.uri for r in resources]}")
     
-    async def call_tool(self, tool_name: str, arguments: dict):
+    async def list_tools(self) -> list[types.Tool]:
+        result = await self.session.list_tools()
+        return result.tools
+    
+    async def list_prompts(self) -> list[types.Prompt]:
+        result = await self.session.list_prompts()
+        return result.prompts
+    
+    async def get_prompt(self, prompt_name: str, args: dict[str, str]):
+        result = await self.session.get_prompt(prompt_name, args)
+        return result
+    
+    async def call_tool(self, tool_name: str, arguments: dict) -> types.CallToolResult | None:
         """Call a tool on the server"""
         if not self.session:
             raise RuntimeError("Not connected to server")
@@ -136,8 +149,8 @@ async def main():
     import sys
     
     if len(sys.argv) < 2:
-        print("Usage: python client.py <path_to_server.py>")
-        print("Example: python client.py ./basic_server.py")
+        print("Usage: python mcp_client.py <path_to_server.py>")
+        print("Example: python mcp_client.py ./mcp_server.py")
         sys.exit(1)
     
     server_path = sys.argv[1]
