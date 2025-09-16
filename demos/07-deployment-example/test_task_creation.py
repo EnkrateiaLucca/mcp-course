@@ -10,7 +10,7 @@ import sys
 from typing import Dict, Any, List
 import time
 
-BASE_URL = "https://deploy-example-openai-agents-sdk-mcp.onrender.com"
+BASE_URL = "http://localhost:8000"
 
 class TaskCreationTester:
     def __init__(self, base_url: str):

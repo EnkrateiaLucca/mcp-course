@@ -1,0 +1,2 @@
+Hello from MCP demo!
+This is a test file for the MCP chat application.

@@ -25,11 +25,11 @@ Most demo scripts in this course include UV inline metadata and can be run direc
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Run any demo script directly - UV handles dependencies automatically
-uv run notebooks/01-introduction-to-mcp/mcp_server.py
-uv run notebooks/03-tools-resources-prompts-sampling/comprehensive_mcp_server.py
+uv run demos/01-introduction-to-mcp/mcp_server.py
+uv run demos/03-tools-resources-prompts-sampling/comprehensive_mcp_server.py
 
 # Or navigate to a demo directory and run
-cd notebooks/02-first-mcp-server
+cd demos/02-first-mcp-server
 uv run obsidian_vault_server.py
 ```
 
@@ -49,7 +49,7 @@ mcp-course/
 │   ├── presentation.html              # Main presentation
 │   ├── mcp-talk.pdf                  # PDF version
 │   └── anki-mcp.txt                  # Study materials
-└── notebooks/                        # All demo materials organized by topic
+└── demos/                        # All demo materials organized by topic
     ├── 01-introduction-to-mcp/       # MCP basics and first server
     ├── 02-first-mcp-server/          # Building your first MCP server
     ├── 03-tools-resources-prompts-sampling/  # Core MCP capabilities

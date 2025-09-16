@@ -1,26 +1,21 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.9"
-# dependencies = [
-#     "openai-agents",
-#     "mcp>=1.0.0"
-# ]
-# ///
-
-import asyncio
-import os
-import shutil
+from webbrowser import get
 from agents import Agent, Runner, gen_trace_id, trace
 from agents.mcp import MCPServer, MCPServerStdio
+import asyncio
 
-async def run(mcp_server: MCPServer):
+
+async def run_notes_agent(mcp_server: MCPServer):
     agent = Agent(
-        name="Note Taker",
+        name="Notes Agent",
         model="gpt-5-mini",
-        instructions="You are a helpful assistant.",
+        instructions="""
+        You are a helpful assistant that can answer questions.
+        You can also create notes and list the available notes
+        from my obsidian vault.
+        """,
         mcp_servers=[mcp_server],
     )
-
+    
     while True:
         message = input("Enter a message: ")
         if message == "exit" or message == "quit":
@@ -28,19 +23,20 @@ async def run(mcp_server: MCPServer):
         print(f"\n\nRunning: {message}")
         result = await Runner.run(starting_agent=agent, input=message)
         print(result.final_output)
-
+    
 async def main():
     async with MCPServerStdio(
-        name="Note Taker Server",
+        name="obsidian-vault",
         params={
             "command": "uv",
-            "args": ["run", "mcp_server_for_openai_agent.py"],
+            "args": ["run", "./obsidian_vault_server.py"],
         },
+        
     ) as server:
         trace_id = gen_trace_id()
-        with trace(workflow_name="MCP Filesystem Example", trace_id=trace_id):
+        with trace(workflow_name="Notes Agent", trace_id=trace_id):
             print(f"View trace: https://platform.openai.com/traces/trace?trace_id={trace_id}\n")
-            await run(server)
+            await run_notes_agent(server)
 
 
 if __name__ == "__main__":

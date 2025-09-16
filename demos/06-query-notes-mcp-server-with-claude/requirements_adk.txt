@@ -1,0 +1,18 @@
+# Requirements for Google ADK Obsidian Notes Agent
+# Install with: pip install -r requirements_adk.txt
+
+# Google ADK - Agent Development Kit
+google-adk>=0.1.0
+
+# MCP (Model Context Protocol) support
+mcp>=1.0.0
+
+# Google AI SDK for Gemini models
+google-generativeai>=0.3.0
+
+# Async support
+asyncio
+
+# Optional: For enhanced functionality
+pydantic>=2.0.0
+python-dotenv>=1.0.0  # For environment variable management

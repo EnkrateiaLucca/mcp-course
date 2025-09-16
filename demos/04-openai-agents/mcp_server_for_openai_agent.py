@@ -19,6 +19,7 @@ https://github.com/modelcontextprotocol/python-sdk
 from mcp.server.fastmcp import FastMCP
 from mcp import types
 import os
+from datetime import datetime
 from typing import List
 
 DOCS_DIR = "./docs/"
@@ -54,7 +55,15 @@ def list_files(dir_path: str) -> str:
     Lists the files in a given folder.
     """
     return os.listdir(dir_path)
-    
+
+@mcp.tool()
+def get_current_time() -> str:
+    """
+    Get the current time.
+    """
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
 
 # @mcp.resource("docs://docs", mime_type="text/markdown")
 # def list_docs() -> List[str]:

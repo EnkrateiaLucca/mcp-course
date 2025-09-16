@@ -5,8 +5,6 @@
 # ///
 
 from datetime import datetime
-from starlette.routing import Mount
-from contextlib import AsyncExitStack, asynccontextmanager
 from mcp.server.fastmcp import FastMCP
 import logging
 
@@ -35,6 +33,8 @@ def get_docs() -> str:
 if __name__ == "__main__":
     logging.info("🚀 Basic MCP (stdio)")
     mcp.run(transport="stdio")
+    # the way the communication with this server will happen
+    # is via running it as a command in the terminal
     
     # run it with:
     # uv run ./mcp_server.py

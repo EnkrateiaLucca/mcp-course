@@ -1,115 +1,83 @@
-# Disclaimer!!!
-- This repo was taken from this example from anthropic's Intro course:
-  - https://anthropic.skilljar.com/introduction-to-model-context-protocol/296694
+# MCP Chat Application with OpenAI Function Calling
 
-# MCP Chat
+This application demonstrates how to integrate OpenAI's function calling capabilities with Model Context Protocol (MCP) servers.
 
-MCP Chat is a command-line interface application that enables interactive chat capabilities with AI models through the Anthropic API. The application supports document retrieval, command-based prompts, and extensible tool integrations via the MCP (Model Control Protocol) architecture.
+## Features
 
-## Prerequisites
-
-- Python 3.9+
-- Anthropic API Key
+- **OpenAI Function Calling**: The AI assistant automatically determines when to use available tools
+- **MCP Tool Integration**: Seamlessly bridges OpenAI function calls to MCP server tools
+- **Interactive Chat**: Natural conversation interface with automatic tool usage
+- **Tool Discovery**: Automatically discovers and converts MCP tools to OpenAI functions
 
 ## Setup
 
-### Step 1: Configure the environment variables
+1. **Install Dependencies**:
+   ```bash
+   pip install openai python-dotenv mcp
+   ```
 
-1. Create or edit the `.env` file in the project root and verify that the following variables are set correctly:
+2. **Configure API Keys**:
+   Edit the `.env` file and add your OpenAI API key:
+   ```
+   OPENAI_API_KEY="your-api-key-here"
+   OPENAI_MODEL="gpt-4-turbo-preview"  # or any other model that supports function calling
+   USE_UV=0  # Set to 1 if using uv package manager
+   ```
 
-```
-ANTHROPIC_API_KEY=""  # Enter your Anthropic API secret key
-```
+3. **Run the Application**:
+   ```bash
+   python chat_app.py
+   ```
 
-### Step 2: Install dependencies
+## How It Works
 
-#### Option 1: Setup with uv (Recommended)
+1. **MCP Tool Discovery**: On startup, the app connects to the MCP server and discovers available tools
+2. **Tool Conversion**: MCP tool definitions are automatically converted to OpenAI function schemas
+3. **Intelligent Tool Usage**: When you chat with the assistant, it automatically decides when to use tools
+4. **Seamless Execution**: Function calls from OpenAI are executed through the MCP client and results are returned to the conversation
 
-[uv](https://github.com/astral-sh/uv) is a fast Python package installer and resolver.
+## Available Commands
 
-1. Install uv, if not already installed:
+- `/tools` - List all available MCP tools
+- `/clear` - Clear the conversation history
+- `/help` - Show available commands
+- `/exit` or `/quit` - Exit the application
 
-```bash
-pip install uv
-```
-
-2. Create and activate a virtual environment:
-
-```bash
-uv venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-```
-
-3. Install dependencies:
-
-```bash
-uv pip install -e .
-```
-
-4. Run the project
-
-```bash
-uv run main.py
-```
-
-#### Option 2: Setup without uv
-
-1. Create and activate a virtual environment:
-
-```bash
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-```
-
-2. Install dependencies:
-
-```bash
-pip install anthropic python-dotenv prompt-toolkit "mcp[cli]==1.8.0"
-```
-
-3. Run the project
-
-```bash
-python main.py
-```
-
-## Usage
-
-### Basic Interaction
-
-Simply type your message and press Enter to chat with the model.
-
-### Document Retrieval
-
-Use the @ symbol followed by a document ID to include document content in your query:
+## Example Usage
 
 ```
-> Tell me about @deposition.md
+You> What's in the file.txt?
+[Calling tool: read_doc with args: {'filepath': 'file.txt'}]
+Assistant> The file contains: "Lucas will never leave anyone behind!"
+
+You> Write "Hello World" to a new file called greeting.txt
+[Calling tool: write_file with args: {'filepath': 'greeting.txt', 'contents': 'Hello World'}]
+Assistant> I've successfully written "Hello World" to greeting.txt.
 ```
 
-### Commands
-
-Use the / prefix to execute commands defined in the MCP server:
+## Architecture
 
 ```
-> /summarize deposition.md
+User <-> Chat App <-> OpenAI API
+             |
+             v
+        MCP Client
+             |
+             v
+        MCP Server (with tools)
 ```
 
-Commands will auto-complete when you press Tab.
+The chat app acts as a bridge:
+- Receives user input
+- Sends it to OpenAI with available tool definitions
+- OpenAI decides if/which tools to call
+- App executes tools via MCP client
+- Results are sent back to OpenAI for final response
 
-## Development
+## MCP Server
 
-### Adding New Documents
+The included `mcp_server.py` provides two example tools:
+- `read_doc`: Read contents of a file
+- `write_file`: Write contents to a file
 
-Edit the `mcp_server.py` file to add new documents to the `docs` dictionary.
-
-### Implementing MCP Features
-
-To fully implement the MCP features:
-
-1. Complete the TODOs in `mcp_server.py`
-2. Implement the missing functionality in `mcp_client.py`
-
-### Linting and Typing Check
-
-There are no lint or type checks implemented.
+You can extend the MCP server with additional tools using the `@mcp.tool()` decorator.
