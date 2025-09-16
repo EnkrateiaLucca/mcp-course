@@ -25,7 +25,7 @@ Most demo scripts in this course include UV inline metadata and can be run direc
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Run any demo script directly - UV handles dependencies automatically
-uv run notebooks/01-introduction-to-mcp/basic_server.py
+uv run notebooks/01-introduction-to-mcp/mcp_server.py
 uv run notebooks/03-tools-resources-prompts-sampling/comprehensive_mcp_server.py
 
 # Or navigate to a demo directory and run
@@ -112,7 +112,7 @@ Test your setup with a basic MCP server:
 ```bash
 cd notebooks/01-introduction-to-mcp
 pip install -r requirements.txt
-python basic_server.py
+python mcp_server.py
 ```
 
 ## 🪟 Windows Setup Guide
