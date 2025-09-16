@@ -1,0 +1,36 @@
+# Core dependencies
+fastmcp==0.1.0
+openai==1.54.0
+asyncio-mqtt==0.16.2
+
+# Google Sheets API
+google-api-python-client==2.95.0
+google-auth==2.22.0
+google-auth-httplib2==0.1.0
+google-auth-oauthlib==1.0.0
+
+# MCP Client
+mcp==1.0.0
+
+# Utilities
+python-dotenv==1.0.0
+pydantic==2.5.0
+httpx==0.25.0
+aiofiles==23.2.1
+
+# Logging and monitoring
+loguru==0.7.0
+prometheus-client==0.18.0
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-mock==3.11.1
+
+# Script execution and sandboxing
+docker==6.1.3
+subprocess32==3.5.4
+
+# Scheduling
+apscheduler==3.10.4
+croniter==2.0.1

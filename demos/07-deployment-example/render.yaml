@@ -1,0 +1,38 @@
+# Render Blueprint for Task Management MCP Server
+# This file defines the infrastructure and deployment configuration for Render
+
+services:
+  # Web Service for the FastAPI application
+  - type: web
+    name: task-mcp-server
+    runtime: python
+    region: oregon  # Change to your preferred region
+    plan: free  # Start with free tier, upgrade as needed
+
+    # Build configuration
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+
+    # Environment variables
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: ENV
+        value: production
+      - key: OPENAI_API_KEY
+        sync: false  # Will be set manually in Render dashboard
+
+    # Health check configuration
+    healthCheckPath: /health
+
+    # Auto-deploy from GitHub
+    autoDeploy: true  # Automatically deploy on push to main branch
+
+# Optional: Database for persistent storage
+# Uncomment if you want to add PostgreSQL for task storage
+# databases:
+#   - name: task-db
+#     plan: free
+#     region: oregon
+#     databaseName: tasks
+#     user: taskuser
