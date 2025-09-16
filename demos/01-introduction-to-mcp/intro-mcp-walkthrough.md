@@ -17,8 +17,8 @@ The Model Context Protocol (MCP) is an open protocol that standardizes how appli
 
 ## Demo Components
 
-1. `basic_server.py` - A minimal MCP server using FastMCP
-2. `test_client.py` - A simple client to test the server
+1. `mcp_server.py` - A minimal MCP server using FastMCP
+2. `mcp_client.py` - A simple client to test the server
 3. `requirements.txt` - Dependencies needed for this demo
 
 ## Running the Demo
@@ -30,12 +30,12 @@ The Model Context Protocol (MCP) is an open protocol that standardizes how appli
 
 2. Run the server:
    ```bash
-   python basic_server.py
+   python mcp_server.py
    ```
 
 3. In another terminal, test with the client:
    ```bash
-   python test_client.py
+   python mcp_client.py
    ```
 
 ## References
