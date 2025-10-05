@@ -1,23 +1,51 @@
 .
-├── CLAUDE.md
 ├── demos
 │   ├── 01-introduction-to-mcp
 │   │   ├── __pycache__
-│   │   │   └── basic_server.cpython-311.pyc
-│   │   ├── basic_server.py
-│   │   ├── lucas-solved-the-debug-issue.md
+│   │   │   ├── basic_server.cpython-311.pyc
+│   │   │   └── mcp_server.cpython-311.pyc
+│   │   ├── documents.txt
+│   │   ├── intro-mcp-walkthrough.md
+│   │   ├── lucas-tests-mcp.md
+│   │   ├── mcp_client.py
+│   │   └── mcp_server.py
+│   ├── 02-study-case-anthropic-tools-resources-prompts-chat-app
+│   │   ├── __pycache__
+│   │   │   ├── mcp_client.cpython-311.pyc
+│   │   │   └── mcp_server.cpython-311.pyc
+│   │   ├── chat_app.py
+│   │   ├── demo.py
+│   │   ├── lucas-test.txt
+│   │   ├── mcp_client.py
+│   │   ├── mcp_server.py
 │   │   ├── README.md
-│   │   ├── requirements.txt
-│   │   ├── silly_joke.txt
-│   │   ├── test_client.py
-│   │   └── test_file.txt
-│   ├── 02-first-mcp-server
+│   │   └── test_output.txt
+│   ├── 03-personal-usecase-image-generation
+│   │   ├── replicate_thumbnail_mcp.py
+│   │   └── thumbnail_mcp.json
+│   ├── 04-openai-agents
+│   │   ├── __pycache__
+│   │   │   └── mcp_server_for_openai_agent.cpython-311.pyc
+│   │   ├── current-time.md
+│   │   ├── docs
+│   │   │   ├── books.md
+│   │   │   ├── music.md
+│   │   │   └── new-file.md
+│   │   ├── mcp_server_for_openai_agent.py
+│   │   ├── openai_agent_custom_tools.py
+│   │   └── openai_agent_filesystem_mcp.py
+│   ├── 05-query-notes-mcp-server-with-claude
 │   │   ├── __pycache__
 │   │   │   ├── obsidian_vault_server.cpython-311.pyc
 │   │   │   └── weather_server.cpython-311.pyc
+│   │   ├── chat_notes_adk_advanced.py
+│   │   ├── chat_notes_google_adk.py
+│   │   ├── chat_notes.py
 │   │   ├── claude_desktop_config.json
 │   │   ├── obsidian_vault_server.py
+│   │   ├── README_GOOGLE_ADK.md
 │   │   ├── README.md
+│   │   ├── requirements_adk.txt
 │   │   └── sample_vault_notes
 │   │       ├── 12 Factors for building agents.md
 │   │       ├── add a retrieval step to give an agent many tools at once.md
@@ -34,53 +62,27 @@
 │   │       ├── Points on memory for agents.md
 │   │       ├── Potential tools for useful agents.md
 │   │       ├── reference
-│   │       │   └── 12 Factors for Building Agents - Compressed.md
 │   │       ├── Research idea generation with research agent.md
 │   │       └── Sample principles for good LLM agent implementations from anthropic.md
-│   ├── 03-tools-resources-prompts-sampling
+│   ├── 06-deployment-example
 │   │   ├── __pycache__
-│   │   │   └── comprehensive_mcp_server.cpython-311.pyc
-│   │   ├── claude_desktop_config.json
-│   │   ├── comprehensive_mcp_server.py
-│   │   ├── README.md
-│   │   └── test_client.py
-│   ├── 04-google-adk-agents
-│   │   ├── adk-agent
-│   │   │   ├── __init__.py
-│   │   │   ├── __pycache__
-│   │   │   │   ├── __init__.cpython-311.pyc
-│   │   │   │   └── agent.cpython-311.pyc
-│   │   │   └── agent.py
-│   │   ├── README_SIMPLE.md
-│   │   ├── README.md
-│   │   ├── run_demo.py
-│   │   ├── simple_adk_agent.py
-│   │   ├── simple_mcp_server_v2.py
-│   │   ├── simple_mcp_server.py
-│   │   └── test_integration.py
-│   ├── 05-openai-agents
-│   │   ├── basic_agent_file_access.py
-│   │   ├── chocolate_pancake_recipe.txt
-│   │   ├── chocolate_pancakes_recipe.txt
-│   │   ├── mcp_server_for_openai_agent.py
-│   │   ├── pancakes_agent.py
-│   │   └── sample_files
-│   │       ├── books.md
-│   │       └── music.md
-│   ├── 06-claude-desktop-cursor-demos
-│   │   ├── claude_desktop_configs
-│   │   │   ├── basic.json
-│   │   │   ├── development.json
-│   │   │   └── production.json
-│   │   ├── development_mcp_server.py
-│   │   ├── mcp_demo_workflow.py
-│   │   └── README.md
-│   ├── 07-security-tips
-│   │   └── security_auth_mcp.md
-│   ├── 08-langgraph-agent-mcp
-│   │   ├── agent_demo.py
+│   │   │   ├── main.cpython-311.pyc
+│   │   │   └── mcp_server.cpython-311.pyc
+│   │   ├── agent.py
+│   │   ├── main.py
+│   │   ├── Makefile
 │   │   ├── mcp_server.py
-│   │   └── README.md
+│   │   ├── README.md
+│   │   ├── render.yaml
+│   │   ├── requirements
+│   │   │   ├── requirements.in
+│   │   │   └── requirements.txt
+│   │   ├── requirements.txt
+│   │   ├── security_auth_mcp.md
+│   │   ├── setup.md
+│   │   ├── tasks.db
+│   │   ├── test_deployment.py
+│   │   └── test_task_creation.py
 │   ├── assets-resources
 │   │   ├── 2025-06-07-11-23-10.png
 │   │   ├── 2025-06-09-11-33-37.png
@@ -93,18 +95,23 @@
 │   │   ├── agent-loop2.png
 │   │   ├── agent-loop3.png
 │   │   ├── agent-loop4.png
+│   │   ├── CLAUDE.md
+│   │   ├── mcp_server_prompt_templates.md
+│   │   ├── MCP_TECHNICAL_CHEATSHEET.md
 │   │   ├── mcp-core1.png
 │   │   ├── mcp-core2.png
 │   │   ├── mcp-core3.png
 │   │   ├── mcp-core4.png
 │   │   ├── mcp-core5.png
 │   │   ├── mcp-core6.png
+│   │   ├── mcp-course.md
 │   │   ├── mcp-intro1.png
 │   │   ├── mcp-market-map.png
 │   │   ├── mcp-stars-on-github.png
 │   │   ├── mn-1.png
 │   │   ├── mn-2.png
-│   │   └── mn-3.png
+│   │   ├── mn-3.png
+│   │   └── modelcontextprotocol.io_docs.md
 │   └── live-demos
 │       ├── __pycache__
 │       │   └── my_mcp_servers.cpython-311.pyc
@@ -112,8 +119,6 @@
 │       ├── intro-agents-basic.ipynb
 │       └── my_mcp_servers.py
 ├── Makefile
-├── MCP_TECHNICAL_CHEATSHEET.md
-├── mcp-course.md
 ├── presentation
 │   ├── mcp-talk.pdf
 │   ├── presentation-mcp.pdf
@@ -122,6 +127,6 @@
 ├── requirements
 │   ├── requirements.in
 │   └── requirements.txt
-└── requirements.txt
+└── resolved_questions_from_last_course.md
 
-24 directories, 101 files
+22 directories, 108 files
