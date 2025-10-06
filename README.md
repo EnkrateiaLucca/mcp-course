@@ -8,11 +8,12 @@ The Model Context Protocol (MCP) is revolutionizing how AI applications connect 
 
 ### What You'll Learn
 
-- **MCP Fundamentals**: Core concepts, architecture, and capabilities
-- **MCP Capabilities**: Tools, Resources, Prompts, and Sampling
-- **Agent Development**: Building agents with Google ADK, and OpenAI SDK
-- **Consumer Applications**: Using MCP with Claude Desktop and Cursor IDE
-- **Security Best Practices**: Securing MCP implementations and preventing attacks
+- **AI Agent Fundamentals**: Understanding agent architecture and decision-making patterns
+- **MCP Core Concepts**: Architecture, capabilities, and protocol fundamentals
+- **MCP Capabilities**: Tools, Resources, Prompts, and practical implementations
+- **Agent Development**: Building agents with OpenAI SDK and MCP integration
+- **Production Deployment**: Cloud hosting, API design, and security best practices
+- **Real-world Applications**: Chat apps, image generation, and custom workflows
 
 ## 🚀 Quick Start with UV
 
@@ -44,20 +45,21 @@ uv run obsidian_vault_server.py
 ```
 mcp-course/
 ├── README.md                           # This file - complete course guide
-├── Makefile                           # Automation scripts
-├── presentation/                      # Course presentation materials
-│   ├── presentation.html              # Main presentation
-│   ├── mcp-talk.pdf                  # PDF version
-│   └── anki-mcp.txt                  # Study materials
-└── demos/                        # All demo materials organized by topic
-    ├── 01-introduction-to-mcp/       # MCP basics and first server
-    ├── 02-first-mcp-server/          # Building your first MCP server
-    ├── 03-tools-resources-prompts-sampling/  # Core MCP capabilities
-    ├── 04-google-adk-agents/         # Google Agent Development Kit demos
-    ├── 05-openai-agents/             # OpenAI Agents SDK with MCP
-    ├── 06-claude-desktop-cursor-demos/  # Consumer app integration
-    ├── 07-security-tips/             # Security best practices
-    └── assets-resources/             # Images and supporting materials
+├── Makefile                            # Automation scripts
+├── requirements/                       # Python dependencies
+│   ├── requirements.txt                # All project dependencies
+│   └── requirements.in                 # Source requirements file
+├── presentation/                       # Course presentation materials
+│   ├── presentation.html               # Main presentation
+│   └── mcp-talk.pdf                    # PDF version
+└── demos/                              # All demo materials organized by topic
+    ├── 00-into-agents/                 # Introduction to AI agents
+    ├── 01-introduction-to-mcp/         # MCP basics and first server
+    ├── 02-study-case-anthropic-tools-resources-prompts-chat-app/  # Complete MCP chat app with tools
+    ├── 03-personal-usecase-image-generation/  # Image generation MCP server
+    ├── 04-openai-agents/               # OpenAI Agents SDK with MCP
+    ├── 05-deployment-example/          # Production deployment example
+    └── assets-resources/               # Images and supporting materials
 ```
 
 ## 🔧 Alternative Setup (Traditional Approach)
@@ -72,9 +74,8 @@ mcp-course/
 
 Depending on which demos you want to run:
 
-- [**OpenAI API Key**](https://platform.openai.com/docs/quickstart?api-mode=chat) (for OpenAI demos)
-- [**Anthropic API Key**](https://docs.anthropic.com/en/docs/get-started) (for Claude-based demos)
-- [**Google Cloud Project**](https://arc.net/l/quote/pyqkrzxd) (for ADK demos)
+- [**OpenAI API Key**](https://platform.openai.com/docs/quickstart?api-mode=chat) (for OpenAI agent demos and chat app)
+- [**Replicate API Key**](https://replicate.com/) (for image generation demo)
 
 ### 1. Clone and Setup
 
@@ -98,8 +99,7 @@ Create a `.env` file in the root directory:
 ```env
 # API Keys (add the ones you have)
 OPENAI_API_KEY=your-openai-api-key
-ANTHROPIC_API_KEY=your-anthropic-api-key
-GOOGLE_CLOUD_PROJECT=your-google-cloud-project-id
+REPLICATE_API_TOKEN=your-replicate-api-token
 
 # Optional: Custom paths
 MCP_DEMO_PATH=/path/to/your/demo/files
@@ -110,7 +110,7 @@ MCP_DEMO_PATH=/path/to/your/demo/files
 Test your setup with a basic MCP server:
 
 ```bash
-cd notebooks/01-introduction-to-mcp
+cd demos/01-introduction-to-mcp
 pip install -r requirements.txt
 python mcp_server.py
 ```
@@ -168,8 +168,7 @@ Create a `.env` file in the project root:
 ```env
 # API Keys
 OPENAI_API_KEY=your-openai-api-key
-ANTHROPIC_API_KEY=your-anthropic-api-key
-GOOGLE_CLOUD_PROJECT=your-google-cloud-project-id
+REPLICATE_API_TOKEN=your-replicate-api-token
 
 # Windows-specific paths (use forward slashes)
 MCP_DEMO_PATH=C:/path/to/your/demo/files
@@ -179,14 +178,14 @@ Alternatively, set environment variables using Command Prompt:
 
 ```cmd
 set OPENAI_API_KEY=your-openai-api-key
-set ANTHROPIC_API_KEY=your-anthropic-api-key
+set REPLICATE_API_TOKEN=your-replicate-api-token
 ```
 
 Or using PowerShell:
 
 ```powershell
 $env:OPENAI_API_KEY="your-openai-api-key"
-$env:ANTHROPIC_API_KEY="your-anthropic-api-key"
+$env:REPLICATE_API_TOKEN="your-replicate-api-token"
 ```
 
 ### 5. Claude Desktop Configuration (Windows)
@@ -203,8 +202,8 @@ Example setup:
 # Navigate to Claude config directory
 cd %APPDATA%\Claude
 
-# Copy and edit configuration
-copy "C:\path\to\mcp-course\notebooks\02-first-mcp-server\claude_desktop_config.json" claude_desktop_config.json
+# Create or edit configuration
+notepad claude_desktop_config.json
 ```
 
 **Important**: Use absolute paths with forward slashes in the config file:
@@ -212,9 +211,9 @@ copy "C:\path\to\mcp-course\notebooks\02-first-mcp-server\claude_desktop_config.
 ```json
 {
   "mcpServers": {
-    "weather": {
+    "mcp_demo": {
       "command": "C:/path/to/mcp-course/venv/Scripts/python.exe",
-      "args": ["C:/path/to/mcp-course/notebooks/02-first-mcp-server/weather_server.py"]
+      "args": ["C:/path/to/mcp-course/demos/01-introduction-to-mcp/mcp_server.py"]
     }
   }
 }
@@ -238,9 +237,8 @@ When running demos, use these Windows-equivalent commands:
 venv\Scripts\activate
 
 # Test basic server
-cd notebooks\01-introduction-to-mcp
-pip install -r requirements.txt
-python basic_server.py
+cd demos\01-introduction-to-mcp
+python mcp_server.py
 ```
 
 ### Windows Troubleshooting
@@ -277,186 +275,159 @@ python basic_server.py
 
 ## 📚 Demo Sections Guide
 
-### 01. Introduction to MCP
+### 00. Introduction to AI Agents
 
-**What it covers**: MCP fundamentals, basic server implementation, client interaction
+**What it covers**: Foundational concepts of AI agents - how they work, their components, and basic implementation patterns
 
 **Files**:
-- `basic_server.py` - Minimal MCP server
-- `test_client.py` - Test client for interaction
-- `README.md` - Detailed explanation
+- `intro-agents.ipynb` - Interactive Jupyter notebook with agent fundamentals
 
 **Running**:
 ```bash
-cd notebooks/01-introduction-to-mcp
-pip install -r requirements.txt
+cd demos/00-into-agents
 
-# Terminal 1: Start the server
-python basic_server.py
+# Run with Jupyter
+jupyter notebook intro-agents.ipynb
 
-# Terminal 2: Test with client
-python test_client.py
+# Or use VS Code with Jupyter extension
+code intro-agents.ipynb
+```
+
+**Key Learning**: Understanding agent architecture, reasoning patterns, and decision-making processes before diving into MCP.
+
+---
+
+### 01. Introduction to MCP
+
+**What it covers**: MCP fundamentals, basic server implementation, and client interaction
+
+**Files**:
+- `mcp_server.py` - Basic MCP server with tools
+- `mcp_client.py` - Test client for interaction
+- `intro-mcp-walkthrough.md` - Step-by-step walkthrough
+- `documents.txt` - Sample data file
+
+**Running**:
+```bash
+cd demos/01-introduction-to-mcp
+
+# With UV (recommended)
+uv run mcp_server.py
+
+# Or traditional method
+pip install mcp
+python mcp_server.py
 ```
 
 **Key Learning**: Understanding MCP architecture and basic client-server communication.
 
 ---
 
-### 02. First MCP Server
+### 02. MCP Chat Application Study Case
 
-**What it covers**: Building a practical MCP server with Claude Desktop integration for real-world workflows
+**What it covers**: Complete chat application integrating OpenAI function calling with MCP tools, resources, and prompts
 
 **Files**:
-- `weather_server.py` - MCP server with weather and file management tools
-- `claude_desktop_config.json` - Configuration for Claude Desktop
-- `README.md` - Detailed setup and usage instructions
+- `chat_app.py` - Full-featured chat app with OpenAI integration
+- `mcp_server.py` - MCP server with file tools
+- `mcp_client.py` - MCP client wrapper
+- `README.md` - Detailed documentation
 
 **Running**:
 ```bash
-cd notebooks/02-first-mcp-server
+cd demos/02-study-case-anthropic-tools-resources-prompts-chat-app
 
-# Start the weather server
-python weather_server.py
+# Set up environment
+export OPENAI_API_KEY="your-api-key"
 
-# Configure Claude Desktop (copy and edit the config)
-cp claude_desktop_config.json ~/.config/Claude/claude_desktop_config.json
-# Restart Claude Desktop to load the new configuration
+# Run the chat app
+uv run chat_app.py
 ```
 
-**Key Learning**: Creating practical MCP servers for end-user workflows with Claude Desktop.
+**Key Learning**: Building production-ready applications that bridge OpenAI's function calling with MCP's capabilities.
 
 ---
 
-### 03. Tools, Resources, Prompts & Sampling
+### 03. Personal Use Case: Image Generation
 
-**What it covers**: All four core MCP capabilities with comprehensive examples
+**What it covers**: Real-world MCP server for generating thumbnails using Replicate AI
 
 **Files**:
-- `comprehensive_mcp_server.py` - Server implementing all capabilities
-- `test_client.py` - Client testing all capabilities
-- `README.md` - Detailed capability explanations
+- `replicate_thumbnail_mcp.py` - MCP server for image generation
+- `thumbnail_mcp.json` - Claude Desktop configuration
 
 **Running**:
 ```bash
-cd notebooks/03-tools-resources-prompts-sampling
-pip install -r requirements.txt
+cd demos/03-personal-usecase-image-generation
 
-# Terminal 1: Start comprehensive server
-python comprehensive_mcp_server.py
+# Configure Claude Desktop with the MCP server
+cat thumbnail_mcp.json
+# Add configuration to Claude Desktop settings
 
-# Terminal 2: Test all capabilities
-python test_client.py
+# Server runs automatically when Claude Desktop starts
 ```
 
-**Key Learning**: Deep dive into MCP's four core capabilities and their use cases.
+**Key Learning**: Creating specialized MCP servers for specific workflows and integrating with AI image generation services.
 
 ---
 
-### 04. Google ADK Agents
+### 04. OpenAI Agents
 
-**What it covers**: Integrating MCP servers with Google's Agent Development Kit (ADK) using MCPToolset
-
-**Prerequisites**: Google Cloud account and project
-
-**Files**:
-- `simple_mcp_server.py` - Sample MCP server for testing
-- `adk-agent/agent.py` - ADK agent implementation with MCP integration
-- `README.md` - Detailed setup instructions
-
-**Running**:
-```bash
-cd notebooks/04-google-adk-agents
-
-# Set up Google Cloud credentials
-gcloud auth application-default login
-export GOOGLE_CLOUD_PROJECT="your-project-id"
-
-# Start the MCP server
-python simple_mcp_server.py
-
-# In another terminal, run the ADK agent
-cd adk-agent
-python agent.py
-```
-
-**Key Learning**: Using MCPToolset to connect Google ADK agents with MCP servers for interoperability.
-
----
-
-### 05. OpenAI Agents
-
-**What it covers**: OpenAI agent integration with MCP for file access capabilities
+**What it covers**: OpenAI Agents SDK integration with MCP for enhanced tool capabilities
 
 **Prerequisites**: OpenAI API key
 
 **Files**:
-- `basic_agent_file_access.py` - OpenAI agent with file access via MCP
-- `sample_files/` - Sample markdown files for testing
-  - `books.md` - Book recommendations
-  - `music.md` - Music playlists
+- `intro-openai-agents-sdk.ipynb` - Interactive notebook tutorial
+- `openai_agent_filesystem_mcp.py` - Agent with MCP filesystem access
+- `openai_agent_custom_tools.py` - Custom tool integration examples
+- `mcp_server_for_openai_agent.py` - Supporting MCP server
 
 **Running**:
 ```bash
-cd notebooks/05-openai-agents
+cd demos/04-openai-agents
 
 # Set API key
 export OPENAI_API_KEY="your-openai-api-key"
 
-# Run the agent with file access
-python basic_agent_file_access.py
+# Run Jupyter notebook
+jupyter notebook intro-openai-agents-sdk.ipynb
+
+# Or run standalone agent
+uv run openai_agent_filesystem_mcp.py
 ```
 
-**Key Learning**: Using OpenAI agents with MCP for structured file access and data retrieval.
+**Key Learning**: Using OpenAI Agents SDK with MCP for structured data access and advanced tool usage.
 
 ---
 
-### 06. Claude Desktop & Cursor Demos
+### 05. Deployment Example
 
-**What it covers**: Advanced consumer application integration with Claude Desktop and Cursor IDE
+**What it covers**: Complete production deployment example with FastAPI, OpenAI agents, and MCP
 
-**Prerequisites**: Claude Desktop app installed
+**Prerequisites**: OpenAI API key, cloud platform account (Render.com recommended)
 
 **Files**:
-- `development_mcp_server.py` - Development-focused MCP server
-- `mcp_demo_workflow.py` - Workflow automation examples
-- `claude_desktop_configs/` - Multiple configuration examples
-  - `basic.json` - Basic configuration
-  - `development.json` - Development environment setup
-  - `production.json` - Production-ready configuration
-- `README.md` - Detailed setup and usage guide
+- `mcp_server.py` - Production MCP server with tools, resources, and prompts
+- `agent.py` - OpenAI agent implementation
+- `main.py` - FastAPI web wrapper
+- `README.md` - Comprehensive deployment guide
+- `setup.md` - Step-by-step setup instructions
+- `security_auth_mcp.md` - Security best practices
 
 **Running**:
 ```bash
-cd notebooks/06-claude-desktop-cursor-demos
+cd demos/05-deployment-example
 
-# Start development server
-python development_mcp_server.py
+# Local development
+export OPENAI_API_KEY="your-api-key"
+python main.py  # Web API on http://localhost:8000
+python agent.py # Interactive agent CLI
 
-# Configure Claude Desktop (choose a config)
-cp claude_desktop_configs/development.json ~/.config/Claude/claude_desktop_config.json
-
-# Restart Claude Desktop to load new configuration
+# See README.md for cloud deployment instructions
 ```
 
-**Key Learning**: Real-world "end-user" experience with MCP in consumer applications, including tips and best practices.
-
----
-
-### 07. Security Tips
-
-**What it covers**: Comprehensive security guide for MCP implementations
-
-**Files**:
-- `README.md` - Complete security guide covering:
-  - Tool poisoning attacks and mitigations
-  - Prompt injection vulnerabilities
-  - Privilege escalation risks
-  - Directory traversal and command injection
-  - Information disclosure vulnerabilities
-  - Security best practices for servers and clients
-  - Pre/during/post-deployment security checklists
-
-**Key Learning**: Understanding critical security considerations for production MCP deployments, including common attack vectors and mitigation strategies.
+**Key Learning**: Production-ready MCP deployment with proper API design, security considerations, and cloud hosting.
 
 ## 🛠️ Automation with Makefile
 
@@ -521,8 +492,8 @@ make stop-servers
 - [Official MCP Servers](https://github.com/modelcontextprotocol/servers)
 
 ### Agent Frameworks
-- [Google ADK Documentation](https://google.github.io/adk-docs/)
 - [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)
+- [Anthropic Claude](https://docs.anthropic.com/)
 
 ### Community Resources
 - [Awesome MCP Servers](https://github.com/punkpeye/awesome-mcp-servers)
