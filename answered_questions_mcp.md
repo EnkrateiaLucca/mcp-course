@@ -266,7 +266,7 @@ MCP has three types of capabilities, each with different **control models**:
 - Users see a list/menu and choose which prompt to run
 - Think of them as "slash commands" like `/debug` or `/review-code`
 
-**Example in Claude Desktop:**
+**Example in Claude Code:**
 ```
 User sees:
 - /debug-code
