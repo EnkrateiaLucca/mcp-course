@@ -21,10 +21,15 @@ certifi==2025.8.3
     # via
     #   httpcore
     #   httpx
+    #   requests
+charset-normalizer==3.4.3
+    # via requests
 click==8.2.1
     # via
     #   typer
     #   uvicorn
+colorama==0.4.6
+    # via griffe
 comm==0.2.3
     # via ipykernel
 debugpy==1.8.16
@@ -35,6 +40,8 @@ distro==1.9.0
     # via openai
 executing==2.2.0
     # via stack-data
+griffe==1.14.0
+    # via openai-agents
 h11==0.16.0
     # via
     #   httpcore
@@ -52,6 +59,7 @@ idna==3.10
     # via
     #   anyio
     #   httpx
+    #   requests
 ipykernel==6.30.1
     # via -r ./requirements/requirements.in
 ipython==9.4.0
@@ -79,12 +87,18 @@ matplotlib-inline==0.1.7
     #   ipykernel
     #   ipython
 mcp==1.12.4
-    # via -r ./requirements/requirements.in
+    # via
+    #   -r ./requirements/requirements.in
+    #   openai-agents
 mdurl==0.1.2
     # via markdown-it-py
 nest-asyncio==1.6.0
     # via ipykernel
-openai==2.1.0
+openai==1.109.1
+    # via
+    #   -r ./requirements/requirements.in
+    #   openai-agents
+openai-agents==0.3.3
     # via -r ./requirements/requirements.in
 packaging==25.0
     # via ipykernel
@@ -106,6 +120,7 @@ pydantic==2.11.7
     # via
     #   mcp
     #   openai
+    #   openai-agents
     #   pydantic-settings
 pydantic-core==2.33.2
     # via pydantic
@@ -133,6 +148,8 @@ referencing==0.36.2
     # via
     #   jsonschema
     #   jsonschema-specifications
+requests==2.32.5
+    # via openai-agents
 rich==14.1.0
     # via typer
 rpds-py==0.27.0
@@ -168,11 +185,14 @@ traitlets==5.14.3
     #   matplotlib-inline
 typer==0.16.0
     # via mcp
+types-requests==2.32.4.20250913
+    # via openai-agents
 typing-extensions==4.14.1
     # via
     #   anyio
     #   ipython
     #   openai
+    #   openai-agents
     #   pydantic
     #   pydantic-core
     #   referencing
@@ -183,6 +203,10 @@ typing-inspection==0.4.1
     # via
     #   pydantic
     #   pydantic-settings
+urllib3==2.5.0
+    # via
+    #   requests
+    #   types-requests
 uvicorn==0.35.0
     # via mcp
 wcwidth==0.2.13

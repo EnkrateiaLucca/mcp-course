@@ -35,7 +35,8 @@ async def run(mcp_server: MCPServer):
     print(result.final_output)
 
     # Ask a question that reads then reasons.
-    message = "Look at my favorite songs. Suggest one new song that I might like."
+    message = "Look at my favorite songs. Suggest one new song that I might \
+               like and refer to the file and contents used to answer the question."
     print(f"\n\nRunning: {message}")
     result = await Runner.run(starting_agent=agent, input=message)
     print(result.final_output)
@@ -43,7 +44,7 @@ async def run(mcp_server: MCPServer):
 
 async def main():
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    samples_dir = os.path.join(current_dir, "sample_files")
+    samples_dir = os.path.join(current_dir, "docs")
 
     async with MCPServerStdio(
         name="Filesystem Server, via npx",

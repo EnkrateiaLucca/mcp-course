@@ -1,5 +1,6 @@
 ipykernel
 httpx
 mcp[cli]
+openai-agents
 openai
 python-dotenv
