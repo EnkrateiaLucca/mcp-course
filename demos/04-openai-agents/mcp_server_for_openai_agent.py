@@ -63,19 +63,5 @@ def get_current_time() -> str:
     """
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-
-
-# @mcp.resource("docs://docs", mime_type="text/markdown")
-# def list_docs() -> List[str]:
-#     return os.listdir("./docs")    
-
-# @mcp.resource("docs://docs/{file_name}",mime_type="text/markdown")
-# def fetch_doc(file_name: str) -> str:
-#     if file_name not in os.listdir(DOCS_DIR):
-#         raise ValueError(f"File: {file_name} not found.")
-    
-#     with open(DOCS_DIR+"/"+file_name , "r") as f:
-#         return f.read()
-
 if __name__ == "__main__":
     mcp.run(transport="stdio")

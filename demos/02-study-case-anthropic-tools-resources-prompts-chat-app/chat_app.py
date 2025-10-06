@@ -1,3 +1,13 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.9"
+# dependencies = [
+#     "mcp[cli]==1.9.3",
+#     "openai",
+#     "python-dotenv"
+# ]
+# ///
+
 #!/usr/bin/env python3
 """
 MCP Chat Application with OpenAI Function Calling
