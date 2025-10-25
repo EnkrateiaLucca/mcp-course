@@ -11,9 +11,10 @@ The Model Context Protocol (MCP) is revolutionizing how AI applications connect 
 - **AI Agent Fundamentals**: Understanding agent architecture and decision-making patterns
 - **MCP Core Concepts**: Architecture, capabilities, and protocol fundamentals
 - **MCP Capabilities**: Tools, Resources, Prompts, and practical implementations
-- **Agent Development**: Building agents with OpenAI SDK and MCP integration
+- **Agent Development**: Building agents with OpenAI SDK, Claude Agents SDK, and MCP integration
+- **Claude Agents SDK**: Creating intelligent agents with streaming sessions, custom tools, and multi-server integration
 - **Production Deployment**: Cloud hosting, API design, and security best practices
-- **Real-world Applications**: Chat apps, image generation, and custom workflows
+- **Real-world Applications**: Chat apps, image generation, automation script generation, and custom workflows
 
 ## 🚀 Quick Start with UV
 
@@ -59,6 +60,9 @@ mcp-course/
     ├── 03-personal-usecase-image-generation/  # Image generation MCP server
     ├── 04-openai-agents/               # OpenAI Agents SDK with MCP
     ├── 05-deployment-example/          # Production deployment example
+    ├── 06-claude-agent-sdk/            # Claude Agents SDK (2-day course)
+    │   ├── day1-file-reader-agent/     # Day 1: File reader agent with MCP
+    │   └── day2-automation-agent/      # Day 2: Automation script generator
     └── assets-resources/               # Images and supporting materials
 ```
 
@@ -74,8 +78,9 @@ mcp-course/
 
 Depending on which demos you want to run:
 
-- [**OpenAI API Key**](https://platform.openai.com/docs/quickstart?api-mode=chat) (for OpenAI agent demos and chat app)
-- [**Replicate API Key**](https://replicate.com/) (for image generation demo)
+- [**Anthropic API Key**](https://console.anthropic.com/) (for Claude Agents SDK demos - demo 06)
+- [**OpenAI API Key**](https://platform.openai.com/docs/quickstart?api-mode=chat) (for OpenAI agent demos and chat app - demos 02, 04, 05)
+- [**Replicate API Key**](https://replicate.com/) (for image generation demo - demo 03)
 
 ### 1. Clone and Setup
 
@@ -428,6 +433,77 @@ python agent.py # Interactive agent CLI
 ```
 
 **Key Learning**: Production-ready MCP deployment with proper API design, security considerations, and cloud hosting.
+
+---
+
+### 06. Claude Agents SDK
+
+**What it covers**: Building intelligent AI agents using Claude Agents SDK with MCP integration
+
+**Duration**: 2 Days (130 minutes total)
+
+**Prerequisites**: Python 3.10+, Node.js, Anthropic API key
+
+**Files**:
+- `day1-file-reader-agent/` - Day 1: Introduction and file reader agent
+  - `01-intro-claude-agents-sdk.ipynb` - Interactive tutorial notebook
+  - `file_reader_agent.py` - Complete file analysis agent demo
+  - `README.md` - Day 1 comprehensive guide
+- `day2-automation-agent/` - Day 2: Automation agent with database
+  - `02-building-automation-agent.ipynb` - Advanced automation tutorial
+  - `automation_agent.py` - Database-driven script generator
+  - `README.md` - Day 2 comprehensive guide
+
+**Running**:
+```bash
+cd demos/06-claude-agent-sdk
+
+# Day 1: File Reader Agent
+cd day1-file-reader-agent
+export ANTHROPIC_API_KEY="your-api-key"
+
+# Run with UV (recommended)
+uv run file_reader_agent.py
+
+# Or use Jupyter notebook
+jupyter notebook 01-intro-claude-agents-sdk.ipynb
+
+# Day 2: Automation Agent
+cd ../day2-automation-agent
+uv run automation_agent.py
+
+# Or use Jupyter notebook
+jupyter notebook 02-building-automation-agent.ipynb
+```
+
+**Key Learning**:
+
+**Day 1** - Introduction to Claude Agents SDK:
+- Installing and configuring Claude Agents SDK
+- Creating streaming sessions with Claude
+- Building custom tools with `@tool` decorator
+- Connecting to external MCP servers (filesystem)
+- Using hooks to monitor and control agent behavior
+- Building a complete file reader and analysis agent
+
+**Day 2** - Advanced Automation Agent:
+- Creating custom in-process MCP database tools
+- Integrating multiple MCP servers (database + filesystem)
+- Building complex multi-step automation workflows
+- Generating production-ready Python scripts from requirements
+- Managing task state via SQLite database
+- Testing and validating generated code automatically
+
+**What You'll Build**:
+1. **File Reader Agent**: Analyzes directories, reads files, extracts action items
+2. **Automation Agent**: Generates Python automation scripts from database requirements
+
+**Real-world Applications**:
+- DevOps script generation
+- Code analysis and documentation
+- Data pipeline creation
+- Test automation
+- Migration tools
 
 ## 🛠️ Automation with Makefile
 
