@@ -11,7 +11,8 @@
 
 # Main source from the mcp docs: https://modelcontextprotocol.io/docs/develop/build-client
 import asyncio
-from typing import Optional
+from typing import Optional, Any
+from pydantic import AnyUrl
 from contextlib import AsyncExitStack
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
@@ -80,14 +81,13 @@ class SimpleMCPClient:
         result = await self.session.call_tool(tool_name, arguments)
         return result
     
-    async def read_resource(self, resource_uri: str):
-        """Read a resource from the server"""
-        if not self.session:
-            raise RuntimeError("Not connected to server")
+    async def read_resource(self, uri: str) -> Any:
+        result = await self.session().read_resource(AnyUrl(uri))
+        resource = result.contents[0]
         
-        print(f"Reading resource: {resource_uri}")
-        result = await self.session.read_resource(resource_uri)
-        return result
+        if isinstance(resource, types.TextResourceContents):
+            if resource.mimeType == "text/plain":
+                return resource.text
     
     async def interactive_mode(self):
         """Simple interactive loop to test the tools"""

@@ -1,7 +1,9 @@
 from mcp.server.fastmcp import FastMCP
+from glob import glob
 
 mcp = FastMCP("lucas-never-quits-mcp")
 
+DOCS_PATH = "./docs"
 
 @mcp.tool(
     name="read_doc",
@@ -22,6 +24,20 @@ def write_file(filepath: str, contents: str) -> str:
         f.write(contents)
 
     return f"File written successfully to: {filepath}"
+
+@mcp.resource(f"docs://documents/{DOCS_PATH}", mime_type="text/plain")
+def list_docs() -> list[str]:
+    return glob(f"{DOCS_PATH}/*.md")
+
+@mcp.resource("docs://documents/{doc_name}", mime_type="text/plain")
+def fetch_doc(doc_name: str) -> str:
+    """Fetch a document from the docs folder by name."""
+    filepath = f"{DOCS_PATH}/{doc_name}"
+    try:
+        with open(filepath, "r") as f:
+            return f.read()
+    except FileNotFoundError:
+        return f"Error: Document '{doc_name}' not found in docs folder"
 
 if __name__ == "__main__":
     mcp.run(transport='stdio')
