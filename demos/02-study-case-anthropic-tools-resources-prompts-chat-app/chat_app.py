@@ -4,7 +4,8 @@
 # dependencies = [
 #     "mcp[cli]==1.9.3",
 #     "openai",
-#     "python-dotenv"
+#     "python-dotenv",
+#     "prompt-toolkit"
 # ]
 # ///
 
@@ -18,22 +19,73 @@ capabilities with MCP server tools.
 import asyncio
 import json
 import os
+from pathlib import Path
 from typing import Optional, Dict, Any, List
 from mcp_client import MCPClient
 from mcp import types
 from openai import OpenAI
 from dotenv import load_dotenv
+from prompt_toolkit import PromptSession
+from prompt_toolkit.completion import Completer, Completion
+from prompt_toolkit.history import InMemoryHistory
+from prompt_toolkit.styles import Style
 
 # Load environment variables
 load_dotenv()
 
 
+class FileCompleter(Completer):
+    """Completer for @mentions of files in the ./docs folder."""
+
+    def __init__(self, docs_dir: str = "./docs"):
+        self.docs_dir = Path(docs_dir)
+        self.files = []
+        self._refresh_files()
+
+    def _refresh_files(self):
+        """Refresh the list of available files."""
+        if self.docs_dir.exists():
+            self.files = [f.name for f in self.docs_dir.iterdir() if f.is_file()]
+
+    def get_completions(self, document, complete_event):
+        text_before_cursor = document.text_before_cursor
+
+        # Check if we're completing an @mention
+        if "@" in text_before_cursor:
+            last_at_pos = text_before_cursor.rfind("@")
+            prefix = text_before_cursor[last_at_pos + 1:]
+
+            for filename in self.files:
+                if filename.lower().startswith(prefix.lower()):
+                    yield Completion(
+                        filename,
+                        start_position=-len(prefix),
+                        display=filename,
+                        display_meta="File",
+                    )
+
+
 class MCPChatApp:
-    def __init__(self, server_command: str, server_args: list[str]):
+    def __init__(self, server_command: str, server_args: list[str], docs_dir: str = "./docs"):
         self.client = MCPClient(command=server_command, args=server_args)
         self.tools = []
         self.openai_client = None
         self.messages = []
+        self.docs_dir = Path(docs_dir)
+
+        # Setup prompt toolkit
+        self.completer = FileCompleter(docs_dir)
+        self.history = InMemoryHistory()
+        self.session = PromptSession(
+            completer=self.completer,
+            history=self.history,
+            style=Style.from_dict({
+                "prompt": "#aaaaaa",
+                "completion-menu.completion": "bg:#222222 #ffffff",
+                "completion-menu.completion.current": "bg:#444444 #ffffff",
+            }),
+            complete_while_typing=True,
+        )
 
     def _convert_mcp_to_openai_tool(self, mcp_tool: types.Tool) -> Dict[str, Any]:
         """Convert MCP tool definition to OpenAI function format."""
@@ -61,6 +113,25 @@ class MCPChatApp:
             }
 
         return openai_tool
+
+    def _extract_mentioned_files(self, text: str) -> str:
+        """Extract @mentions from text and load file contents."""
+        mentions = [word[1:] for word in text.split() if word.startswith("@")]
+
+        if not mentions:
+            return ""
+
+        context_parts = []
+        for filename in mentions:
+            file_path = self.docs_dir / filename
+            if file_path.exists() and file_path.is_file():
+                try:
+                    content = file_path.read_text(encoding="utf-8")
+                    context_parts.append(f'<document id="{filename}">\n{content}\n</document>')
+                except Exception as e:
+                    print(f"Warning: Could not read {filename}: {e}")
+
+        return "\n".join(context_parts) if context_parts else ""
 
     async def start(self):
         """Initialize the MCP connection and OpenAI client, then start the chat loop."""
@@ -100,6 +171,8 @@ class MCPChatApp:
             print("  /tools          - List available tools")
             print("  /help           - Show this help message")
             print("  /exit or /quit  - Exit the application")
+            print("\nFeatures:")
+            print("  @filename       - Mention files from ./docs (auto-complete with @)")
             print("=" * 50 + "\n")
 
             await self.chat_loop(openai_tools)
@@ -113,7 +186,8 @@ class MCPChatApp:
 
         while True:
             try:
-                user_input = input("You> ").strip()
+                user_input = await self.session.prompt_async("You> ")
+                user_input = user_input.strip()
 
                 if not user_input:
                     continue
@@ -125,14 +199,37 @@ class MCPChatApp:
                     else:
                         break
 
+                # Extract any @mentioned files and add as context
+                file_context = self._extract_mentioned_files(user_input)
+
+                # Build the message with context if files were mentioned
+                if file_context:
+                    message_content = f"""The user has a question:
+<query>
+{user_input}
+</query>
+
+The following context may be useful in answering their question:
+<context>
+{file_context}
+</context>
+
+Note: The user's query contains references to documents like "@filename". The "@" is only
+included as a way of mentioning the document. If the document content is included in this prompt,
+you don't need to use an additional tool to read it.
+Answer the user's question directly and concisely. Don't refer to or mention the provided context
+in any way - just use it to inform your answer."""
+                else:
+                    message_content = user_input
+
                 # Add user message to conversation
-                self.messages.append({"role": "user", "content": user_input})
+                self.messages.append({"role": "user", "content": message_content})
 
                 # Get response from OpenAI with function calling
                 response = await self.get_openai_response(openai_tools)
 
                 if response:
-                    print(f"Assistant> {response}")
+                    print(f"\nAssistant> {response}\n")
 
             except (KeyboardInterrupt, EOFError):
                 print("\nGoodbye!")
@@ -228,7 +325,9 @@ class MCPChatApp:
             print("  /clear          - Clear conversation history")
             print("  /tools          - List available tools")
             print("  /help           - Show this help message")
-            print("  /exit or /quit  - Exit the application\n")
+            print("  /exit or /quit  - Exit the application")
+            print("\nFeatures:")
+            print("  @filename       - Mention files from ./docs (auto-complete with @)\n")
 
         elif cmd == "/clear":
             self.messages = [
