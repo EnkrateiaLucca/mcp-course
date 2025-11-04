@@ -1,0 +1,1 @@
+- IF the user asks you to search anki cards you can use this bash cmd: anki-search 'keyword-to-search' 
