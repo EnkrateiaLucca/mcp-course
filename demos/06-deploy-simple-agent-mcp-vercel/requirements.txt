@@ -1,0 +1,22 @@
+# OpenAI Agents SDK
+openai-agents>=0.1.0
+
+# Web framework
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+
+# MCP Support
+mcp>=1.0.0
+
+# HTTP client for fetch functionality
+httpx>=0.27.0
+beautifulsoup4>=4.12.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# Type hints and validation
+pydantic>=2.0.0
+
+# ASGI server for production
+gunicorn>=22.0.0

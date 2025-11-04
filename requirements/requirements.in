@@ -4,3 +4,4 @@ mcp[cli]
 openai-agents
 openai
 python-dotenv
+pandas

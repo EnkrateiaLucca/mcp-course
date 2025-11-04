@@ -94,6 +94,8 @@ mdurl==0.1.2
     # via markdown-it-py
 nest-asyncio==1.6.0
     # via ipykernel
+numpy==2.3.4
+    # via pandas
 openai==1.109.1
     # via
     #   -r ./requirements/requirements.in
@@ -102,6 +104,8 @@ openai-agents==0.3.3
     # via -r ./requirements/requirements.in
 packaging==25.0
     # via ipykernel
+pandas==2.3.3
+    # via -r ./requirements/requirements.in
 parso==0.8.4
     # via jedi
 pexpect==4.9.0
@@ -132,7 +136,9 @@ pygments==2.19.2
     #   ipython-pygments-lexers
     #   rich
 python-dateutil==2.9.0.post0
-    # via jupyter-client
+    # via
+    #   jupyter-client
+    #   pandas
 python-dotenv==1.1.1
     # via
     #   -r ./requirements/requirements.in
@@ -140,6 +146,8 @@ python-dotenv==1.1.1
     #   pydantic-settings
 python-multipart==0.0.20
     # via mcp
+pytz==2025.2
+    # via pandas
 pyzmq==27.0.1
     # via
     #   ipykernel
@@ -189,20 +197,18 @@ types-requests==2.32.4.20250913
     # via openai-agents
 typing-extensions==4.14.1
     # via
-    #   anyio
-    #   ipython
     #   openai
     #   openai-agents
     #   pydantic
     #   pydantic-core
-    #   referencing
-    #   starlette
     #   typer
     #   typing-inspection
 typing-inspection==0.4.1
     # via
     #   pydantic
     #   pydantic-settings
+tzdata==2025.2
+    # via pandas
 urllib3==2.5.0
     # via
     #   requests
