@@ -1,6 +1,7 @@
 """
 AI Agent API with OpenAI Agents SDK, Web Search, and MCP Fetch Tools
 A beginner-friendly demo showing how to deploy agents to Vercel
+Using official MCP Python SDK for better integration
 """
 
 import os
@@ -12,6 +13,10 @@ from pydantic import BaseModel
 import httpx
 from dotenv import load_dotenv
 
+# OpenAI Agents SDK imports
+from agents import Agent, Runner
+from agents.mcp import MCPServerStreamableHttp
+
 # Load environment variables
 load_dotenv()
 
@@ -19,7 +24,7 @@ load_dotenv()
 app = FastAPI(
     title="AI Agent API",
     description="OpenAI Agents SDK with Web Search and MCP Tools",
-    version="1.0.0"
+    version="2.0.0"
 )
 
 # Mount static files for the chat interface
@@ -49,85 +54,24 @@ class QueryResponse(BaseModel):
 
 
 # =======================
-# Custom Tools for Agent
+# MCP Server Configuration
 # =======================
 
-class FetchTool:
-    """
-    Custom tool for fetching web content
-    Works with our MCP Fetch Server or directly via HTTP
-    """
-
-    def __init__(self, fetch_server_url: Optional[str] = None):
-        self.fetch_server_url = fetch_server_url or os.getenv(
-            "MCP_FETCH_SERVER_URL",
-            "http://localhost:8001"
-        )
-
-    async def fetch_url(self, url: str, extract_text: bool = True) -> str:
-        """
-        Fetch content from a URL
-
-        Args:
-            url: The URL to fetch
-            extract_text: If True, extract clean text; if False, return HTML
-
-        Returns:
-            The fetched content as a string
-        """
-        try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                endpoint = f"{self.fetch_server_url}/tools/fetch_url"
-                response = await client.post(
-                    endpoint,
-                    json={"url": url, "extract_text": extract_text}
-                )
-                response.raise_for_status()
-                data = response.json()
-                return data.get("content", "")
-        except Exception as e:
-            return f"Error fetching URL: {str(e)}"
-
-    def get_tool_definition(self):
-        """Return OpenAI function definition for this tool"""
-        return {
-            "type": "function",
-            "function": {
-                "name": "fetch_url",
-                "description": "Fetch and extract text content from a web URL. Use this to read articles, documentation, or any web page content.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "url": {
-                            "type": "string",
-                            "description": "The URL to fetch content from"
-                        },
-                        "extract_text": {
-                            "type": "boolean",
-                            "description": "Whether to extract clean text (true) or return HTML (false)",
-                            "default": True
-                        }
-                    },
-                    "required": ["url"]
-                }
-            }
-        }
+def get_mcp_server_url() -> str:
+    """Get the MCP server URL from environment or use default"""
+    return os.getenv("MCP_FETCH_SERVER_URL", "http://localhost:8001/mcp")
 
 
 # =======================
 # Agent Configuration
 # =======================
 
-# Note: For a production app, you would use the OpenAI Agents SDK here
-# However, for Vercel deployment simplicity, we're using direct OpenAI API calls
-# The OpenAI Agents SDK would be structured similarly but with more abstractions
-
 async def run_agent(query: str, history: List[ChatMessage] = None) -> str:
     """
-    Run the AI agent with web search and fetch capabilities
+    Run the AI agent with MCP fetch capabilities using OpenAI Agents SDK.
 
-    This is a simplified version that demonstrates the core concepts.
-    In a full implementation, you would use the OpenAI Agents SDK.
+    This implementation uses the official OpenAI Agents SDK with proper
+    MCP server integration for web fetching capabilities.
 
     Args:
         query: User's question or request
@@ -141,131 +85,73 @@ async def run_agent(query: str, history: List[ChatMessage] = None) -> str:
     if not api_key:
         raise ValueError("OPENAI_API_KEY not found in environment variables")
 
-    # Initialize fetch tool
-    fetch_tool = FetchTool()
+    # Set OpenAI API key for the agents SDK
+    os.environ["OPENAI_API_KEY"] = api_key
 
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            # Build messages from history
-            messages = []
+        # Connect to MCP Fetch Server using OpenAI Agents SDK
+        mcp_server_url = get_mcp_server_url()
 
-            # System message with instructions
-            messages.append({
-                "role": "system",
-                "content": """You are a helpful AI assistant with access to:
-1. Web search capabilities - to find current information
-2. URL fetch tool - to read content from specific web pages
+        async with MCPServerStreamableHttp(
+            name="MCP Fetch Server",
+            params={
+                "url": mcp_server_url,
+                "timeout": 30,
+            },
+            cache_tools_list=True,
+            max_retry_attempts=3,
+        ) as mcp_server:
 
-When users ask questions:
-- Use web search for general queries and current events
-- Use fetch_url when you need to read specific web pages or documentation
-- Provide clear, concise, and helpful responses
-- Always cite your sources when using web search or fetched content"""
-            })
-
-            # Add conversation history
+            # Build context from conversation history
+            context_messages = []
             if history:
                 for msg in history[-5:]:  # Keep last 5 messages for context
-                    messages.append({
-                        "role": msg.role,
-                        "content": msg.content
-                    })
+                    context_messages.append(f"{msg.role}: {msg.content}")
 
-            # Add current query
-            messages.append({
-                "role": "user",
-                "content": query
-            })
+            context_str = "\n".join(context_messages) if context_messages else ""
 
-            # Define available tools
-            tools = [
-                fetch_tool.get_tool_definition(),
-                {
-                    "type": "function",
-                    "function": {
-                        "name": "web_search",
-                        "description": "Search the web for current information, news, and general knowledge",
-                        "parameters": {
-                            "type": "object",
-                            "properties": {
-                                "query": {
-                                    "type": "string",
-                                    "description": "The search query"
-                                }
-                            },
-                            "required": ["query"]
-                        }
-                    }
-                }
-            ]
+            # Create instructions with context
+            instructions = """You are a helpful AI assistant with access to web fetching tools via MCP.
 
-            # Call OpenAI API with function calling
-            response = await client.post(
-                "https://api.openai.com/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "model": "gpt-4o-mini",  # Using mini for cost efficiency
-                    "messages": messages,
-                    "tools": tools,
-                    "tool_choice": "auto"
-                }
+Your capabilities:
+- fetch_url: Fetch and extract clean text from web pages (perfect for reading articles, docs, etc.)
+- fetch_html: Fetch raw HTML content from web pages
+
+When users ask questions:
+- Use fetch_url to read content from specific web pages or documentation
+- Provide clear, concise, and helpful responses
+- Always cite your sources when using fetched content
+
+"""
+            if context_str:
+                instructions += f"\nConversation context:\n{context_str}\n"
+
+            # Create agent with MCP server tools
+            agent = Agent(
+                name="Web Research Assistant",
+                instructions=instructions,
+                model="gpt-4o-mini",  # Using mini for cost efficiency
+                mcp_servers=[mcp_server],
             )
-            response.raise_for_status()
-            result = response.json()
 
-            # Process response
-            message = result["choices"][0]["message"]
+            # Run the agent with the user query
+            result = await Runner.run(agent, query)
 
-            # If agent wants to use tools, execute them
-            if message.get("tool_calls"):
-                tool_messages = messages.copy()
-                tool_messages.append(message)
-
-                for tool_call in message["tool_calls"]:
-                    function_name = tool_call["function"]["name"]
-                    function_args = eval(tool_call["function"]["arguments"])
-
-                    # Execute the appropriate tool
-                    if function_name == "fetch_url":
-                        tool_response = await fetch_tool.fetch_url(**function_args)
-                    elif function_name == "web_search":
-                        # For demo purposes, simulate web search
-                        # In production, integrate with a real search API
-                        tool_response = f"[Web search simulation] Results for: {function_args.get('query')}\n\nNote: In production, integrate with a real search API like Brave, Tavily, or Bing."
-                    else:
-                        tool_response = "Unknown tool"
-
-                    # Add tool response to messages
-                    tool_messages.append({
-                        "role": "tool",
-                        "tool_call_id": tool_call["id"],
-                        "content": tool_response
-                    })
-
-                # Get final response after tool execution
-                final_response = await client.post(
-                    "https://api.openai.com/v1/chat/completions",
-                    headers={
-                        "Authorization": f"Bearer {api_key}",
-                        "Content-Type": "application/json"
-                    },
-                    json={
-                        "model": "gpt-4o-mini",
-                        "messages": tool_messages
-                    }
-                )
-                final_response.raise_for_status()
-                final_result = final_response.json()
-                return final_result["choices"][0]["message"]["content"]
-
-            # Return direct response if no tools were used
-            return message.get("content", "I'm sorry, I couldn't generate a response.")
+            # Extract the response text
+            if hasattr(result, 'content'):
+                return result.content
+            elif isinstance(result, str):
+                return result
+            else:
+                # Try to extract text from the result
+                return str(result)
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Agent error: {str(e)}")
+        # Fallback to basic response if MCP connection fails
+        error_msg = str(e)
+        if "Connection refused" in error_msg or "Failed to connect" in error_msg:
+            return f"Sorry, I'm unable to connect to the web fetching service right now. Please make sure the MCP server is running at {mcp_server_url}. Error: {error_msg}"
+        raise HTTPException(status_code=500, detail=f"Agent error: {error_msg}")
 
 
 # =======================
@@ -318,15 +204,19 @@ async def health_check():
 async def get_info():
     """Get information about the agent's capabilities"""
     return {
-        "name": "AI Research Assistant",
+        "name": "Web Research Assistant",
+        "description": "AI agent with MCP-powered web fetching capabilities",
         "capabilities": [
-            "Web search for current information",
-            "Fetch and read content from URLs",
+            "Fetch and read content from URLs (via MCP)",
+            "Extract clean text from web pages",
+            "Fetch raw HTML for analysis",
             "Answer questions with cited sources",
             "General conversation and assistance"
         ],
         "models": ["gpt-4o-mini"],
-        "tools": ["web_search", "fetch_url"]
+        "mcp_server": get_mcp_server_url(),
+        "tools_via_mcp": ["fetch_url", "fetch_html"],
+        "architecture": "OpenAI Agents SDK + Official MCP Python SDK"
     }
 
 

@@ -45,7 +45,10 @@ uv run obsidian_vault_server.py
 ```
 mcp-course/
 ├── README.md                           # This file - complete course guide
+├── CLAUDE.md                           # Project-specific instructions
 ├── Makefile                            # Automation scripts
+├── claude_desktop_config.json          # Claude Desktop MCP configuration
+├── how-mcp-works-with-claude.md       # MCP integration guide
 ├── requirements/                       # Python dependencies
 │   ├── requirements.txt                # All project dependencies
 │   └── requirements.in                 # Source requirements file
@@ -53,13 +56,15 @@ mcp-course/
 │   ├── presentation.html               # Main presentation
 │   └── mcp-talk.pdf                    # PDF version
 └── demos/                              # All demo materials organized by topic
-    ├── 00-into-agents/                 # Introduction to AI agents
+    ├── 00-intro-agents/                # Introduction to AI agents
     ├── 01-introduction-to-mcp/         # MCP basics and first server
-    ├── 02-study-case-anthropic-tools-resources-prompts-chat-app/  # Complete MCP chat app with tools
-    ├── 03-personal-usecase-image-generation/  # Image generation MCP server
-    ├── 04-openai-agents/               # OpenAI Agents SDK with MCP
+    ├── 02-study-case-anthropic-tools-resources-prompts-chat-app/  # Complete MCP chat app
+    ├── 03-openai-agents/               # OpenAI Agents SDK with MCP
+    ├── 04-query-tabular-data/          # CSV/tabular data querying with MCP
     ├── 05-deployment-example/          # Production deployment example
-    └── assets-resources/               # Images and supporting materials
+    ├── 06-deploy-simple-agent-mcp-vercel/  # Vercel deployment with OpenAI Agents SDK
+    ├── assets-resources/               # Images and supporting materials
+    └── live-demos/                     # Additional live demo materials
 ```
 
 ## 🔧 Alternative Setup (Traditional Approach)
@@ -89,7 +94,7 @@ python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install base dependencies
-pip install -r requirements.txt
+pip install -r requirements/requirements.txt
 ```
 
 ### 2. Set Environment Variables
@@ -111,7 +116,11 @@ Test your setup with a basic MCP server:
 
 ```bash
 cd demos/01-introduction-to-mcp
-pip install -r requirements.txt
+
+# With UV (recommended)
+uv run mcp_server.py
+
+# Or with traditional Python after installing base dependencies
 python mcp_server.py
 ```
 
@@ -145,7 +154,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 ```cmd
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/EnkrateiaLucca/mcp-course.git
 cd mcp-course
 
 # Create virtual environment
@@ -158,7 +167,7 @@ venv\Scripts\activate
 venv\Scripts\Activate.ps1
 
 # Install dependencies
-pip install -r requirements.txt
+pip install -r requirements/requirements.txt
 ```
 
 ### 4. Environment Variables (Windows)
@@ -284,7 +293,7 @@ python mcp_server.py
 
 **Running**:
 ```bash
-cd demos/00-into-agents
+cd demos/00-intro-agents
 
 # Run with Jupyter
 jupyter notebook intro-agents.ipynb
@@ -348,30 +357,7 @@ uv run chat_app.py
 
 ---
 
-### 03. Personal Use Case: Image Generation
-
-**What it covers**: Real-world MCP server for generating thumbnails using Replicate AI
-
-**Files**:
-- `replicate_thumbnail_mcp.py` - MCP server for image generation
-- `thumbnail_mcp.json` - Claude Desktop configuration
-
-**Running**:
-```bash
-cd demos/03-personal-usecase-image-generation
-
-# Configure Claude Desktop with the MCP server
-cat thumbnail_mcp.json
-# Add configuration to Claude Desktop settings
-
-# Server runs automatically when Claude Desktop starts
-```
-
-**Key Learning**: Creating specialized MCP servers for specific workflows and integrating with AI image generation services.
-
----
-
-### 04. OpenAI Agents
+### 03. OpenAI Agents
 
 **What it covers**: OpenAI Agents SDK integration with MCP for enhanced tool capabilities
 
@@ -380,12 +366,12 @@ cat thumbnail_mcp.json
 **Files**:
 - `intro-openai-agents-sdk.ipynb` - Interactive notebook tutorial
 - `openai_agent_filesystem_mcp.py` - Agent with MCP filesystem access
-- `openai_agent_custom_tools.py` - Custom tool integration examples
+- `openai_agent_custom.py` - Custom tool integration examples
 - `mcp_server_for_openai_agent.py` - Supporting MCP server
 
 **Running**:
 ```bash
-cd demos/04-openai-agents
+cd demos/03-openai-agents
 
 # Set API key
 export OPENAI_API_KEY="your-openai-api-key"
@@ -398,6 +384,39 @@ uv run openai_agent_filesystem_mcp.py
 ```
 
 **Key Learning**: Using OpenAI Agents SDK with MCP for structured data access and advanced tool usage.
+
+---
+
+### 04. Query Tabular Data
+
+**What it covers**: MCP server for querying CSV and tabular data, plus image generation with Replicate
+
+**Prerequisites**: Replicate API key (for thumbnail generation)
+
+**Files**:
+- `csv_query_mcp_server.py` - MCP server for CSV data queries
+- `openai_mcp_csv_demo.ipynb` - Interactive demo notebook
+- `replicate_thumbnail_mcp.py` - MCP server for image generation
+- `thumbnail_mcp.json` - Claude Desktop configuration
+- `sample_data.csv` - Sample CSV data for testing
+- `README_CSV_DEMO.md` - Detailed documentation
+
+**Running**:
+```bash
+cd demos/04-query-tabular-data
+
+# Run CSV query server
+uv run csv_query_mcp_server.py
+
+# Or explore the notebook
+jupyter notebook openai_mcp_csv_demo.ipynb
+
+# For image generation, configure Claude Desktop
+cat thumbnail_mcp.json
+# Add configuration to Claude Desktop settings
+```
+
+**Key Learning**: Creating specialized MCP servers for data analysis workflows and integrating with AI image generation services.
 
 ---
 
@@ -428,6 +447,46 @@ python agent.py # Interactive agent CLI
 ```
 
 **Key Learning**: Production-ready MCP deployment with proper API design, security considerations, and cloud hosting.
+
+---
+
+### 06. Deploy Simple Agent with MCP to Vercel
+
+**What it covers**: Beginner-friendly deployment of an AI agent with MCP fetch capabilities to Vercel using the official MCP Python SDK
+
+**Prerequisites**: OpenAI API key, Vercel account
+
+**Files**:
+- `main.py` - FastAPI app with OpenAI agent logic
+- `mcp_fetch_server.py` - MCP server for web fetching (built with FastMCP)
+- `static/index.html` - Beautiful chat interface
+- `requirements.txt` - Python dependencies
+- `vercel.json` - Vercel configuration
+- `deployment_agents_sdk_vercel.md` - Complete deployment guide
+- `README.md` - Project documentation
+
+**Running**:
+```bash
+cd demos/06-deploy-simple-agent-mcp-vercel
+
+# Set up environment
+cp .env.example .env
+# Add your OPENAI_API_KEY to .env
+
+# Terminal 1 - Start MCP Fetch Server
+python mcp_fetch_server.py
+
+# Terminal 2 - Start Main App
+python main.py
+
+# Open http://localhost:8000
+
+# Deploy to Vercel
+vercel env add OPENAI_API_KEY
+vercel --prod
+```
+
+**Key Learning**: Deploying AI agents with MCP to serverless platforms like Vercel, using the official MCP Python SDK with HTTP transport for proper protocol compliance.
 
 ## 🛠️ Automation with Makefile
 

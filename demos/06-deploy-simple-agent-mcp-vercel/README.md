@@ -1,6 +1,24 @@
-# AI Agent with OpenAI Agents SDK & MCP - Vercel Deployment Demo
+# AI Agent with OpenAI Agents SDK & Official MCP Python SDK - Vercel Deployment Demo
 
-A beginner-friendly demo showing how to build and deploy an AI agent with web search and MCP fetch capabilities to Vercel.
+A beginner-friendly demo showing how to build and deploy an AI agent with MCP fetch capabilities to Vercel, using the **official MCP Python SDK** for proper protocol integration.
+
+## ✨ What's New (v2.0)
+
+This demo has been **upgraded to use the official MCP Python SDK** (`mcp[cli]`) instead of a custom FastAPI implementation:
+
+**Before (v1.0):**
+- Custom FastAPI endpoints mimicking MCP protocol
+- Manual tool definitions and HTTP routing
+- Direct HTTP POST to `/tools/fetch_url` endpoint
+
+**Now (v2.0):**
+- ✅ Built with **FastMCP** (official MCP Python SDK)
+- ✅ Proper MCP protocol compliance with **HTTP/Streamable transport**
+- ✅ Seamless integration with **OpenAI Agents SDK** via `MCPServerStreamableHttp`
+- ✅ Standard MCP tool decorators (`@mcp.tool()`)
+- ✅ Better error handling and protocol adherence
+
+This provides better compatibility, follows MCP best practices, and makes the code more maintainable and extensible.
 
 ## 🚀 Quick Start
 
@@ -42,8 +60,9 @@ For complete setup, deployment, and troubleshooting instructions, see:
 ## 🎯 What This Demo Includes
 
 - ✅ **OpenAI Agents SDK** integration with GPT-4o-mini
-- ✅ **Web Search** capabilities (simulated, ready for real API integration)
-- ✅ **MCP Fetch Server** for web scraping and content extraction
+- ✅ **Official MCP Python SDK** (FastMCP) for building the MCP server
+- ✅ **MCP Fetch Server** with HTTP transport for web scraping and content extraction
+- ✅ **Proper MCP Integration** using `MCPServerStreamableHttp` from OpenAI Agents SDK
 - ✅ **Beautiful Chat Interface** with gradient design and typing indicators
 - ✅ **FastAPI Backend** optimized for Vercel serverless deployment
 - ✅ **Complete Deployment Guide** with step-by-step instructions
@@ -55,12 +74,25 @@ User → Chat Interface (HTML/JS)
   ↓
 FastAPI Backend (main.py)
   ↓
-OpenAI Agent with Tools:
-  ├── Web Search Tool
-  └── Fetch URL Tool
-      ↓
-      MCP Fetch Server (mcp_fetch_server.py)
+OpenAI Agents SDK
+  ↓
+MCPServerStreamableHttp (MCP Client)
+  ↓ HTTP/Streamable Transport
+  ↓
+MCP Fetch Server (mcp_fetch_server.py)
+  Built with FastMCP (Official MCP Python SDK)
+  ↓
+Tools:
+  ├── fetch_url (extract clean text)
+  └── fetch_html (raw HTML)
 ```
+
+**Key Architectural Components:**
+
+1. **MCP Server** (`mcp_fetch_server.py`): Built with the official `FastMCP` SDK, exposing tools via HTTP transport
+2. **MCP Client Integration**: Uses `MCPServerStreamableHttp` from OpenAI Agents SDK to connect to the MCP server
+3. **OpenAI Agent**: Orchestrates tool calling and conversation flow
+4. **FastAPI Backend**: Handles HTTP requests and manages the agent lifecycle
 
 ## 🌟 Features
 
@@ -81,7 +113,8 @@ OpenAI Agent with Tools:
 
 - **Backend:** Python 3.9+, FastAPI, Uvicorn
 - **AI:** OpenAI GPT-4o-mini, OpenAI Agents SDK
-- **Tools:** MCP (Model Context Protocol)
+- **MCP:** Official MCP Python SDK (`mcp[cli]>=1.9.0`) with FastMCP
+- **MCP Transport:** HTTP/Streamable (modern approach, replaces SSE)
 - **Frontend:** Vanilla HTML/CSS/JavaScript
 - **Deployment:** Vercel Serverless Functions
 - **HTTP Client:** httpx
@@ -106,10 +139,11 @@ OpenAI Agent with Tools:
 
 Try these once your agent is running:
 
-- "What are the latest AI developments?"
-- "Search for Python tutorials for beginners"
 - "Fetch content from https://example.com"
-- "Tell me about the Model Context Protocol"
+- "Read the documentation at https://modelcontextprotocol.io"
+- "What's on the OpenAI website?"
+- "Get the HTML from https://github.com"
+- "Tell me about the Model Context Protocol by reading https://modelcontextprotocol.io"
 - "What can you do?"
 
 ## 🚢 Deploy to Vercel

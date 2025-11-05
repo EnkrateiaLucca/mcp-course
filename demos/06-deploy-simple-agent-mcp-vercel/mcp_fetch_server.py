@@ -1,70 +1,43 @@
 """
-Simple HTTP MCP Fetch Server
-Provides web scraping tools via MCP protocol over HTTP/SSE
+MCP Fetch Server - Built with Official MCP Python SDK
+Provides web scraping tools via Model Context Protocol with HTTP transport
 """
 
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, HttpUrl
+from mcp.server.fastmcp import FastMCP
 from typing import Optional
 import httpx
 from bs4 import BeautifulSoup
 import os
 
-app = FastAPI(
-    title="MCP Fetch Server",
-    description="MCP server providing web fetch and scraping tools",
-    version="1.0.0"
+# Create MCP server instance
+mcp = FastMCP(
+    name="mcp-fetch-server",
+    version="2.0.0"
 )
 
 
-class FetchRequest(BaseModel):
-    """Request model for fetch operations"""
-    url: str
-    extract_text: bool = True
-
-
-class FetchResponse(BaseModel):
-    """Response model for fetch operations"""
-    content: str
-    status_code: int
-    url: str
-
-
-@app.get("/")
-async def root():
-    """Root endpoint - server info"""
-    return {
-        "name": "MCP Fetch Server",
-        "version": "1.0.0",
-        "protocol": "mcp-http",
-        "tools": [
-            {
-                "name": "fetch_url",
-                "description": "Fetch and extract text content from a URL"
-            },
-            {
-                "name": "fetch_html",
-                "description": "Fetch raw HTML content from a URL"
-            }
-        ]
-    }
-
-
-@app.post("/tools/fetch_url", response_model=FetchResponse)
-async def fetch_url(request: FetchRequest):
+@mcp.tool()
+async def fetch_url(url: str, extract_text: bool = True) -> str:
     """
-    Fetch a URL and extract clean text content
+    Fetch a URL and extract clean text content.
 
     This tool fetches web pages and extracts readable text,
     removing HTML tags and scripts. Perfect for getting
     article content, documentation, etc.
+
+    Args:
+        url: The URL to fetch content from
+        extract_text: If True, extract clean text; if False, return HTML
+
+    Returns:
+        The fetched content as a string
     """
     try:
         async with httpx.AsyncClient(follow_redirects=True, timeout=10.0) as client:
-            response = await client.get(request.url)
+            response = await client.get(url)
             response.raise_for_status()
 
-            if request.extract_text:
+            if extract_text:
                 # Parse HTML and extract text
                 soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -84,51 +57,58 @@ async def fetch_url(request: FetchRequest):
             else:
                 content = response.text[:5000]
 
-            return FetchResponse(
-                content=content,
-                status_code=response.status_code,
-                url=str(response.url)
-            )
+            return f"Status: {response.status_code}\nURL: {response.url}\n\nContent:\n{content}"
 
     except httpx.HTTPError as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch URL: {str(e)}")
+        return f"Error fetching URL: {str(e)}"
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
+        return f"Error processing request: {str(e)}"
 
 
-@app.post("/tools/fetch_html", response_model=FetchResponse)
-async def fetch_html(request: FetchRequest):
+@mcp.tool()
+async def fetch_html(url: str) -> str:
     """
-    Fetch raw HTML content from a URL
+    Fetch raw HTML content from a URL.
 
     This tool fetches the raw HTML source of a web page.
     Useful when you need to analyze page structure or
     extract specific HTML elements.
+
+    Args:
+        url: The URL to fetch HTML from
+
+    Returns:
+        The raw HTML content (limited to 5000 chars)
     """
     try:
         async with httpx.AsyncClient(follow_redirects=True, timeout=10.0) as client:
-            response = await client.get(request.url)
+            response = await client.get(url)
             response.raise_for_status()
 
-            return FetchResponse(
-                content=response.text[:5000],  # Limit to 5000 chars
-                status_code=response.status_code,
-                url=str(response.url)
-            )
+            content = response.text[:5000]
+            return f"Status: {response.status_code}\nURL: {response.url}\n\nHTML:\n{content}"
 
     except httpx.HTTPError as e:
-        raise HTTPException(status_code=500, detail=f"Failed to fetch URL: {str(e)}")
+        return f"Error fetching URL: {str(e)}"
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
+        return f"Error processing request: {str(e)}"
 
 
-@app.get("/health")
-async def health_check():
-    """Health check endpoint"""
-    return {"status": "healthy", "service": "mcp-fetch-server"}
+# For production deployment with Vercel
+# Create the ASGI app for HTTP transport
+def create_app():
+    """Create ASGI application for production deployment"""
+    return mcp.http_app()
+
+
+# Export the app for Vercel
+app = create_app()
 
 
 if __name__ == "__main__":
-    import uvicorn
+    # For local development, run with HTTP transport
     port = int(os.getenv("PORT", "8001"))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    print(f"🚀 Starting MCP Fetch Server on http://localhost:{port}/mcp")
+    print(f"📡 Protocol: Model Context Protocol (HTTP Transport)")
+    print(f"🔧 Tools available: fetch_url, fetch_html")
+    mcp.run(transport="http", host="0.0.0.0", port=port)
