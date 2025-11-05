@@ -3,7 +3,7 @@
 # requires-python = ">=3.9"
 # dependencies = [
 #     "openai-agents",
-#     "mcp>=1.0.0"
+#     "mcp"
 # ]
 # ///
 
