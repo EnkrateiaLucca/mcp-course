@@ -242,7 +242,7 @@ in any way - just use it to inform your answer."""
         try:
             # Call OpenAI API with tools
             response = self.openai_client.chat.completions.create(
-                model=os.getenv("OPENAI_MODEL", "gpt-4-turbo-preview"),
+                model=os.getenv("OPENAI_MODEL", "gpt-5-mini"),
                 messages=self.messages,
                 tools=openai_tools if openai_tools else None,
                 tool_choice="auto" if openai_tools else None

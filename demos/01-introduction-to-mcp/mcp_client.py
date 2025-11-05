@@ -72,13 +72,14 @@ class SimpleMCPClient:
         result = await self.session.get_prompt(prompt_name, args)
         return result
     
+    # The LLM is going to decide the tool and arguments to call
     async def call_tool(self, tool_name: str, arguments: dict) -> types.CallToolResult | None:
         """Call a tool on the server"""
         if not self.session:
             raise RuntimeError("Not connected to server")
         
         print(f"Calling tool: {tool_name} with args: {arguments}")
-        result = await self.session.call_tool(tool_name, arguments)
+        result = await self.session.call_tool(tool_name, arguments) # very similar to function calling in LLMs!
         return result
     
     async def read_resource(self, uri: str) -> Any:
@@ -89,6 +90,7 @@ class SimpleMCPClient:
             if resource.mimeType == "text/plain":
                 return resource.text
     
+    # SImulation of the Server/Host application!
     async def interactive_mode(self):
         """Simple interactive loop to test the tools"""
         print("\n🤖 Interactive Mode - Type 'help' for commands or 'quit' to exit")

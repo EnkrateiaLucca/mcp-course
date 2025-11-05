@@ -11,6 +11,7 @@ import logging
 # Can you read this comment?
 mcp = FastMCP("basic-demo")
 
+# automatically generating the schemas! Which are helpful for the LLM to understand the inputs and outputs of the tools.
 @mcp.tool()
 def get_current_time() -> str:
     return datetime.now().isoformat()

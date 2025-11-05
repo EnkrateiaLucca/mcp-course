@@ -46,6 +46,7 @@ class MCPClient:
     ) -> types.CallToolResult | None:
         return await self.session().call_tool(tool_name, tool_input)
     
+    # boiler plate code for handling cleanup!
     async def cleanup(self):
         await self._exit_stack.aclose()
         self._session = None

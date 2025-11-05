@@ -29,7 +29,10 @@ mcp = FastMCP("csv-query-server")
 CSV_FILE_PATH = os.path.join(os.path.dirname(__file__), "sample_data.csv")
 
 
-@mcp.tool()
+@mcp.tool(
+    name="get_all_products",
+    description="Get all products from the CSV file"
+)
 def get_all_products() -> str:
     """
     Get all products from the CSV file.
@@ -41,7 +44,10 @@ def get_all_products() -> str:
     return df.to_string(index=False)
 
 
-@mcp.tool()
+@mcp.tool(
+    name="search_products_by_category",
+    description="Search for products by category"
+)
 def search_products_by_category(category: str) -> str:
     """
     Search for products by category.
@@ -61,7 +67,10 @@ def search_products_by_category(category: str) -> str:
     return filtered_df.to_string(index=False)
 
 
-@mcp.tool()
+@mcp.tool(
+    name="search_products_by_price_range",
+    description="Search for products by price range"
+)
 def search_products_by_price_range(min_price: float, max_price: float) -> str:
     """
     Search for products within a price range.
@@ -82,7 +91,10 @@ def search_products_by_price_range(min_price: float, max_price: float) -> str:
     return filtered_df.to_string(index=False)
 
 
-@mcp.tool()
+@mcp.tool(
+    name="get_product_by_name",
+    description="Get details of a specific product by name"
+)
 def get_product_by_name(product_name: str) -> str:
     """
     Get details of a specific product by name.
@@ -102,7 +114,10 @@ def get_product_by_name(product_name: str) -> str:
     return filtered_df.to_string(index=False)
 
 
-@mcp.tool()
+@mcp.tool(
+    name="get_top_rated_products",
+    description="Get the top-rated products"
+)
 def get_top_rated_products(limit: int = 5) -> str:
     """
     Get the top-rated products.
@@ -118,7 +133,10 @@ def get_top_rated_products(limit: int = 5) -> str:
     return top_products.to_string(index=False)
 
 
-@mcp.tool()
+@mcp.tool(
+    name="get_products_in_stock",
+    description="Get products that have at least the specified stock level"
+)
 def get_products_in_stock(min_stock: int = 1) -> str:
     """
     Get products that have at least the specified stock level.
@@ -134,7 +152,10 @@ def get_products_in_stock(min_stock: int = 1) -> str:
     return in_stock_df.to_string(index=False)
 
 
-@mcp.tool()
+@mcp.tool(
+    name="get_category_statistics",
+    description="Get statistics about products grouped by category"
+)
 def get_category_statistics() -> str:
     """
     Get statistics about products grouped by category.
