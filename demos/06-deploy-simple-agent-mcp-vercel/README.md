@@ -1,6 +1,11 @@
-# AI Agent with OpenAI Agents SDK & Official MCP Python SDK - Vercel Deployment Demo
+# AI Agent Deployment Examples - Vercel with MCP Integration
 
-A beginner-friendly demo showing how to build and deploy an AI agent with MCP fetch capabilities to Vercel, using the **official MCP Python SDK** for proper protocol integration.
+Two comprehensive examples showing how to build and deploy AI agents with MCP capabilities to Vercel:
+
+1. **OpenAI Agents SDK** (Stateless) - `main.py`
+2. **Claude Agents SDK** (Sandboxed) - `main_claude.py`
+
+Both use the **official MCP Python SDK** for proper protocol integration.
 
 ## ✨ What's New (v2.0)
 
@@ -20,7 +25,76 @@ This demo has been **upgraded to use the official MCP Python SDK** (`mcp[cli]`) 
 
 This provides better compatibility, follows MCP best practices, and makes the code more maintainable and extensible.
 
-## 🚀 Quick Start
+## 🔀 Choose Your Implementation
+
+### Option 1: OpenAI Agents SDK (Recommended for Beginners)
+
+**Best for:** Simple chat applications, stateless interactions, quick deployments
+
+**Architecture:**
+- ✅ Stateless request/response model
+- ✅ Simple serverless deployment
+- ✅ No sandbox management needed
+- ✅ Lower operational complexity
+
+**Files:**
+- `main.py` - OpenAI Agents SDK implementation
+- `requirements.txt` - Dependencies
+- `deployment_agents_sdk_vercel.md` - Full deployment guide
+
+**Quick Start:**
+```bash
+pip install -r requirements.txt
+python main.py
+```
+
+📖 **[Complete OpenAI Deployment Guide →](./deployment_agents_sdk_vercel.md)**
+
+---
+
+### Option 2: Claude Agents SDK (Recommended for Production)
+
+**Best for:** Complex agents, long-running tasks, advanced tool use, production deployments
+
+**Architecture:**
+- ✅ Long-running agent processes
+- ✅ Sandboxed execution environment
+- ✅ File system and command execution
+- ✅ Production-grade security
+
+**Files:**
+- `main_claude.py` - Claude Agents SDK with sandbox management
+- `claude_agent_sandbox.py` - Agent code that runs in sandbox
+- `requirements_claude.txt` - Dependencies
+- `deployment_claude_agents_sdk_vercel.md` - Comprehensive deployment guide
+
+**Quick Start:**
+```bash
+pip install -r requirements_claude.txt
+python main_claude.py
+```
+
+📖 **[Complete Claude Agents SDK Deployment Guide →](./deployment_claude_agents_sdk_vercel.md)**
+
+---
+
+### 🆚 Quick Comparison
+
+| Feature | OpenAI Agents SDK | Claude Agents SDK |
+|---------|-------------------|-------------------|
+| **Deployment Model** | Stateless serverless | Sandboxed containers |
+| **Setup Complexity** | Low ⭐ | Medium ⭐⭐⭐ |
+| **Security** | API-level | Container isolation |
+| **File Operations** | Limited | Full access (sandboxed) |
+| **Command Execution** | No | Yes (in sandbox) |
+| **Session State** | Stateless | Persistent (per container) |
+| **Cost** | API calls only | API + sandbox compute |
+| **Best For** | Chat apps | Complex agents |
+| **Production Ready** | Yes | Yes (with sandboxing) |
+
+---
+
+## 🚀 Quick Start (OpenAI)
 
 ### 1. Install Dependencies
 

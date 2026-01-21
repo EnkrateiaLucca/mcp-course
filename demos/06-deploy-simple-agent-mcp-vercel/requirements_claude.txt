@@ -1,0 +1,29 @@
+# Claude Agent SDK Deployment Requirements
+# For Vercel Sandbox deployment
+
+# Core Framework
+fastapi==0.115.12
+uvicorn[standard]==0.34.0
+python-dotenv==1.0.1
+
+# Claude SDK
+anthropic==0.43.1
+
+# HTTP Client
+httpx==0.28.1
+
+# Data Validation
+pydantic==2.10.6
+
+# Optional: For HTML parsing in MCP tools
+beautifulsoup4==4.12.3
+lxml==5.3.0
+
+# Optional: For advanced MCP integration
+# mcp[cli]>=1.9.0
+
+# Note: Vercel Sandbox SDK is TypeScript-only
+# For Python sandbox management, consider:
+# - Modal Python SDK: modal
+# - E2B Python SDK: e2b
+# - Or use a Node.js microservice with @vercel/sandbox
