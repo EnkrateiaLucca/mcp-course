@@ -2,8 +2,12 @@
 #    uv pip compile ./requirements/requirements.in -o ./requirements/requirements.txt
 annotated-types==0.7.0
     # via pydantic
+anthropic==0.76.0
+    # via -r ./requirements/requirements.in
 anyio==4.10.0
     # via
+    #   anthropic
+    #   claude-agent-sdk
     #   httpx
     #   mcp
     #   openai
@@ -24,6 +28,8 @@ certifi==2025.8.3
     #   requests
 charset-normalizer==3.4.3
     # via requests
+claude-agent-sdk==0.1.20
+    # via -r ./requirements/requirements.in
 click==8.2.1
     # via
     #   typer
@@ -37,7 +43,11 @@ debugpy==1.8.16
 decorator==5.2.1
     # via ipython
 distro==1.9.0
-    # via openai
+    # via
+    #   anthropic
+    #   openai
+docstring-parser==0.17.0
+    # via anthropic
 executing==2.2.0
     # via stack-data
 griffe==1.14.0
@@ -51,6 +61,7 @@ httpcore==1.0.9
 httpx==0.28.1
     # via
     #   -r ./requirements/requirements.in
+    #   anthropic
     #   mcp
     #   openai
 httpx-sse==0.4.1
@@ -69,7 +80,9 @@ ipython-pygments-lexers==1.1.1
 jedi==0.19.2
     # via ipython
 jiter==0.11.0
-    # via openai
+    # via
+    #   anthropic
+    #   openai
 jsonschema==4.25.0
     # via mcp
 jsonschema-specifications==2025.4.1
@@ -89,6 +102,7 @@ matplotlib-inline==0.1.7
 mcp==1.12.4
     # via
     #   -r ./requirements/requirements.in
+    #   claude-agent-sdk
     #   openai-agents
 mdurl==0.1.2
     # via markdown-it-py
@@ -97,9 +111,7 @@ nest-asyncio==1.6.0
 numpy==2.3.4
     # via pandas
 openai==1.109.1
-    # via
-    #   -r ./requirements/requirements.in
-    #   openai-agents
+    # via openai-agents
 openai-agents==0.3.3
     # via -r ./requirements/requirements.in
 packaging==25.0
@@ -122,6 +134,7 @@ pure-eval==0.2.3
     # via stack-data
 pydantic==2.11.7
     # via
+    #   anthropic
     #   mcp
     #   openai
     #   openai-agents
@@ -170,6 +183,7 @@ six==1.17.0
     # via python-dateutil
 sniffio==1.3.1
     # via
+    #   anthropic
     #   anyio
     #   openai
 sse-starlette==3.0.2
@@ -197,10 +211,15 @@ types-requests==2.32.4.20250913
     # via openai-agents
 typing-extensions==4.14.1
     # via
+    #   anthropic
+    #   anyio
+    #   ipython
     #   openai
     #   openai-agents
     #   pydantic
     #   pydantic-core
+    #   referencing
+    #   starlette
     #   typer
     #   typing-inspection
 typing-inspection==0.4.1

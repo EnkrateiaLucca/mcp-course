@@ -2,6 +2,7 @@ ipykernel
 httpx
 mcp[cli]
 openai-agents
-openai
+anthropic
 python-dotenv
 pandas
+claude-agent-sdk
