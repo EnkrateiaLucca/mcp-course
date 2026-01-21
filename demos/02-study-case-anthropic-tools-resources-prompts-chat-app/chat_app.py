@@ -3,7 +3,7 @@
 # requires-python = ">=3.9"
 # dependencies = [
 #     "mcp[cli]==1.9.3",
-#     "openai",
+#     "anthropic",
 #     "python-dotenv",
 #     "prompt-toolkit"
 # ]
@@ -11,19 +11,18 @@
 
 #!/usr/bin/env python3
 """
-MCP Chat Application with OpenAI Function Calling
-Demonstrates Model Context Protocol by connecting OpenAI's function calling
+MCP Chat Application with Claude Tool Use
+Demonstrates Model Context Protocol by connecting Claude's tool use
 capabilities with MCP server tools.
 """
 
 import asyncio
-import json
 import os
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 from mcp_client import MCPClient
 from mcp import types
-from openai import OpenAI
+from anthropic import Anthropic
 from dotenv import load_dotenv
 from prompt_toolkit import PromptSession
 from prompt_toolkit.completion import Completer, Completion
@@ -69,7 +68,7 @@ class MCPChatApp:
     def __init__(self, server_command: str, server_args: list[str], docs_dir: str = "./docs"):
         self.client = MCPClient(command=server_command, args=server_args)
         self.tools = []
-        self.openai_client = None
+        self.anthropic_client = None
         self.messages = []
         self.docs_dir = Path(docs_dir)
 
@@ -87,32 +86,28 @@ class MCPChatApp:
             complete_while_typing=True,
         )
 
-    def _convert_mcp_to_openai_tool(self, mcp_tool: types.Tool) -> Dict[str, Any]:
-        """Convert MCP tool definition to OpenAI function format."""
-        openai_tool = {
-            "type": "function",
-            "function": {
-                "name": mcp_tool.name,
-                "description": mcp_tool.description or f"Execute {mcp_tool.name}",
-            }
+    def _convert_mcp_to_claude_tool(self, mcp_tool: types.Tool) -> Dict[str, Any]:
+        """Convert MCP tool definition to Claude tool format."""
+        claude_tool = {
+            "name": mcp_tool.name,
+            "description": mcp_tool.description or f"Execute {mcp_tool.name}",
         }
 
         # Convert input schema if present
         if mcp_tool.inputSchema:
-            # OpenAI expects parameters in a specific format
-            parameters = {
+            # Claude expects input_schema in JSON Schema format
+            claude_tool["input_schema"] = {
                 "type": "object",
                 "properties": mcp_tool.inputSchema.get("properties", {}),
                 "required": mcp_tool.inputSchema.get("required", [])
             }
-            openai_tool["function"]["parameters"] = parameters
         else:
-            openai_tool["function"]["parameters"] = {
+            claude_tool["input_schema"] = {
                 "type": "object",
                 "properties": {}
             }
 
-        return openai_tool
+        return claude_tool
 
     def _extract_mentioned_files(self, text: str) -> str:
         """Extract @mentions from text and load file contents."""
@@ -134,18 +129,18 @@ class MCPChatApp:
         return "\n".join(context_parts) if context_parts else ""
 
     async def start(self):
-        """Initialize the MCP connection and OpenAI client, then start the chat loop."""
-        print("MCP Chat Application with OpenAI")
+        """Initialize the MCP connection and Claude client, then start the chat loop."""
+        print("MCP Chat Application with Claude")
         print("=" * 50)
 
-        # Initialize OpenAI client
-        api_key = os.getenv("OPENAI_API_KEY")
+        # Initialize Claude client
+        api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
-            print("Error: OPENAI_API_KEY not found in environment variables")
-            print("Please add OPENAI_API_KEY to your .env file")
+            print("Error: ANTHROPIC_API_KEY not found in environment variables")
+            print("Please add ANTHROPIC_API_KEY to your .env file")
             return
 
-        self.openai_client = OpenAI(api_key=api_key)
+        self.anthropic_client = Anthropic(api_key=api_key)
 
         print("Connecting to MCP server...")
 
@@ -153,8 +148,8 @@ class MCPChatApp:
             # Get available tools from MCP server
             self.tools = await client.list_tools()
 
-            # Convert MCP tools to OpenAI function format
-            openai_tools = [self._convert_mcp_to_openai_tool(tool) for tool in self.tools]
+            # Convert MCP tools to Claude tool format
+            claude_tools = [self._convert_mcp_to_claude_tool(tool) for tool in self.tools]
 
             print(f"\nConnected! Available tools:")
             for tool in self.tools:
@@ -175,14 +170,13 @@ class MCPChatApp:
             print("  @filename       - Mention files from ./docs (auto-complete with @)")
             print("=" * 50 + "\n")
 
-            await self.chat_loop(openai_tools)
+            await self.chat_loop(claude_tools)
 
-    async def chat_loop(self, openai_tools: List[Dict[str, Any]]):
-        """Main chat interaction loop with OpenAI function calling."""
-        # Initialize with a system message
-        self.messages = [
-            {"role": "system", "content": "You are a helpful assistant with access to tools. Use them when appropriate to help the user."}
-        ]
+    async def chat_loop(self, claude_tools: List[Dict[str, Any]]):
+        """Main chat interaction loop with Claude tool use."""
+        # Initialize conversation (Claude uses system parameter separately, not in messages)
+        self.messages = []
+        self.system_prompt = "You are a helpful assistant with access to tools. Use them when appropriate to help the user."
 
         while True:
             try:
@@ -225,8 +219,8 @@ in any way - just use it to inform your answer."""
                 # Add user message to conversation
                 self.messages.append({"role": "user", "content": message_content})
 
-                # Get response from OpenAI with function calling
-                response = await self.get_openai_response(openai_tools)
+                # Get response from Claude with tool use
+                response = await self.get_claude_response(claude_tools)
 
                 if response:
                     print(f"\nAssistant> {response}\n")
@@ -237,53 +231,74 @@ in any way - just use it to inform your answer."""
             except Exception as e:
                 print(f"Error: {e}")
 
-    async def get_openai_response(self, openai_tools: List[Dict[str, Any]]) -> Optional[str]:
-        """Get response from OpenAI, handling function calls."""
+    async def get_claude_response(self, claude_tools: List[Dict[str, Any]]) -> Optional[str]:
+        """Get response from Claude, handling tool use."""
         try:
-            # Call OpenAI API with tools
-            response = self.openai_client.chat.completions.create(
-                model=os.getenv("OPENAI_MODEL", "gpt-5-mini"),
+            # Call Claude API with tools
+            response = self.anthropic_client.messages.create(
+                model=os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929"),
+                max_tokens=4096,
+                system=self.system_prompt,
                 messages=self.messages,
-                tools=openai_tools if openai_tools else None,
-                tool_choice="auto" if openai_tools else None
+                tools=claude_tools if claude_tools else None,
             )
 
-            response_message = response.choices[0].message
+            # Process the response
+            assistant_message = {
+                "role": "assistant",
+                "content": response.content
+            }
+            self.messages.append(assistant_message)
 
-            # Add assistant's response to conversation
-            self.messages.append(response_message.model_dump())
+            # Check if Claude wants to use tools
+            tool_use_blocks = [block for block in response.content if block.type == "tool_use"]
 
-            # Check if the model wants to call functions
-            if response_message.tool_calls:
-                # Execute all function calls
-                for tool_call in response_message.tool_calls:
-                    function_name = tool_call.function.name
-                    function_args = json.loads(tool_call.function.arguments)
+            if tool_use_blocks:
+                # Execute all tool calls
+                tool_results = []
+                for tool_use in tool_use_blocks:
+                    tool_name = tool_use.name
+                    tool_input = tool_use.input
 
-                    print(f"[Calling tool: {function_name} with args: {function_args}]")
+                    print(f"[Calling tool: {tool_name} with args: {tool_input}]")
 
                     # Execute the tool through MCP
-                    result = await self.execute_mcp_tool(function_name, function_args)
+                    result = await self.execute_mcp_tool(tool_name, tool_input)
 
-                    # Add the function result to messages
-                    self.messages.append({
-                        "role": "tool",
-                        "content": str(result),
-                        "tool_call_id": tool_call.id
+                    # Collect tool results
+                    tool_results.append({
+                        "type": "tool_result",
+                        "tool_use_id": tool_use.id,
+                        "content": str(result)
                     })
 
-                # Get the final response from OpenAI after tool execution
-                final_response = self.openai_client.chat.completions.create(
-                    model=os.getenv("OPENAI_MODEL", "gpt-4-turbo-preview"),
+                # Add tool results as a user message
+                self.messages.append({
+                    "role": "user",
+                    "content": tool_results
+                })
+
+                # Get the final response from Claude after tool execution
+                final_response = self.anthropic_client.messages.create(
+                    model=os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5-20250929"),
+                    max_tokens=4096,
+                    system=self.system_prompt,
                     messages=self.messages
                 )
 
-                final_message = final_response.choices[0].message
-                self.messages.append(final_message.model_dump())
-                return final_message.content
+                final_message = {
+                    "role": "assistant",
+                    "content": final_response.content
+                }
+                self.messages.append(final_message)
+
+                # Extract text content from response
+                text_content = [block.text for block in final_response.content if hasattr(block, "text")]
+                return "\n".join(text_content) if text_content else None
             else:
-                # No function calls, return the response
-                return response_message.content
+                # No tool calls, return the response
+                text_content = [block.text for block in response.content if hasattr(block, "text")]
+                return "\n".join(text_content) if text_content else None
 
         except Exception as e:
             return f"Error getting response: {e}"
@@ -330,9 +345,7 @@ in any way - just use it to inform your answer."""
             print("  @filename       - Mention files from ./docs (auto-complete with @)\n")
 
         elif cmd == "/clear":
-            self.messages = [
-                {"role": "system", "content": "You are a helpful assistant with access to tools. Use them when appropriate to help the user."}
-            ]
+            self.messages = []
             print("Conversation history cleared.\n")
 
         elif cmd == "/tools":

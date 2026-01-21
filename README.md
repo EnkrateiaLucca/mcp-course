@@ -1,95 +1,75 @@
 # Building AI Agents with MCP: Complete Course Materials
 
-This repository contains all the demo code, examples, and hands-on materials for the O'Reilly Live Training course "Building AI Agents with MCP: The HTTP Moment of AI?"
+A comprehensive 2-day bootcamp on the **Model Context Protocol (MCP)** - the standardized way to connect AI agents to external tools, data sources, and systems.
 
-## 🎯 Course Overview
+> 🎓 **O'Reilly Live Training**: "MCP Bootcamp: Building AI Agents with Model Context Protocol"
 
-The Model Context Protocol (MCP) is revolutionizing how AI applications connect to external tools and data sources. This course provides comprehensive, hands-on experience with MCP through practical demos and real-world examples.
+## 🎯 What is MCP?
+
+The **Model Context Protocol (MCP)** is an open standard that provides a universal way to connect AI applications to data sources and tools - like a "USB-C port for AI." Instead of building custom integrations for each tool, MCP provides:
+
+- **Standardized Communication**: A single protocol for all AI-tool interactions
+- **Tool Discovery**: Agents can discover and understand available capabilities dynamically
+- **Resource Access**: Structured access to data sources (files, databases, APIs)
+- **Prompt Templates**: Reusable, versioned prompts that agents can leverage
+- **Cross-Platform**: Works with any AI model (Claude, GPT, local models, etc.)
+
+**Why It Matters**: MCP enables a future where AI agents can seamlessly integrate with any tool or data source, just as USB-C standardized hardware connectivity.
+
+## 📚 Course Overview
+
+This hands-on course takes you from MCP fundamentals to production deployment through 7 comprehensive demos:
 
 ### What You'll Learn
 
-- **AI Agent Fundamentals**: Understanding agent architecture and decision-making patterns
-- **MCP Core Concepts**: Architecture, capabilities, and protocol fundamentals
-- **MCP Capabilities**: Tools, Resources, Prompts, and practical implementations
-- **Agent Development**: Building agents with OpenAI SDK and MCP integration
-- **Production Deployment**: Cloud hosting, API design, and security best practices
-- **Real-world Applications**: Chat apps, image generation, and custom workflows
-
-## 🚀 Quick Start with UV
-
-### Using UV Package Manager (Recommended)
-
-Most demo scripts in this course include UV inline metadata and can be run directly with [UV](https://github.com/astral-sh/uv), a fast Python package manager:
-
-```bash
-# Install UV (if not already installed)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Run any demo script directly - UV handles dependencies automatically
-uv run demos/01-introduction-to-mcp/mcp_server.py
-uv run demos/03-tools-resources-prompts-sampling/comprehensive_mcp_server.py
-
-# Or navigate to a demo directory and run
-cd demos/02-first-mcp-server
-uv run obsidian_vault_server.py
-```
-
-**Benefits of using UV:**
-- No need to manage virtual environments manually
-- Dependencies are installed automatically from inline script metadata
-- Faster dependency resolution and installation
-- Consistent environment across all demos
-
-## 📁 Repository Structure
-
-```
-mcp-course/
-├── README.md                           # This file - complete course guide
-├── CLAUDE.md                           # Project-specific instructions
-├── Makefile                            # Automation scripts
-├── claude_desktop_config.json          # Claude Desktop MCP configuration
-├── how-mcp-works-with-claude.md       # MCP integration guide
-├── requirements/                       # Python dependencies
-│   ├── requirements.txt                # All project dependencies
-│   └── requirements.in                 # Source requirements file
-├── presentation/                       # Course presentation materials
-│   ├── presentation.html               # Main presentation
-│   └── mcp-talk.pdf                    # PDF version
-└── demos/                              # All demo materials organized by topic
-    ├── 00-intro-agents/                # Introduction to AI agents
-    ├── 01-introduction-to-mcp/         # MCP basics and first server
-    ├── 02-study-case-anthropic-tools-resources-prompts-chat-app/  # Complete MCP chat app
-    ├── 03-openai-agents/               # OpenAI Agents SDK with MCP
-    ├── 04-query-tabular-data/          # CSV/tabular data querying with MCP
-    ├── 05-deployment-example/          # Production deployment example
-    ├── 06-deploy-simple-agent-mcp-vercel/  # Vercel deployment with OpenAI Agents SDK
-    ├── assets-resources/               # Images and supporting materials
-    └── live-demos/                     # Additional live demo materials
-```
-
-## 🔧 Alternative Setup (Traditional Approach)
+- ✅ **MCP Fundamentals**: Architecture, protocol concepts, and tool/resource patterns
+- ✅ **Building MCP Servers**: Using FastMCP to create custom tool providers
+- ✅ **Claude Agents SDK**: Building production-grade agents with in-process MCP
+- ✅ **OpenAI Integration**: Bridging MCP with OpenAI's function calling
+- ✅ **Real-World Applications**: Chat apps, data queries, automation, and deployment
+- ✅ **Security & Permissions**: Tool authorization, input validation, and best practices
+- ✅ **Production Deployment**: Serverless deployment to Vercel with both SDKs
 
 ### Prerequisites
 
-- **Python 3.10+** (Required for all demos)
-- **Node.js 18+** (Required for some MCP servers)
-- **Git** (For repository operations)
+- **Python 3.10+** (Python 3.12+ recommended for latest features)
+- **Basic async/await** understanding
+- **API keys**:
+  - Anthropic API key (for Claude demos) - [Get one here](https://console.anthropic.com/)
+  - Replicate API key (OPTIONAL - for image generation demo) - [Get one here](https://replicate.com/)
 
-### API Keys Needed
+## 🚀 Quick Start
 
-Depending on which demos you want to run:
+### Using UV Package Manager (Recommended)
 
-- [**OpenAI API Key**](https://platform.openai.com/docs/quickstart?api-mode=chat) (for OpenAI agent demos and chat app)
-- [**Replicate API Key**](https://replicate.com/) (for image generation demo)
-
-### 1. Clone and Setup
+[UV](https://github.com/astral-sh/uv) is a fast Python package manager that handles dependencies automatically:
 
 ```bash
-# Clone the repository
+# Install UV
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Run any demo directly (UV handles dependencies automatically)
+cd demos/01-introduction-to-mcp
+uv run mcp_server.py
+
+# Or test with MCP Inspector
+mcp dev mcp_server.py
+```
+
+**Benefits of UV:**
+- ✅ No virtual environment management
+- ✅ Automatic dependency resolution from script metadata
+- ✅ Faster than pip
+- ✅ Consistent across all demos
+
+### Traditional Setup (Alternative)
+
+```bash
+# Clone and navigate to the repository
 git clone https://github.com/EnkrateiaLucca/mcp-course.git
 cd mcp-course
 
-# Create a virtual environment
+# Create virtual environment
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
@@ -97,140 +77,624 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements/requirements.txt
 ```
 
-### 2. Set Environment Variables
+### Environment Setup
 
 Create a `.env` file in the root directory:
 
 ```env
-# API Keys (add the ones you have)
-OPENAI_API_KEY=your-openai-api-key
-REPLICATE_API_TOKEN=your-replicate-api-token
+# Required for Claude Agents SDK demos
+ANTHROPIC_API_KEY=your-anthropic-api-key-here
 
-# Optional: Custom paths
-MCP_DEMO_PATH=/path/to/your/demo/files
+# Required for OpenAI demos
+OPENAI_API_KEY=your-openai-api-key-here
+
+# Optional: for image generation demo
+REPLICATE_API_TOKEN=your-replicate-token-here
 ```
 
-### 3. Quick Test
+## 📁 Course Structure
 
-Test your setup with a basic MCP server:
+### Demo 00: Introduction to AI Agents
+**Path**: `demos/00-intro-agents/`
 
+**What it covers**: Foundational concepts of AI agents before diving into MCP.
+
+**Key Files**:
+- `intro-agents-cld.ipynb` - Jupyter notebook with agent architecture and patterns
+
+**Learning Objectives**:
+- Understand agent components (perception, reasoning, action)
+- Learn agent decision-making patterns
+- Grasp the difference between simple LLM calls and agentic systems
+
+**Run it**:
+```bash
+cd demos/00-intro-agents
+jupyter notebook intro-agents-cld.ipynb
+```
+
+---
+
+### Demo 01: Introduction to MCP
+**Path**: `demos/01-introduction-to-mcp/`
+
+**What it covers**: MCP fundamentals, server implementation with FastMCP, and client interaction.
+
+**Key Files**:
+- `mcp_server.py` - Basic MCP server with document tools
+- `mcp_client.py` - Test client for server interaction
+- `intro-mcp-walkthrough.md` - Step-by-step guide
+- `documents.txt` - Sample data
+
+**Learning Objectives**:
+- Understand MCP architecture (client/server/host)
+- Create tools with `@mcp.tool()` decorator
+- Handle stdio transport communication
+- Test servers with MCP Inspector
+
+**Run it**:
 ```bash
 cd demos/01-introduction-to-mcp
 
-# With UV (recommended)
+# Run the server
 uv run mcp_server.py
 
-# Or with traditional Python after installing base dependencies
-python mcp_server.py
+# Or test interactively
+mcp dev mcp_server.py
 ```
 
-## 🪟 Windows Setup Guide
+**★ Insight ─────────────────────────────────────**
+MCP uses a client-server architecture where:
+- **MCP Host**: Your AI application (coordinates everything)
+- **MCP Client**: Maintains connection to a single server
+- **MCP Server**: Provides tools, resources, and prompts
 
-Windows users need additional setup steps for MCP development. Follow this comprehensive guide for a smooth setup experience.
+Think of it like a restaurant: the Host seats you, Clients take orders from specific tables, and Servers (kitchen stations) provide specific capabilities.
+**─────────────────────────────────────────────────**
 
-### Prerequisites for Windows
+---
 
-- **Windows 10/11** with Developer Mode enabled
-- **Python 3.10+** from [python.org](https://www.python.org/downloads/) (ensure "Add to PATH" is checked)
-- **Node.js 18+** from [nodejs.org](https://nodejs.org/)
-- **Git for Windows** from [git-scm.com](https://git-scm.com/)
-- **Windows Terminal** (recommended) from Microsoft Store
+### Demo 02: MCP Chat Application Study Case
+**Path**: `demos/02-study-case-anthropic-tools-resources-prompts-chat-app/`
 
-### 1. Enable Developer Mode
+**What it covers**: Complete chat application integrating **OpenAI function calling** with MCP capabilities.
 
-1. Open **Settings** → **Update & Security** → **For developers**
-2. Select **Developer mode**
-3. Restart your computer
+**Key Files**:
+- `chat_app.py` - Full-featured chat interface with tool usage
+- `mcp_server.py` - MCP server with file operations
+- `mcp_client.py` - MCP client wrapper for OpenAI integration
+- `README.md` - Detailed documentation
 
-### 2. Setup PowerShell Execution Policy
+**Learning Objectives**:
+- Bridge OpenAI function calling with MCP tools
+- Convert MCP schemas to OpenAI function definitions
+- Build production-ready chat applications
+- Handle tool execution and response streaming
 
-Open PowerShell as Administrator and run:
+**Run it**:
+```bash
+cd demos/02-study-case-anthropic-tools-resources-prompts-chat-app
 
-```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+export OPENAI_API_KEY="your-key"
+uv run chat_app.py
 ```
 
-### 3. Clone and Setup (Windows)
+**Example Interaction**:
+```
+You> Create a file called notes.md with "Hello MCP"
+[Calling tool: write_doc...]
+✅ File created successfully
 
-```cmd
-# Clone the repository
-git clone https://github.com/EnkrateiaLucca/mcp-course.git
-cd mcp-course
-
-# Create virtual environment
-python -m venv venv
-
-# Activate virtual environment (Command Prompt)
-venv\Scripts\activate
-
-# OR activate in PowerShell
-venv\Scripts\Activate.ps1
-
-# Install dependencies
-pip install -r requirements/requirements.txt
+You> What's in notes.md?
+[Calling tool: read_doc...]
+Content: Hello MCP
 ```
 
-### 4. Environment Variables (Windows)
+---
 
-Create a `.env` file in the project root:
+### Demo 03: Claude Agents SDK - Filesystem Agent
+**Path**: `demos/03-claude-agents-sdk-filesystem-agent/`
 
-```env
-# API Keys
-OPENAI_API_KEY=your-openai-api-key
-REPLICATE_API_TOKEN=your-replicate-api-token
+**What it covers**: Building agents with the **Claude Agents SDK** using in-process MCP servers for filesystem operations.
 
-# Windows-specific paths (use forward slashes)
-MCP_DEMO_PATH=C:/path/to/your/demo/files
+**Key Files**:
+- `examples/` - Individual topic examples
+  - `example_mcp_server.py` - MCP server setup patterns
+  - `example_tool_permissions.py` - Permission callbacks and security
+  - `example_response_handling.py` - Processing agent responses
+  - `example_error_handling.py` - Error handling strategies
+- `scripts/file_reader_agent.py` - Complete file reader implementation
+- `README.md` - Comprehensive learning guide
+- `COURSE_SUMMARY.md` - Architecture deep dive
+
+**Learning Objectives**:
+- Create in-process MCP servers (no subprocess overhead)
+- Implement tool permissions and security callbacks
+- Handle streaming responses with async/await
+- Use PreToolUse/PostToolUse hooks for validation
+- Mix in-process and external MCP servers
+
+**Run it**:
+```bash
+cd demos/03-claude-agents-sdk-filesystem-agent
+
+export ANTHROPIC_API_KEY="your-key"
+
+# Run individual examples
+uv run examples/example_mcp_server.py
+uv run examples/example_tool_permissions.py
+
+# Run complete file reader agent
+uv run scripts/file_reader_agent.py
 ```
 
-Alternatively, set environment variables using Command Prompt:
+**★ Insight ─────────────────────────────────────**
+**In-Process MCP** (Claude Agents SDK approach):
+- Tools run directly in your Python process
+- No subprocess management needed
+- Better performance, simpler debugging
+- Single deployment artifact
 
-```cmd
-set OPENAI_API_KEY=your-openai-api-key
-set REPLICATE_API_TOKEN=your-replicate-api-token
+**External MCP** (Traditional approach):
+- Separate server process via stdio/HTTP
+- Language-agnostic server implementation
+- Better isolation, can restart independently
+**─────────────────────────────────────────────────**
+
+---
+
+### Demo 04: Query Tabular Data
+**Path**: `demos/04-query-tabular-data/`
+
+**What it covers**: MCP server for CSV/tabular data queries with both **Claude and OpenAI** agent implementations.
+
+**Key Files**:
+- `csv_query_mcp_server.py` - MCP server with 7 CSV query tools
+- `claude_agents_sdk_demo.py` - ⭐ **Recommended**: In-process tools with Claude SDK
+- `openai_mcp_csv_demo.ipynb` - OpenAI Agents SDK approach (notebook)
+- `replicate_thumbnail_mcp.py` - Image generation with Replicate
+- `sample_data.csv` - Product database (15 products)
+- `README_CLAUDE_AGENTS_SDK.md` - Claude SDK documentation
+- `CLAUDE_SDK_EXPLANATION.md` - Architecture deep dive
+
+**Learning Objectives**:
+- Create specialized MCP tools for data analysis
+- Compare in-process vs external MCP patterns
+- Use Claude SDK's `@tool` decorator
+- Integrate AI with image generation APIs
+- Handle complex multi-step queries
+
+**Run it**:
+```bash
+cd demos/04-query-tabular-data
+
+export ANTHROPIC_API_KEY="your-key"
+
+# Claude Agents SDK approach (recommended)
+uv run claude_agents_sdk_demo.py
+
+# Or explore with Jupyter
+jupyter notebook openai_mcp_csv_demo.ipynb
+
+# Configure Claude Desktop for image generation
+cat thumbnail_mcp.json  # Copy to Claude Desktop config
 ```
 
-Or using PowerShell:
+**Available Tools**:
+1. `get_all_products` - Browse entire catalog
+2. `search_products_by_category` - Filter by category (Electronics, Furniture)
+3. `search_products_by_price_range` - Find products in price range
+4. `get_product_by_name` - Get specific product details
+5. `get_top_rated_products` - Find highest-rated items
+6. `get_products_in_stock` - Check inventory
+7. `get_category_statistics` - Analytics and summaries
 
-```powershell
-$env:OPENAI_API_KEY="your-openai-api-key"
-$env:REPLICATE_API_TOKEN="your-replicate-api-token"
+**Example Queries**:
+```
+"What electronics do we have?"
+"Show me products between $50 and $150"
+"What are the top 3 highest-rated products?"
+"I need office equipment: keyboard (check ratings), furniture under $200"
 ```
 
-### 5. Claude Desktop Configuration (Windows)
+---
 
-Claude Desktop config location on Windows:
+### Demo 05: Automation Agent
+**Path**: `demos/05-automations-agent/`
 
+**What it covers**: Intelligent automation script generator using **Claude Agents SDK** + MCP database integration.
+
+**Key Files**:
+- `automation_agent.py` - Claude Agent that generates scripts
+- `automation_mcp_server.py` - MCP server with database query tools
+- `automations_database.csv` - 7 pre-built automation templates
+- `generated_scripts/` - Output directory (created at runtime)
+- `README.md` - Complete architecture guide
+- `QUICKSTART.md` - Quick reference
+- `DEMO_OUTPUT.md` - Example session outputs
+
+**Learning Objectives**:
+- Combine MCP data tools with built-in filesystem tools
+- Build multi-step agent workflows
+- Query structured data (CSV) via MCP
+- Generate executable scripts programmatically
+- Implement permission-restricted file operations
+
+**Architecture**:
 ```
-%APPDATA%\Claude\claude_desktop_config.json
+User Request
+    ↓
+Automation Agent (Claude SDK)
+    ↓
+MCP Server (data queries) + Built-in Tools (Write, Bash, Glob)
+    ↓
+Automation Database (CSV)
+    ↓
+Generated Scripts (output)
 ```
 
-Example setup:
+**Run it**:
+```bash
+cd demos/05-automations-agent
 
-```cmd
-# Navigate to Claude config directory
-cd %APPDATA%\Claude
-
-# Create or edit configuration
-notepad claude_desktop_config.json
+export ANTHROPIC_API_KEY="your-key"
+uv run automation_agent.py
 ```
 
-**Important**: Use absolute paths with forward slashes in the config file:
+**Example Workflow**:
+```
+You: What automations are available?
+Agent: [Lists 7 automations: backup_files, clean_temp_files, etc.]
+
+You: Generate the file backup automation
+Agent: [Creates backup_files.sh with full template]
+      ✅ Created: generated_scripts/backup_files.sh
+      ✅ Made executable with chmod +x
+
+Usage: ./backup_files.sh /source/path /backup/destination
+```
+
+**Available Automations**:
+- **File Management**: backup_files, organize_downloads
+- **System Maintenance**: clean_temp_files, monitor_disk_space
+- **Database Operations**: backup_database
+- **Version Control**: auto_commit_changes
+- **Reporting**: generate_report
+
+---
+
+### Demo 06: Deploy to Vercel (Serverless)
+**Path**: `demos/06-deploy-simple-agent-mcp-vercel/`
+
+**What it covers**: Production deployment of AI agents with MCP to **Vercel serverless** platform. Includes **two complete implementations**:
+
+1. **OpenAI Agents SDK** (Stateless) - `main.py`
+2. **Claude Agents SDK** (Sandboxed) - `main_claude.py`
+
+**Key Files**:
+- `main.py` - OpenAI Agents SDK implementation
+- `main_claude.py` - Claude Agents SDK with sandbox
+- `claude_agent_sandbox.py` - Agent code for sandbox execution
+- `mcp_fetch_server.py` - MCP server with HTTP transport (FastMCP)
+- `static/index.html` - Beautiful chat interface
+- `requirements.txt` / `requirements_claude.txt` - Dependencies
+- `vercel.json` - Vercel configuration
+- `deployment_agents_sdk_vercel.md` - OpenAI deployment guide
+- `deployment_claude_agents_sdk_vercel.md` - Claude deployment guide
+- `README.md` - Overview and comparison
+
+**Learning Objectives**:
+- Deploy MCP servers with HTTP transport (not just stdio)
+- Use `MCPServerStreamableHttp` from OpenAI Agents SDK
+- Build with official MCP Python SDK (`mcp[cli]`)
+- Compare stateless vs sandboxed architectures
+- Implement production security patterns
+- Create FastAPI wrappers for agent endpoints
+- Deploy to serverless platforms
+
+**Architecture Comparison**:
+
+| Feature | OpenAI (main.py) | Claude (main_claude.py) |
+|---------|------------------|-------------------------|
+| Model | Stateless serverless | Sandboxed containers |
+| Complexity | Low ⭐ | Medium ⭐⭐⭐ |
+| File Operations | Limited | Full (sandboxed) |
+| Command Execution | No | Yes (in sandbox) |
+| Best For | Chat apps | Complex agents |
+| Cost | API only | API + sandbox compute |
+
+**Run Locally (OpenAI)**:
+```bash
+cd demos/06-deploy-simple-agent-mcp-vercel
+
+cp .env.example .env
+# Add OPENAI_API_KEY to .env
+
+# Terminal 1: MCP Server
+python mcp_fetch_server.py
+
+# Terminal 2: Main App
+python main.py
+
+# Open http://localhost:8000
+```
+
+**Run Locally (Claude)**:
+```bash
+export ANTHROPIC_API_KEY="your-key"
+python main_claude.py
+```
+
+**Deploy to Vercel**:
+```bash
+# Install Vercel CLI
+npm install -g vercel
+
+# Login and configure
+vercel login
+vercel env add OPENAI_API_KEY  # or ANTHROPIC_API_KEY
+
+# Deploy
+vercel --prod
+```
+
+**Example Queries**:
+```
+"Fetch content from https://modelcontextprotocol.io"
+"What's the latest on the OpenAI blog?"
+"Read https://github.com/anthropics/claude-agent-sdk-python and summarize"
+```
+
+**★ Insight ─────────────────────────────────────**
+**MCP HTTP Transport** (New in this demo):
+- MCP traditionally uses stdio (standard input/output)
+- HTTP transport enables serverless deployment
+- FastMCP supports both stdio and HTTP via `transport="sse"`
+- OpenAI SDK uses `MCPServerStreamableHttp` to connect
+**─────────────────────────────────────────────────**
+
+---
+
+## 🎨 Architecture Patterns
+
+### Pattern 1: In-Process MCP Tools (Claude Agents SDK)
+
+**Used in**: Demos 03, 04, 05
+
+```python
+from agents import tool
+from agents.extensions.mcp import create_sdk_mcp_server
+
+@tool("query_data", "Query the database", {"query": str})
+async def query_data(args: dict) -> dict:
+    result = execute_query(args["query"])
+    return {"content": [{"type": "text", "text": result}]}
+
+# Create in-process MCP server
+server = create_sdk_mcp_server(
+    name="data-tools",
+    version="1.0.0",
+    tools=[query_data]
+)
+
+# Agent has direct access
+agent = Agent(
+    name="assistant",
+    instructions="You help query data",
+    mcp_servers={"data": server},
+    model="claude-sonnet-4-5-20250929"
+)
+```
+
+**Pros**: Fast, simple deployment, easy debugging
+**Cons**: All in one process, Python-only
+
+---
+
+### Pattern 2: External MCP Server (Traditional)
+
+**Used in**: Demos 01, 02, 04 (OpenAI version)
+
+```python
+# Server (FastMCP)
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("tool-server")
+
+@mcp.tool()
+def process_data(input: str) -> str:
+    return f"Processed: {input}"
+
+if __name__ == "__main__":
+    mcp.run(transport="stdio")
+
+# Client connects via subprocess
+from agents.mcp import MCPServerConfig
+
+config = MCPServerConfig(
+    command="uv",
+    args=["run", "server.py"]
+)
+
+agent = Agent(mcp_servers=[config])
+```
+
+**Pros**: Language-agnostic, isolated, restartable
+**Cons**: Subprocess overhead, more complex deployment
+
+---
+
+### Pattern 3: HTTP Transport (Serverless)
+
+**Used in**: Demo 06
+
+```python
+# Server with HTTP transport
+mcp = FastMCP("web-tools")
+
+@mcp.tool()
+def fetch_url(url: str) -> str:
+    return httpx.get(url).text
+
+if __name__ == "__main__":
+    mcp.run(transport="sse")  # Server-Sent Events transport
+
+# Client via HTTP
+from agents_mcp import MCPServerStreamableHttp
+
+agent = Agent(
+    mcp_servers=[
+        MCPServerStreamableHttp(
+            name="web",
+            url="http://localhost:8001/sse"
+        )
+    ]
+)
+```
+
+**Pros**: Serverless-friendly, scalable, network-accessible
+**Cons**: Network latency, requires HTTP infrastructure
+
+---
+
+## 🛠️ Development Tools
+
+### MCP Inspector
+
+Interactively test any MCP server:
+
+```bash
+# Run inspector on your server
+mcp dev path/to/your_server.py
+
+# Opens web UI at http://localhost:5173
+# - List available tools
+# - Test tool calls with parameters
+# - View resources and prompts
+# - See full request/response logs
+```
+
+### Claude Desktop Integration
+
+Configure MCP servers in Claude Desktop:
+
+**macOS/Linux**: `~/.config/Claude/claude_desktop_config.json`
+**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
 {
   "mcpServers": {
-    "mcp_demo": {
-      "command": "C:/path/to/mcp-course/venv/Scripts/python.exe",
-      "args": ["C:/path/to/mcp-course/demos/01-introduction-to-mcp/mcp_server.py"]
+    "csv-query": {
+      "command": "uv",
+      "args": ["run", "/absolute/path/to/csv_query_mcp_server.py"]
+    },
+    "automation-tools": {
+      "command": "uv",
+      "args": ["run", "/absolute/path/to/automation_mcp_server.py"]
     }
   }
 }
 ```
 
-### 6. Windows-Specific Commands
+**After adding**, restart Claude Desktop. Tools appear in the tool selector.
 
-When running demos, use these Windows-equivalent commands:
+### Makefile Commands
+
+Automate common tasks:
+
+```bash
+make conda-create     # Create conda environment
+make env-setup        # Setup with pip-tools and UV
+make notebook-setup   # Install Jupyter kernel
+make env-update       # Update dependencies
+make freeze           # Freeze current dependencies
+make clean            # Remove environments
+```
+
+---
+
+## 🪟 Windows Setup Guide
+
+### Prerequisites
+
+- **Windows 10/11** with Developer Mode enabled
+- **Python 3.10+** from [python.org](https://www.python.org/downloads/)
+- **Node.js 18+** from [nodejs.org](https://nodejs.org/)
+- **Git for Windows** from [git-scm.com](https://git-scm.com/)
+
+### Enable Developer Mode
+
+1. **Settings** → **Update & Security** → **For developers**
+2. Select **Developer mode**
+3. Restart computer
+
+### PowerShell Execution Policy
+
+Open PowerShell as Administrator:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
+
+### Setup
+
+```cmd
+# Clone repository
+git clone https://github.com/EnkrateiaLucca/mcp-course.git
+cd mcp-course
+
+# Create virtual environment
+python -m venv venv
+venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements/requirements.txt
+```
+
+### Environment Variables
+
+Create `.env` file:
+
+```env
+ANTHROPIC_API_KEY=your-key
+OPENAI_API_KEY=your-key
+# Use forward slashes in paths
+MCP_DEMO_PATH=C:/path/to/files
+```
+
+Or set in Command Prompt:
+```cmd
+set ANTHROPIC_API_KEY=your-key
+```
+
+Or PowerShell:
+```powershell
+$env:ANTHROPIC_API_KEY="your-key"
+```
+
+### Claude Desktop Config (Windows)
+
+Location: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```cmd
+cd %APPDATA%\Claude
+notepad claude_desktop_config.json
+```
+
+**Use absolute paths with forward slashes**:
+
+```json
+{
+  "mcpServers": {
+    "demo": {
+      "command": "C:/path/to/venv/Scripts/python.exe",
+      "args": ["C:/path/to/mcp_server.py"]
+    }
+  }
+}
+```
+
+### Windows Command Reference
 
 | Linux/macOS | Windows (CMD) | Windows (PowerShell) |
 |-------------|---------------|----------------------|
@@ -239,355 +703,150 @@ When running demos, use these Windows-equivalent commands:
 | `~/.config/Claude/` | `%APPDATA%\Claude\` | `$env:APPDATA\Claude\` |
 | `python3` | `python` | `python` |
 
-### 7. Testing on Windows
+### Common Windows Issues
 
-```cmd
-# Activate virtual environment
-venv\Scripts\activate
+**"python not found"**
+- Reinstall Python with "Add to PATH" checked
 
-# Test basic server
-cd demos\01-introduction-to-mcp
-python mcp_server.py
+**PowerShell script errors**
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
 ```
 
-### Windows Troubleshooting
-
-**Common Windows Issues:**
-
-1. **"python not found"**
-   - Reinstall Python with "Add to PATH" checked
-   - Or add Python manually to system PATH
-
-2. **PowerShell execution policy errors**
-   ```powershell
-   Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process
-   ```
-
-3. **Permission denied with npm/node**
-   - Run terminal as Administrator
-   - Or use `npm config set prefix "C:\Users\{username}\AppData\Roaming\npm"`
-
-4. **Claude Desktop not finding MCP servers**
-   - Use absolute paths in configuration
-   - Ensure all backslashes are forward slashes in JSON
-   - Check that Python executable path is correct: `C:\path\to\venv\Scripts\python.exe`
-
-5. **Long path issues**
-   - Enable long paths in Windows: `gpedit.msc` → Computer Configuration → Administrative Templates → System → Filesystem → Enable Win32 long paths
-
-### Windows Development Tips
-
-- Use **Windows Terminal** with PowerShell for better experience
-- Consider **WSL2** for Linux-like environment if preferred
-- Use **VS Code** with Python extension for development
-- Set up **Windows Defender** exclusions for your development folder to improve performance
-
-## 📚 Demo Sections Guide
-
-### 00. Introduction to AI Agents
-
-**What it covers**: Foundational concepts of AI agents - how they work, their components, and basic implementation patterns
-
-**Files**:
-- `intro-agents.ipynb` - Interactive Jupyter notebook with agent fundamentals
-
-**Running**:
-```bash
-cd demos/00-intro-agents
-
-# Run with Jupyter
-jupyter notebook intro-agents.ipynb
-
-# Or use VS Code with Jupyter extension
-code intro-agents.ipynb
-```
-
-**Key Learning**: Understanding agent architecture, reasoning patterns, and decision-making processes before diving into MCP.
+**Long path issues**
+- Enable in Group Policy: `gpedit.msc` → Computer Configuration → Administrative Templates → System → Filesystem → Enable Win32 long paths
 
 ---
 
-### 01. Introduction to MCP
+## 🐛 Troubleshooting
 
-**What it covers**: MCP fundamentals, basic server implementation, and client interaction
+### "Module not found" errors
 
-**Files**:
-- `mcp_server.py` - Basic MCP server with tools
-- `mcp_client.py` - Test client for interaction
-- `intro-mcp-walkthrough.md` - Step-by-step walkthrough
-- `documents.txt` - Sample data file
-
-**Running**:
 ```bash
-cd demos/01-introduction-to-mcp
+# With UV
+uv pip install mcp model-context-protocol
 
-# With UV (recommended)
-uv run mcp_server.py
-
-# Or traditional method
-pip install mcp
-python mcp_server.py
+# With pip
+pip install mcp model-context-protocol
 ```
 
-**Key Learning**: Understanding MCP architecture and basic client-server communication.
+### API Key Issues
+
+**Claude SDK**:
+```bash
+export ANTHROPIC_API_KEY="your-key"
+# Or add to .env file
+```
+
+**OpenAI**:
+```bash
+export OPENAI_API_KEY="your-key"
+# Or add to .env file
+```
+
+### Claude Desktop Not Recognizing Servers
+
+1. ✅ Use **absolute paths** in config
+2. ✅ Verify UV is in PATH: `which uv`
+3. ✅ Test server independently: `uv run mcp_server.py`
+4. ✅ Check server logs for errors
+5. ✅ **Restart Claude Desktop** after config changes
+
+### Permission Denied
+
+```bash
+chmod +x script.py
+```
+
+### MCP Server Connection Issues
+
+**Test independently**:
+```bash
+mcp dev path/to/server.py
+```
+
+**Check if running**:
+```bash
+ps aux | grep mcp_server  # Linux/macOS
+tasklist | findstr python  # Windows
+```
+
+### Rate Limiting
+
+- Check API quota in your provider dashboard
+- Implement exponential backoff
+- Add request delays in loops
+- Use cheaper models for testing (gpt-4o-mini, claude-haiku)
 
 ---
 
-### 02. MCP Chat Application Study Case
-
-**What it covers**: Complete chat application integrating OpenAI function calling with MCP tools, resources, and prompts
-
-**Files**:
-- `chat_app.py` - Full-featured chat app with OpenAI integration
-- `mcp_server.py` - MCP server with file tools
-- `mcp_client.py` - MCP client wrapper
-- `README.md` - Detailed documentation
-
-**Running**:
-```bash
-cd demos/02-study-case-anthropic-tools-resources-prompts-chat-app
-
-# Set up environment
-export OPENAI_API_KEY="your-api-key"
-
-# Run the chat app
-uv run chat_app.py
-```
-
-**Key Learning**: Building production-ready applications that bridge OpenAI's function calling with MCP's capabilities.
-
----
-
-### 03. OpenAI Agents
-
-**What it covers**: OpenAI Agents SDK integration with MCP for enhanced tool capabilities
-
-**Prerequisites**: OpenAI API key
-
-**Files**:
-- `intro-openai-agents-sdk.ipynb` - Interactive notebook tutorial
-- `openai_agent_filesystem_mcp.py` - Agent with MCP filesystem access
-- `openai_agent_custom.py` - Custom tool integration examples
-- `mcp_server_for_openai_agent.py` - Supporting MCP server
-
-**Running**:
-```bash
-cd demos/03-openai-agents
-
-# Set API key
-export OPENAI_API_KEY="your-openai-api-key"
-
-# Run Jupyter notebook
-jupyter notebook intro-openai-agents-sdk.ipynb
-
-# Or run standalone agent
-uv run openai_agent_filesystem_mcp.py
-```
-
-**Key Learning**: Using OpenAI Agents SDK with MCP for structured data access and advanced tool usage.
-
----
-
-### 04. Query Tabular Data
-
-**What it covers**: MCP server for querying CSV and tabular data, plus image generation with Replicate
-
-**Prerequisites**: Replicate API key (for thumbnail generation)
-
-**Files**:
-- `csv_query_mcp_server.py` - MCP server for CSV data queries
-- `openai_mcp_csv_demo.ipynb` - Interactive demo notebook
-- `replicate_thumbnail_mcp.py` - MCP server for image generation
-- `thumbnail_mcp.json` - Claude Desktop configuration
-- `sample_data.csv` - Sample CSV data for testing
-- `README_CSV_DEMO.md` - Detailed documentation
-
-**Running**:
-```bash
-cd demos/04-query-tabular-data
-
-# Run CSV query server
-uv run csv_query_mcp_server.py
-
-# Or explore the notebook
-jupyter notebook openai_mcp_csv_demo.ipynb
-
-# For image generation, configure Claude Desktop
-cat thumbnail_mcp.json
-# Add configuration to Claude Desktop settings
-```
-
-**Key Learning**: Creating specialized MCP servers for data analysis workflows and integrating with AI image generation services.
-
----
-
-### 05. Deployment Example
-
-**What it covers**: Complete production deployment example with FastAPI, OpenAI agents, and MCP
-
-**Prerequisites**: OpenAI API key, cloud platform account (Render.com recommended)
-
-**Files**:
-- `mcp_server.py` - Production MCP server with tools, resources, and prompts
-- `agent.py` - OpenAI agent implementation
-- `main.py` - FastAPI web wrapper
-- `README.md` - Comprehensive deployment guide
-- `setup.md` - Step-by-step setup instructions
-- `security_auth_mcp.md` - Security best practices
-
-**Running**:
-```bash
-cd demos/05-deployment-example
-
-# Local development
-export OPENAI_API_KEY="your-api-key"
-python main.py  # Web API on http://localhost:8000
-python agent.py # Interactive agent CLI
-
-# See README.md for cloud deployment instructions
-```
-
-**Key Learning**: Production-ready MCP deployment with proper API design, security considerations, and cloud hosting.
-
----
-
-### 06. Deploy Simple Agent with MCP to Vercel
-
-**What it covers**: Beginner-friendly deployment of an AI agent with MCP fetch capabilities to Vercel using the official MCP Python SDK
-
-**Prerequisites**: OpenAI API key, Vercel account
-
-**Files**:
-- `main.py` - FastAPI app with OpenAI agent logic
-- `mcp_fetch_server.py` - MCP server for web fetching (built with FastMCP)
-- `static/index.html` - Beautiful chat interface
-- `requirements.txt` - Python dependencies
-- `vercel.json` - Vercel configuration
-- `deployment_agents_sdk_vercel.md` - Complete deployment guide
-- `README.md` - Project documentation
-
-**Running**:
-```bash
-cd demos/06-deploy-simple-agent-mcp-vercel
-
-# Set up environment
-cp .env.example .env
-# Add your OPENAI_API_KEY to .env
-
-# Terminal 1 - Start MCP Fetch Server
-python mcp_fetch_server.py
-
-# Terminal 2 - Start Main App
-python main.py
-
-# Open http://localhost:8000
-
-# Deploy to Vercel
-vercel env add OPENAI_API_KEY
-vercel --prod
-```
-
-**Key Learning**: Deploying AI agents with MCP to serverless platforms like Vercel, using the official MCP Python SDK with HTTP transport for proper protocol compliance.
-
-## 🛠️ Automation with Makefile
-
-The repository includes a Makefile for common tasks:
-
-```bash
-# Set up all environments
-make setup-all
-
-# Run all tests
-make test-all
-
-# Clean up all environments
-make clean-all
-
-# Start all demo servers
-make start-servers
-
-# Stop all demo servers
-make stop-servers
-```
-
-## 🔧 Troubleshooting
-
-### Common Issues
-
-1. **"mcp module not found"**
-   ```bash
-   pip install mcp model-context-protocol
-   ```
-
-2. **"Permission denied" errors**
-   ```bash
-   chmod +x *.py
-   ```
-
-3. **Claude Desktop not recognizing MCP servers**
-   - Check configuration file location: `~/.claude_desktop_config.json`
-   - Verify server paths are absolute
-   - Restart Claude Desktop after configuration changes
-
-4. **API rate limiting**
-   - Use API keys with sufficient quota
-   - Implement rate limiting in custom servers
-   - Add delays between requests in test scripts
-
-### Getting Help
-
-1. **Check the README** in each demo directory for specific instructions
-2. **Review error logs** for detailed error messages
-3. **Test MCP servers independently** before integrating with agents
-4. **Use the MCP Inspector** tool for debugging:
-   ```bash
-   npx @modelcontextprotocol/inspector
-   ```
-
-## 📖 Additional Resources
+## 📖 Learning Resources
 
 ### Official Documentation
-- [MCP Specification](https://modelcontextprotocol.io/specification/)
-- [MCP Documentation](https://modelcontextprotocol.io/introduction)
-- [Official MCP Servers](https://github.com/modelcontextprotocol/servers)
 
-### Agent Frameworks
-- [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)
-- [Anthropic Claude](https://docs.anthropic.com/)
+- **MCP Specification**: https://modelcontextprotocol.io/specification/
+- **MCP Introduction**: https://modelcontextprotocol.io/introduction
+- **FastMCP SDK**: https://github.com/modelcontextprotocol/python-sdk
+- **Claude Agents SDK**: https://github.com/anthropics/claude-agent-sdk-python
+- **OpenAI Agents SDK**: https://openai.github.io/openai-agents-python/
 
 ### Community Resources
-- [Awesome MCP Servers](https://github.com/punkpeye/awesome-mcp-servers)
-- [MCP Community Examples](https://github.com/esxr/langgraph-mcp)
-- [Glama MCP Directory](https://glama.ai/mcp)
+
+- **Awesome MCP Servers**: https://github.com/punkpeye/awesome-mcp-servers
+- **Glama MCP Directory**: https://glama.ai/mcp
+- **MCP Community Examples**: https://github.com/esxr/langgraph-mcp
+
+### Course Materials
+
+- `presentation/presentation.html` - Full course slides
+- `presentation/mcp-talk.pdf` - PDF version
+- `how-mcp-works-with-claude.md` - Integration guide
+- `CLAUDE.md` - Project development guidelines
+
+---
+
+## 🎓 Course Instructor
+
+**Lucas Soares**
+
+📚 [Blog](https://enkrateialucca.github.io/lucas-landing-page/)
+🔗 [LinkedIn](https://www.linkedin.com/in/lucas-soares-969044167/)
+🐦 [Twitter/X](https://x.com/LucasEnkrateia)
+📺 [YouTube - Automata Learning Lab](https://www.youtube.com/@automatalearninglab)
+📧 lucasenkrateia@gmail.com
+
+---
 
 ## 🤝 Contributing
 
-Found an issue or want to improve the demos? Contributions are welcome!
+Contributions are welcome! To contribute:
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
+2. Create a feature branch: `git checkout -b feature/your-feature`
+3. Make your changes with clear commits
+4. Test thoroughly across demos
 5. Submit a pull request
-
-## 📝 License
-
-This course material is provided for educational purposes. Individual components may have their own licenses - please check specific directories for details.
-
-## 🎓 Course Information
-
-**Instructor**: Lucas Soares  
-**Course**: Building AI Agents with MCP: The HTTP Moment of AI?  
-**Platform**: O'Reilly Live Training  
-
-### Connect with the Instructor
-- 📚 [Blog](https://enkrateialucca.github.io/lucas-landing-page/)
-- 🔗 [LinkedIn](https://www.linkedin.com/in/lucas-soares-969044167/)
-- 🐦 [Twitter/X](https://x.com/LucasEnkrateia)
-- 📺 [YouTube](https://www.youtube.com/@automatalearninglab)
-- 📧 Email: lucasenkrateia@gmail.com
 
 ---
 
-**Happy Learning! 🚀**
+## 📝 License
 
-*The Model Context Protocol represents a significant step toward standardized AI-tool integration. Through these hands-on demos, you'll gain practical experience with this revolutionary technology that's shaping the future of AI applications.*
+This course material is provided for educational purposes as part of the O'Reilly Live Training series.
+
+---
+
+## 🚀 Next Steps
+
+1. ✅ **Start with Demo 00** - Understand AI agent fundamentals
+2. ✅ **Build MCP basics** (Demo 01) - Create your first server
+3. ✅ **Choose your SDK**:
+   - **Claude Agents SDK** (Demos 03, 04, 05) - In-process, fast, Python-native
+   - **OpenAI Agents SDK** (Demos 02, 06) - Stateless, simple, widely compatible
+4. ✅ **Deploy to production** (Demo 06) - Vercel serverless deployment
+5. ✅ **Build your own** - Create custom MCP servers for your use cases
+
+---
+
+**The Model Context Protocol is revolutionizing how AI agents connect to the world. This course gives you the practical skills to build with it today.**
+
+**Happy building! 🎉**
