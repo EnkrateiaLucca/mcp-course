@@ -23,7 +23,7 @@ from typing import List, Optional
 import os
 
 # Initialize FastMCP server
-mcp = FastMCP("csv-query-server")
+mcp = FastMCP("csv-query-mcp-server")
 
 # Path to the CSV file
 CSV_FILE_PATH = os.path.join(os.path.dirname(__file__), "sample_data.csv")
