@@ -20,7 +20,7 @@ def get_current_time() -> str:
 def add_numbers(a: float, b: float) -> float:
     return a + b
 
-@mcp.tool()
+@mcp.tool() #automates generating the schemas!!
 def write_file(file_name: str, file_content: str) -> str:
     with open(file_name, "w") as f:
         f.write(file_content)
