@@ -10,26 +10,6 @@
 **3 bugs found across 3 files.** Everything else passes.
 
 ---
-
-## Bugs Found
-
-### 1. Demo 01 — `mcp_client.py` line 139: `read` command crashes
-
-**File:** `demos/01-introduction-to-mcp/mcp_client.py:139`
-**Severity:** Medium (breaks the `read` interactive command; `time`, `add`, and tool listing all work fine)
-
-The `read_resource()` method (lines 85-91) unwraps the MCP response and returns a plain `str`. But line 139 treats it as a raw MCP response object:
-
-```python
-# Current (broken):
-result = await self.read_resource('docs://documents.txt')
-print(f"Document content:\n{result.contents[0].text if result.contents else 'No content'}")
-```
-
-**Error:** `AttributeError: 'str' object has no attribute 'contents'`
-
-**Fix:** `print(f"Document content:\n{result}")`
-
 ---
 
 ### 2. Demo 03 — `example_error_handling.py` line 135: `e.output` doesn't exist

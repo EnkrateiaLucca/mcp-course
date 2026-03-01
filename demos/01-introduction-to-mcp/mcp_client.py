@@ -84,11 +84,18 @@ class SimpleMCPClient:
     
     async def read_resource(self, uri: str) -> Any:
         result = await self.session.read_resource(AnyUrl(uri))
+        if not result.contents:
+            return ""
+
         resource = result.contents[0]
-        
+
+        # In MCP, text resources can come back as TextResourceContents or plain strings.
         if isinstance(resource, types.TextResourceContents):
-            if resource.mimeType == "text/plain":
-                return resource.text
+            return resource.text
+        if isinstance(resource, str):
+            return resource
+
+        return str(resource)
     
     # SImulation of the Server/Host application!
     async def interactive_mode(self):
@@ -136,7 +143,7 @@ Available commands:
                         print("Usage: write <filename> <content>")
                 elif command == 'read':
                     result = await self.read_resource('docs://documents.txt')
-                    print(f"Document content:\n{result.contents[0].text if result.contents else 'No content'}")
+                    print(f"Document content:\n{result if result else 'No content'}")
                 else:
                     print("Unknown command. Type 'help' for available commands.")
                     

@@ -65,6 +65,22 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def _extract_from_exception_group(exc: BaseException, target_type: type[BaseException]) -> BaseException | None:
+    """
+    Recursively find the first exception of target_type inside ExceptionGroup.
+    """
+    if isinstance(exc, target_type):
+        return exc
+
+    if isinstance(exc, BaseExceptionGroup):
+        for sub_exc in exc.exceptions:
+            match = _extract_from_exception_group(sub_exc, target_type)
+            if match is not None:
+                return match
+
+    return None
+
+
 # =============================================================================
 # PART 1: SDK Exception Handling
 # =============================================================================
@@ -132,7 +148,7 @@ async def example_sdk_exceptions():
         logger.error(f"Process error: exit_code={e.exit_code}")
         print("\n❌ ERROR: Process execution failed")
         print(f"   Exit code: {e.exit_code}")
-        print(f"   Output: {e.output}")
+        print(f"   Output: {e.stderr}")
 
     except CLIJSONDecodeError as e:
         logger.error(f"JSON decode error: {e}")
@@ -145,6 +161,14 @@ async def example_sdk_exceptions():
         print(f"\n❌ ERROR: SDK error: {e}")
 
     except Exception as e:
+        grouped_connection_error = _extract_from_exception_group(e, CLIConnectionError)
+        if grouped_connection_error is not None:
+            logger.error(f"Connection error (grouped): {grouped_connection_error}")
+            print("\n❌ ERROR: Cannot connect to Claude Code")
+            print("   Check if Claude Code is running")
+            print(f"   Details: {grouped_connection_error}")
+            return
+
         logger.exception(f"Unexpected error: {e}")
         print(f"\n❌ UNEXPECTED ERROR: {e}")
         raise

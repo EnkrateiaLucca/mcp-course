@@ -11,8 +11,7 @@ import os
 
 # Create MCP server instance
 mcp = FastMCP(
-    name="mcp-fetch-server",
-    version="2.0.0"
+    name="mcp-fetch-server"
 )
 
 
