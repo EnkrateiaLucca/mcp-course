@@ -88,32 +88,11 @@ async def create_quiz_file(args: dict[str, Any]) -> dict[str, Any]:
     Expected quiz_data format:
     {
         "title": "Quiz Title",
-        "description": "Quiz description (optional)",
         "questions": [
             {
                 "question": "What is...?",
                 "alternatives": ["Option A", "Option B", "Option C", "Option D"],
-                "correct_answer": 0,  # Index of correct answer (0-based)
-                "explanation": "Why this answer is correct (optional)"
-            }
-        ]
-    }
-
-    Example:
-    {
-        "title": "Quantum Computing Quiz",
-        "description": "Test your knowledge of quantum computing concepts",
-        "questions": [
-            {
-                "question": "What is quantum superposition?",
-                "alternatives": [
-                    "A quantum bit being in multiple states simultaneously",
-                    "The ability to process classical bits faster",
-                    "A type of quantum error",
-                    "A measurement technique"
-                ],
-                "correct_answer": 0,
-                "explanation": "Superposition allows qubits to exist in multiple states at once"
+                "correct_answer": 0  # Index of correct answer (0-based)
             }
         ]
     }
@@ -170,11 +149,11 @@ async def create_quiz_file(args: dict[str, Any]) -> dict[str, Any]:
             "is_error": True
         } 
 
-# Create MCP server with arXiv search and quiz creation tools
+# Create MCP server with arXiv search tool
 arxiv_server = create_sdk_mcp_server(
     name="arxiv_research",
     version="1.0.0",
-    tools=[search_arxiv, create_quiz_file]
+    tools=[search_arxiv]
 )
 
 
@@ -187,29 +166,16 @@ async def main():
     # Create agent options with arXiv MCP server
     options = ClaudeAgentOptions(
         mcp_servers={"arxiv_research": arxiv_server},
-        allowed_tools=[
-            "mcp__arxiv_research__search_arxiv",
-            "mcp__arxiv_research__create_quiz_file"
-        ]
+        allowed_tools=["mcp__arxiv_research__search_arxiv"]
     )
 
     # Initialize Claude SDK client with options
     print(f"\n🔍 Searching arXiv for papers about '{user_query}'...\n")
 
     async with ClaudeSDKClient(options=options) as client:
-        # Query the agent with enhanced prompt
+        # Query the agent
         await client.query(
-            f"""Search arXiv for papers about: {user_query}.
-
-            After finding papers, create a quiz with 5 questions based on the paper summaries.
-            Each question should have 4 multiple choice alternatives, with one correct answer.
-            Save the quiz to a file named '{user_query.replace(' ', '_')}_quiz.json'.
-
-            The quiz should test understanding of:
-            - Key concepts from the papers
-            - Research methods or approaches
-            - Important findings or contributions
-            """
+            f"Search arXiv for papers about: {user_query}. Show me the top 5 most relevant papers."
         )
 
         # Process the response

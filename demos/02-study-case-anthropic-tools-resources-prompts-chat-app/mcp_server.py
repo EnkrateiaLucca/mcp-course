@@ -1,3 +1,11 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.9"
+# dependencies = [
+#     "mcp[cli]>=1.0.0",
+# ]
+# ///
+
 from mcp.server.fastmcp import FastMCP
 from glob import glob
 

@@ -83,7 +83,7 @@ class SimpleMCPClient:
         return result
     
     async def read_resource(self, uri: str) -> Any:
-        result = await self.session().read_resource(AnyUrl(uri))
+        result = await self.session.read_resource(AnyUrl(uri))
         resource = result.contents[0]
         
         if isinstance(resource, types.TextResourceContents):

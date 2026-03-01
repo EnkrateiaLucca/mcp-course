@@ -2,7 +2,7 @@
 # /// script
 # requires-python = ">=3.11"
 # dependencies = [
-#     "anthropic-claude-sdk",
+#     "claude-agent-sdk",
 # ]
 # ///
 """
@@ -55,7 +55,6 @@ from claude_agent_sdk import (
     ResultMessage,
     TextBlock,
     ToolUseBlock,
-    ToolResultMessage,
     # Exceptions
     ClaudeSDKError,
     CLINotFoundError,

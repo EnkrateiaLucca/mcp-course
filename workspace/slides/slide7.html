@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #ffffff; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  background: #ffffff; font-family: Arial, sans-serif;
+  display: flex; flex-direction: column;
+}
+.title-area { margin: 8pt 0 0 0; text-align: center; }
+.main-container {
+  margin: 6pt 20pt 10pt 20pt; border: 2px solid #000000; background: #FAFAFA;
+  flex: 1; display: flex; flex-direction: row; padding: 10pt;
+}
+.left-panel { width: 180pt; display: flex; flex-direction: column; justify-content: center; padding: 8pt; }
+.right-panel { flex: 1; display: flex; flex-direction: column; }
+.flow-boxes { display: flex; flex-direction: row; align-items: center; margin: 10pt 0 0 0; }
+.box { border: 2px solid #000000; background: #ffffff; padding: 6pt 10pt; margin: 0 3pt; text-align: center; min-width: 70pt; }
+.arrow { margin: 0 2pt; }
+.tools-area {
+  border: 2px solid #27AE60; background: #F0FAF0; margin: 12pt 10pt 0 80pt;
+  padding: 8pt 12pt; display: flex; flex-direction: column;
+}
+.tool-icons { display: flex; flex-direction: row; align-items: center; margin: 4pt 0; }
+.tool-icon { border: 2px solid #333; border-radius: 50%; width: 32pt; height: 32pt; display: flex; align-items: center; justify-content: center; margin: 0 6pt; background: #fff; }
+.code-snippet { background: #2C2C2C; padding: 4pt 8pt; margin: 6pt 0 0 0; }
+.loop-indicator {
+  border: 3px solid #E67E22; margin: 6pt 10pt 0 10pt;
+  padding: 4pt 10pt; background: rgba(230, 126, 34, 0.1);
+}
+.final-output-area { display: flex; align-items: center; margin: 0 0 4pt 0; }
+</style>
+</head>
+<body>
+<div class="title-area">
+  <h1 style="font-size: 48pt; color: #000000; margin: 0; font-weight: bold; letter-spacing: 6pt;">AGENT</h1>
+  <p style="font-size: 14pt; color: #666666; margin: 2pt 0 0 0;">Complete Architecture</p>
+</div>
+<div class="main-container">
+  <div class="left-panel">
+    <p style="font-size: 14pt; color: #000000; margin: 0 0 8pt 0; font-weight: bold;">Writing Code for:</p>
+    <p style="font-size: 14pt; color: #C0392B; margin: 0 0 6pt 0; font-weight: bold;">1. LLM API access</p>
+    <p style="font-size: 14pt; color: #27AE60; margin: 0 0 6pt 0; font-weight: bold;">2. Connection to<br>Tools/Resources</p>
+    <p style="font-size: 14pt; color: #E67E22; margin: 0; font-weight: bold;">3. The Agent Logic</p>
+  </div>
+  <div class="right-panel">
+    <div class="final-output-area">
+      <p style="font-size: 11pt; color: #C0392B; margin: 0 0 0 10pt; font-style: italic;">Final output</p>
+      <p style="font-size: 14pt; color: #C0392B; margin: 0 4pt;">&#8592;</p>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: flex-start; margin-left: 10pt;">
+      <p style="font-size: 10pt; color: #888888; margin: 0 0 2pt 108pt;">LLM 2? LLM 3?</p>
+    </div>
+    <div class="flow-boxes">
+      <div class="box"><p style="font-size: 13pt; color: #000000; margin: 0; font-weight: bold;">USER</p></div>
+      <p class="arrow" style="font-size: 16pt; color: #000000; margin: 0;">&#8594;</p>
+      <div class="box" style="border-color: #C0392B; border-width: 3px;">
+        <p style="font-size: 13pt; color: #000000; margin: 0; font-weight: bold;">LLM</p>
+      </div>
+      <p class="arrow" style="font-size: 16pt; color: #E67E22; margin: 0;">&#8594;</p>
+      <div class="box" style="border-color: #E67E22;"><p style="font-size: 13pt; color: #000000; margin: 0;">Action</p></div>
+      <p class="arrow" style="font-size: 16pt; color: #E67E22; margin: 0;">&#8594;</p>
+      <div class="box" style="border-color: #E67E22;"><p style="font-size: 13pt; color: #000000; margin: 0;">Observation</p></div>
+    </div>
+    <div class="tools-area">
+      <div class="tool-icons">
+        <div class="tool-icon"><p style="font-size: 14pt; margin: 0;">&#128269;</p></div>
+        <div class="tool-icon"><p style="font-size: 16pt; margin: 0; font-weight: bold; font-family: 'Times New Roman', serif;">W</p></div>
+        <div class="tool-icon"><p style="font-size: 9pt; margin: 0; font-weight: bold; color: #B71C1C;">arXiv</p></div>
+      </div>
+      <div class="code-snippet">
+        <p style="font-size: 9pt; color: #00FF00; margin: 0; font-family: 'Courier New', monospace;">function_response = function_to_call(**function_args)</p>
+      </div>
+      <p style="font-size: 9pt; color: #27AE60; margin: 4pt 0 0 0; font-style: italic;">python functions and tool/function schemas</p>
+    </div>
+    <div class="loop-indicator">
+      <p style="font-size: 12pt; color: #E67E22; margin: 0; text-align: center; font-weight: bold;">&#8635; Loop until final output is reached</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

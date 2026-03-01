@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #F5F3EB; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  background: #F5F3EB; font-family: Arial, sans-serif;
+  display: flex; flex-direction: column;
+}
+.content {
+  flex: 1; display: flex; flex-direction: row; margin: 12pt 16pt 0 16pt;
+}
+.diagram-col {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+}
+.screenshot-col {
+  width: 200pt; display: flex; align-items: flex-start; justify-content: center;
+  margin-left: 10pt; padding-top: 10pt;
+}
+.screenshot-frame {
+  border: 2px solid #000000; width: 180pt; height: 280pt; overflow: hidden;
+}
+.footer {
+  margin: 4pt 20pt 10pt 20pt;
+}
+</style>
+</head>
+<body>
+<div class="content">
+  <div class="diagram-col">
+    <img src="diagram-tool-use.png" style="width: 100%; height: auto;">
+  </div>
+  <div class="screenshot-col">
+    <div class="screenshot-frame">
+      <img src="chatgpt-websearch.png" style="width: 180pt; height: auto; display: block;">
+    </div>
+  </div>
+</div>
+<div class="footer">
+  <p style="font-size: 8pt; color: #8A847A; margin: 0;">Reference: Toolformer — Language Models Can Teach Themselves to Use Tools (Schick et al., 2023)</p>
+</div>
+</body>
+</html>

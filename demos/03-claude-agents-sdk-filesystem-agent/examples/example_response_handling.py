@@ -2,7 +2,7 @@
 # /// script
 # requires-python = ">=3.11"
 # dependencies = [
-#     "anthropic-claude-sdk",
+#     "claude-agent-sdk",
 # ]
 # ///
 """
@@ -44,10 +44,11 @@ from claude_agent_sdk import (
     create_sdk_mcp_server,
     SystemMessage,
     AssistantMessage,
+    UserMessage,
     ResultMessage,
     TextBlock,
     ToolUseBlock,
-    ToolResultMessage,
+    ToolResultBlock,
 )
 
 
@@ -70,7 +71,7 @@ async def example_message_types():
     Message Types:
     - SystemMessage: Initialization, system info, agent events
     - AssistantMessage: Claude's text responses and tool invocations
-    - ToolResultMessage: Results from tool execution
+    - UserMessage: Tool results (with parent_tool_use_id set)
     - ResultMessage: Final execution status and metadata
     """
 
@@ -116,12 +117,13 @@ async def example_message_types():
                         print(f"    Input: {block.input}")
                 print()
 
-            # Tool results
-            elif isinstance(message, ToolResultMessage):
-                print(f"[ToolResultMessage] Tool: {message.tool_use_id}")
-                for block in message.content:
-                    if isinstance(block, TextBlock):
-                        print(f"  - Result: {block.text[:50]}...")
+            # Tool results (UserMessage with parent_tool_use_id)
+            elif isinstance(message, UserMessage) and message.parent_tool_use_id:
+                print(f"[ToolResult] Tool: {message.parent_tool_use_id}")
+                if isinstance(message.content, list):
+                    for block in message.content:
+                        if isinstance(block, TextBlock):
+                            print(f"  - Result: {block.text[:50]}...")
                 print()
 
             # Final result
@@ -251,7 +253,7 @@ class ExecutionTracker:
     all_messages: List[Any] = field(default_factory=list)
     system_messages: List[SystemMessage] = field(default_factory=list)
     assistant_messages: List[AssistantMessage] = field(default_factory=list)
-    tool_result_messages: List[ToolResultMessage] = field(default_factory=list)
+    tool_result_messages: List[UserMessage] = field(default_factory=list)
 
     # Extracted data
     assistant_texts: List[str] = field(default_factory=list)
@@ -287,18 +289,19 @@ class ExecutionTracker:
                         "timestamp": datetime.now()
                     })
 
-        elif isinstance(message, ToolResultMessage):
+        elif isinstance(message, UserMessage) and message.parent_tool_use_id:
             self.tool_result_messages.append(message)
 
             # Extract results
-            for block in message.content:
-                if isinstance(block, TextBlock):
-                    self.tool_results.append({
-                        "tool_use_id": message.tool_use_id,
-                        "result": block.text,
-                        "is_error": getattr(block, 'is_error', False),
-                        "timestamp": datetime.now()
-                    })
+            if isinstance(message.content, list):
+                for block in message.content:
+                    if isinstance(block, TextBlock):
+                        self.tool_results.append({
+                            "tool_use_id": message.parent_tool_use_id,
+                            "result": block.text,
+                            "is_error": getattr(block, 'is_error', False),
+                            "timestamp": datetime.now()
+                        })
 
         elif isinstance(message, ResultMessage):
             self.end_time = datetime.now()
@@ -445,13 +448,14 @@ def summarize_execution(messages: List[Any]) -> Dict[str, Any]:
                         summary["tool_usage"].get(tool_name, 0) + 1
 
         # Track errors
-        elif isinstance(msg, ToolResultMessage):
-            for block in msg.content:
-                if hasattr(block, 'is_error') and block.is_error:
-                    summary["errors"].append({
-                        "tool": msg.tool_use_id,
-                        "message": block.text if isinstance(block, TextBlock) else str(block)
-                    })
+        elif isinstance(msg, UserMessage) and msg.parent_tool_use_id:
+            if isinstance(msg.content, list):
+                for block in msg.content:
+                    if hasattr(block, 'is_error') and block.is_error:
+                        summary["errors"].append({
+                            "tool": msg.parent_tool_use_id,
+                            "message": block.text if isinstance(block, TextBlock) else str(block)
+                        })
 
         # Final status
         elif isinstance(msg, ResultMessage):

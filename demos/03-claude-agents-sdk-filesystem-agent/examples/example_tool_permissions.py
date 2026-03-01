@@ -2,7 +2,7 @@
 # /// script
 # requires-python = ">=3.11"
 # dependencies = [
-#     "anthropic-claude-sdk",
+#     "claude-agent-sdk",
 # ]
 # ///
 """

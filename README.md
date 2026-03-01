@@ -175,7 +175,7 @@ Think of it like a restaurant: the Host seats you, Clients take orders from spec
 ```bash
 cd demos/02-study-case-anthropic-tools-resources-prompts-chat-app
 
-export OPENAI_API_KEY="your-key"
+export ANTHROPIC_API_KEY="your-key"
 uv run chat_app.py
 ```
 
@@ -205,7 +205,6 @@ Content: Hello MCP
   - `example_error_handling.py` - Error handling strategies
 - `scripts/file_reader_agent.py` - Complete file reader implementation
 - `README.md` - Comprehensive learning guide
-- `COURSE_SUMMARY.md` - Architecture deep dive
 
 **Learning Objectives**:
 - Create in-process MCP servers (no subprocess overhead)
@@ -251,11 +250,8 @@ uv run scripts/file_reader_agent.py
 **Key Files**:
 - `csv_query_mcp_server.py` - MCP server with 7 CSV query tools
 - `claude_agents_sdk_demo.py` - ⭐ **Recommended**: In-process tools with Claude SDK
-- `openai_mcp_csv_demo.ipynb` - OpenAI Agents SDK approach (notebook)
-- `replicate_thumbnail_mcp.py` - Image generation with Replicate
+- `claude_agents_csv_demo.ipynb` - Claude Agents SDK notebook demo
 - `sample_data.csv` - Product database (15 products)
-- `README_CLAUDE_AGENTS_SDK.md` - Claude SDK documentation
-- `CLAUDE_SDK_EXPLANATION.md` - Architecture deep dive
 
 **Learning Objectives**:
 - Create specialized MCP tools for data analysis
@@ -274,10 +270,7 @@ export ANTHROPIC_API_KEY="your-key"
 uv run claude_agents_sdk_demo.py
 
 # Or explore with Jupyter
-jupyter notebook openai_mcp_csv_demo.ipynb
-
-# Configure Claude Desktop for image generation
-cat thumbnail_mcp.json  # Copy to Claude Desktop config
+jupyter notebook claude_agents_csv_demo.ipynb
 ```
 
 **Available Tools**:
@@ -310,8 +303,7 @@ cat thumbnail_mcp.json  # Copy to Claude Desktop config
 - `automations_database.csv` - 7 pre-built automation templates
 - `generated_scripts/` - Output directory (created at runtime)
 - `README.md` - Complete architecture guide
-- `QUICKSTART.md` - Quick reference
-- `DEMO_OUTPUT.md` - Example session outputs
+- `WALKTHROUGH.md` - Step-by-step walkthrough
 
 **Learning Objectives**:
 - Combine MCP data tools with built-in filesystem tools

@@ -9,7 +9,6 @@
 # ]
 # ///
 
-#!/usr/bin/env python3
 """
 MCP Chat Application with Claude Tool Use
 Demonstrates Model Context Protocol by connecting Claude's tool use
