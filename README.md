@@ -18,15 +18,15 @@ The **Model Context Protocol (MCP)** is an open standard that provides a univers
 
 ## 📚 Course Overview
 
-This hands-on course takes you from MCP fundamentals to production deployment through 7 comprehensive demos:
+This hands-on course takes you from MCP fundamentals to production deployment through 8 comprehensive demos:
 
 ### What You'll Learn
 
 - ✅ **MCP Fundamentals**: Architecture, protocol concepts, and tool/resource patterns
 - ✅ **Building MCP Servers**: Using FastMCP to create custom tool providers
 - ✅ **Claude Agents SDK**: Building production-grade agents with in-process MCP
-- ✅ **OpenAI Integration**: Bridging MCP with OpenAI's function calling
-- ✅ **Real-World Applications**: Chat apps, data queries, automation, and deployment
+- ✅ **Chat Applications**: Building full-featured chat apps with Claude tool use and MCP
+- ✅ **Real-World Applications**: Data queries, automation, and deployment
 - ✅ **Security & Permissions**: Tool authorization, input validation, and best practices
 - ✅ **Production Deployment**: Serverless deployment to Vercel with both SDKs
 
@@ -121,9 +121,10 @@ jupyter notebook intro-agents-cld.ipynb
 **What it covers**: MCP fundamentals, server implementation with FastMCP, and client interaction.
 
 **Key Files**:
-- `mcp_server.py` - Basic MCP server with document tools
+- `mcp_server.py` - Basic MCP server with time, math, and file tools
 - `mcp_client.py` - Test client for server interaction
-- `intro-mcp-walkthrough.md` - Step-by-step guide
+- `mcp_host.py` - Host/client integration example
+- `walkthrough.md` - Step-by-step guide
 - `documents.txt` - Sample data
 
 **Learning Objectives**:
@@ -157,19 +158,19 @@ Think of it like a restaurant: the Host seats you, Clients take orders from spec
 ### Demo 02: MCP Chat Application Study Case
 **Path**: `demos/02-study-case-anthropic-tools-resources-prompts-chat-app/`
 
-**What it covers**: Complete chat application integrating **OpenAI function calling** with MCP capabilities.
+**What it covers**: Complete chat application integrating **Claude tool use** with MCP capabilities.
 
 **Key Files**:
-- `chat_app.py` - Full-featured chat interface with tool usage
+- `chat_app.py` - Full-featured chat interface with Claude tool use
 - `mcp_server.py` - MCP server with file operations
-- `mcp_client.py` - MCP client wrapper for OpenAI integration
+- `mcp_client.py` - MCP client wrapper for Anthropic integration
 - `README.md` - Detailed documentation
 
 **Learning Objectives**:
-- Bridge OpenAI function calling with MCP tools
-- Convert MCP schemas to OpenAI function definitions
-- Build production-ready chat applications
-- Handle tool execution and response streaming
+- Bridge Claude tool use with MCP tools
+- Convert MCP schemas to Claude tool definitions
+- Build production-ready chat applications with `@file` mentions
+- Handle tool execution and multi-turn conversations
 
 **Run it**:
 ```bash
@@ -198,12 +199,13 @@ Content: Hello MCP
 **What it covers**: Building agents with the **Claude Agents SDK** using in-process MCP servers for filesystem operations.
 
 **Key Files**:
+- `file_reader_agent.py` - Complete file reader agent implementation
+- `simple_claude_agent_files.py` - Simplified starter example
 - `examples/` - Individual topic examples
   - `example_mcp_server.py` - MCP server setup patterns
   - `example_tool_permissions.py` - Permission callbacks and security
   - `example_response_handling.py` - Processing agent responses
   - `example_error_handling.py` - Error handling strategies
-- `scripts/file_reader_agent.py` - Complete file reader implementation
 - `README.md` - Comprehensive learning guide
 
 **Learning Objectives**:
@@ -219,12 +221,15 @@ cd demos/03-claude-agents-sdk-filesystem-agent
 
 export ANTHROPIC_API_KEY="your-key"
 
-# Run individual examples
+# Run the simplified example
+uv run simple_claude_agent_files.py
+
+# Run individual topic examples
 uv run examples/example_mcp_server.py
 uv run examples/example_tool_permissions.py
 
 # Run complete file reader agent
-uv run scripts/file_reader_agent.py
+uv run file_reader_agent.py
 ```
 
 **★ Insight ─────────────────────────────────────**
@@ -447,6 +452,40 @@ vercel --prod
 
 ---
 
+### Demo 07: Hacks, Tips, Tools & Workflows
+**Path**: `demos/07-hacks-tips-tools-workflows/`
+
+**What it covers**: Curated collection of **practical tips, tools, and workflow patterns** demonstrated live during the training session.
+
+**Key Files**:
+- `mcp-builder-skill/` - Claude skill for building MCP servers
+  - `SKILL.md` - Skill definition and usage guide
+  - `reference/` - Reference implementations
+  - `scripts/` - Helper scripts
+
+**Learning Objectives**:
+- Discover useful MCP ecosystem tools and integrations
+- Learn workflow shortcuts for MCP development
+- Use Claude skills to accelerate MCP server creation
+- Explore tips and tricks shared during live sessions
+
+---
+
+### Assets & Resources
+**Path**: `demos/assets-resources/`
+
+**What it contains**: Reference materials, diagrams, and cheatsheets used throughout the course.
+
+**Key Files**:
+- `MCP_TECHNICAL_CHEATSHEET.md` - Quick reference for MCP concepts and patterns
+- `mcp_server_prompt_templates.md` - Prompt templates for building MCP servers
+- `mcp_security_report.pdf` - Security analysis and best practices
+- `diagram.excalidraw` - Editable architecture diagrams
+- `mcp-course.md` - Comprehensive course reference document
+- Various `.png` files - Architecture diagrams, agent loops, market maps
+
+---
+
 ## 🎨 Architecture Patterns
 
 ### Pattern 1: In-Process MCP Tools (Claude Agents SDK)
@@ -485,7 +524,7 @@ agent = Agent(
 
 ### Pattern 2: External MCP Server (Traditional)
 
-**Used in**: Demos 01, 02, 04 (OpenAI version)
+**Used in**: Demos 01, 02, 04 (external server version)
 
 ```python
 # Server (FastMCP)
@@ -790,9 +829,10 @@ tasklist | findstr python  # Windows
 
 ### Course Materials
 
-- `presentation/presentation.html` - Full course slides
-- `presentation/mcp-talk.pdf` - PDF version
-- `how-mcp-works-with-claude.md` - Integration guide
+- `presentation/presentation.html` - Interactive HTML course slides
+- `presentation/presentation-mcp-updated.pdf` - PDF version of slides
+- `walkthrough_for_beginners.md` - Comprehensive beginner's guide
+- `demos/assets-resources/MCP_TECHNICAL_CHEATSHEET.md` - Quick reference cheatsheet
 - `CLAUDE.md` - Project development guidelines
 
 ---
@@ -831,11 +871,11 @@ This course material is provided for educational purposes as part of the O'Reill
 
 1. ✅ **Start with Demo 00** - Understand AI agent fundamentals
 2. ✅ **Build MCP basics** (Demo 01) - Create your first server
-3. ✅ **Choose your SDK**:
-   - **Claude Agents SDK** (Demos 03, 04, 05) - In-process, fast, Python-native
-   - **OpenAI Agents SDK** (Demos 02, 06) - Stateless, simple, widely compatible
-4. ✅ **Deploy to production** (Demo 06) - Vercel serverless deployment
-5. ✅ **Build your own** - Create custom MCP servers for your use cases
+3. ✅ **Build a chat app** (Demo 02) - Connect Claude tool use with MCP
+4. ✅ **Master the Claude Agents SDK** (Demos 03, 04, 05) - In-process tools, data queries, automation
+5. ✅ **Deploy to production** (Demo 06) - Vercel serverless deployment with both SDKs
+6. ✅ **Level up** (Demo 07) - Explore hacks, tips, and workflow tools
+7. ✅ **Build your own** - Create custom MCP servers for your use cases
 
 ---
 
