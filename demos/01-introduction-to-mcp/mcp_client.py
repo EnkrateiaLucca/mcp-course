@@ -97,85 +97,13 @@ class SimpleMCPClient:
 
         return str(resource)
     
-    # SImulation of the Server/Host application!
-    async def interactive_mode(self):
-        """Simple interactive loop to test the tools"""
-        print("\n🤖 Interactive Mode - Type 'help' for commands or 'quit' to exit")
-        
-        while True:
-            try:
-                command = input("\n> ").strip().lower()
-                
-                if command == 'quit':
-                    break
-                elif command == 'help':
-                    print("""
-Available commands:
-  time          - Get current time
-  add X Y       - Add two numbers
-  write F C     - Write to file C content F
-  read          - Read the documents resource
-  help          - Show this help
-  quit          - Exit
-                    """)
-                elif command == 'time':
-                    result = await self.call_tool('get_current_time', {})
-                    print(f"Current time: {result.content}")
-                elif command.startswith('add '):
-                    parts = command.split()
-                    if len(parts) == 3:
-                        a, b = float(parts[1]), float(parts[2])
-                        result = await self.call_tool('add_numbers', {'a': a, 'b': b})
-                        print(f"Result: {result.content}")
-                    else:
-                        print("Usage: add <number1> <number2>")
-                elif command.startswith('write '):
-                    parts = command.split(maxsplit=2)
-                    if len(parts) == 3:
-                        filename = parts[1]
-                        content = parts[2]
-                        result = await self.call_tool('write_file', {
-                            'file_name': filename,
-                            'file_content': content
-                        })
-                        print(f"File written: {result.content}")
-                    else:
-                        print("Usage: write <filename> <content>")
-                elif command == 'read':
-                    result = await self.read_resource('docs://documents.txt')
-                    print(f"Document content:\n{result if result else 'No content'}")
-                else:
-                    print("Unknown command. Type 'help' for available commands.")
-                    
-            except Exception as e:
-                print(f"Error: {e}")
-    
     async def cleanup(self):
         """Clean up resources - AsyncExitStack handles this automatically"""
         await self.exit_stack.aclose()
 
-async def main():
-    import sys
-    
-    if len(sys.argv) < 2:
-        print("Usage: python mcp_client.py <path_to_server.py>")
-        print("Example: python mcp_client.py ./mcp_server.py")
-        sys.exit(1)
-    
-    server_path = sys.argv[1]
-    client = SimpleMCPClient()
-    
-    try:
-        # Connect to server
-        await client.connect_to_server(server_path)
-        
-        # Run interactive mode
-        await client.interactive_mode()
-        
-    finally:
-        # Clean up - AsyncExitStack ensures all resources are properly closed
-        await client.cleanup()
-        print("\n👋 Goodbye!")
-
-if __name__ == "__main__":
-    asyncio.run(main())
+## The MCP CLIENT is a pure protocol layer.
+## It knows how to connect to an MCP server, discover tools/resources,
+## and call them — but it has NO user interface.
+##
+## The HOST (mcp_host.py) is what the user actually runs.
+## Run with: python mcp_host.py ./mcp_server.py
