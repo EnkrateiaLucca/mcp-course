@@ -1,0 +1,7 @@
+- - [ ] Tips, hacks and tools using MCP:
+	- [ ] Automate mcp server writing with AI
+		- [ ] [Go through this example to build MCP servers with LLMs, showing your claude-code workflow for that](https://modelcontextprotocol.io/tutorials/building-mcp-with-llms)
+	- [ ] Claude Code + context7 for up to date docs
+	- [ ] replace github with gitingest to get LLM ready data for any repository on github
+	- [ ] https://llmstxt.org/ for indexing docs easily
+	- [ ] replace github with deepwiki for a fully functional docs page over your repo
