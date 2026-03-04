@@ -300,34 +300,32 @@ jupyter notebook claude_agents_csv_demo.ipynb
 ### Demo 05: Automation Agent
 **Path**: `demos/05-automations-agent/`
 
-**What it covers**: Intelligent automation script generator using **Claude Agents SDK** + MCP database integration.
+**What it covers**: An AI agent that **writes, tests, and runs** Python automation scripts using **Claude Agent SDK** + an MCP server that provides sandboxed script execution.
 
 **Key Files**:
-- `automation_agent.py` - Claude Agent that generates scripts
-- `automation_mcp_server.py` - MCP server with database query tools
-- `automations_database.csv` - 7 pre-built automation templates
-- `generated_scripts/` - Output directory (created at runtime)
-- `README.md` - Complete architecture guide
-- `WALKTHROUGH.md` - Step-by-step walkthrough
+- `automation_agent.py` - Interactive Claude Agent (CLI)
+- `automation_mcp_server.py` - MCP server with sandboxed script tools
+- `generated_scripts/` - Where scripts are saved and executed
+- `WALKTHROUGH.md` - Full architecture explanation
 
 **Learning Objectives**:
-- Combine MCP data tools with built-in filesystem tools
-- Build multi-step agent workflows
-- Query structured data (CSV) via MCP
-- Generate executable scripts programmatically
-- Implement permission-restricted file operations
+- Use MCP as a **capability boundary** (constrained, auditable tools)
+- Build agentic write→test→fix loops
+- Connect Claude Agent SDK to an external MCP server via stdio
+- Implement sandboxed script execution with timeouts
 
 **Architecture**:
 ```
-User Request
+User Request ("Create a CSV converter")
     ↓
-Automation Agent (Claude SDK)
+Automation Agent (Claude Agent SDK)
+    ↓ writes code, calls MCP tools
+MCP Server (script-sandbox)
+    - save_script(name, code)
+    - run_script(name, args)  ← 30s timeout
+    - list_scripts / read_script / delete_script
     ↓
-MCP Server (data queries) + Built-in Tools (Write, Bash, Glob)
-    ↓
-Automation Database (CSV)
-    ↓
-Generated Scripts (output)
+generated_scripts/  (sandboxed directory)
 ```
 
 **Run it**:
@@ -340,23 +338,18 @@ uv run automation_agent.py
 
 **Example Workflow**:
 ```
-You: What automations are available?
-Agent: [Lists 7 automations: backup_files, clean_temp_files, etc.]
+You: Create a script that finds duplicate files in a folder
+Agent: [Writes Python script → saves via MCP → runs to test → fixes errors → reports back]
+      ✅ Saved: generated_scripts/find_duplicates.py
+      ✅ Tested successfully
 
-You: Generate the file backup automation
-Agent: [Creates backup_files.sh with full template]
-      ✅ Created: generated_scripts/backup_files.sh
-      ✅ Made executable with chmod +x
+You: List my scripts
+Agent: [Calls list_scripts tool]
+      - find_duplicates.py
 
-Usage: ./backup_files.sh /source/path /backup/destination
+You: Run find_duplicates.py /tmp/test
+Agent: [Calls run_script with args → shows output]
 ```
-
-**Available Automations**:
-- **File Management**: backup_files, organize_downloads
-- **System Maintenance**: clean_temp_files, monitor_disk_space
-- **Database Operations**: backup_database
-- **Version Control**: auto_commit_changes
-- **Reporting**: generate_report
 
 ---
 

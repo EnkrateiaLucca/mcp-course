@@ -1,295 +1,184 @@
-# Automation Generator: Claude Agent + MCP
+# Automation Agent: Claude Agent SDK + MCP
 
-A simple demo showing how to build an AI agent that queries an automation database via MCP and generates scripts.
-
-## What This Demo Does
-
-You ask the agent about automation scripts, and it:
-1. Queries a CSV database using MCP tools
-2. Retrieves script templates
-3. Generates the scripts to a folder
-4. Explains how to use them
+An agent that writes, tests, and runs Python scripts — demonstrating how MCP provides
+**constrained capabilities** to an AI agent.
 
 ## Architecture
 
 ```
-┌─────────────────────┐
-│      User           │
-│  "Show me scripts"  │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────────────┐
-│   automation_agent.py       │
-│   (Claude Agent SDK)        │
-└────────┬────────────────────┘
-         │
-         │ MCP Tools
-         ▼
-┌─────────────────────────────┐
-│  automation_mcp_server.py   │
-│  - list_automations         │
-│  - get_automation           │
-└────────┬────────────────────┘
-         │
-         │ Reads CSV
-         ▼
-┌─────────────────────────────┐
-│  automations_database.csv   │
-│  Script templates database  │
-└─────────────────────────────┘
+┌─────────────────────────┐
+│        User              │
+│  "Make a CSV converter"  │
+└───────────┬──────────────┘
+            │
+            ▼
+┌──────────────────────────────┐
+│   automation_agent.py         │
+│   Claude Agent SDK            │
+│   - Understands the request   │
+│   - Writes Python code        │
+│   - Tests and iterates        │
+└───────────┬──────────────────┘
+            │ MCP (stdio)
+            ▼
+┌──────────────────────────────┐
+│   automation_mcp_server.py    │
+│   FastMCP Server              │
+│   - save_script(name, code)   │
+│   - list_scripts()            │
+│   - read_script(name)         │
+│   - run_script(name, args)    │
+│   - delete_script(name)       │
+└───────────┬──────────────────┘
+            │
+            ▼
+┌──────────────────────────────┐
+│   generated_scripts/          │
+│   Sandboxed directory         │
+│   - hello.py                  │
+│   - csv_converter.py          │
+│   - ...                       │
+└──────────────────────────────┘
 ```
+
+## The Key Idea: MCP as a Capability Boundary
+
+The MCP server doesn't just "expose tools" — it defines a **security sandbox**:
+
+| What the agent CAN do          | What the agent CANNOT do        |
+|--------------------------------|----------------------------------|
+| Save .py files to one folder   | Write files anywhere on disk     |
+| Run scripts with 30s timeout   | Run arbitrary shell commands     |
+| Read scripts it created        | Access files outside the sandbox |
+| Delete scripts it created      | Install packages or modify system|
+
+This is the core MCP pattern: **constrained, auditable capabilities**.
 
 ## Quick Start
 
-### Prerequisites
-
 ```bash
-# Set your API key
-export ANTHROPIC_API_KEY='your-key-here'
-```
-
-### Run the Agent
-
-```bash
-cd 05-automations-agent
+export ANTHROPIC_API_KEY='your-key'
+cd demos/05-automations-agent
 uv run automation_agent.py
 ```
 
-### Try It
+## Try These Prompts
 
 ```
-You: What automations are available?
+You: Create a script that finds all duplicate files in a given folder
 
-[Agent lists all scripts from database]
+You: Write a CSV to JSON converter
 
-You: Generate the backup files automation
+You: Make a script that generates a random password
 
-[Agent creates backup_files.sh in generated_scripts/]
+You: List my scripts
+
+You: Run password_generator.py
 ```
 
 ## File Breakdown
 
-### 1. automations_database.csv
-
-A simple CSV with automation templates:
-
-| id | name | description | category | script_type | template |
-|----|------|-------------|----------|-------------|----------|
-| 1 | backup_files | Backup files script | File Management | bash | #!/bin/bash... |
-
-Contains 7 pre-built automation scripts.
-
-### 2. automation_mcp_server.py
-
-**An MCP server that provides database tools.**
+### automation_mcp_server.py — The Capability Layer
 
 ```python
 from mcp.server.fastmcp import FastMCP
-import pandas as pd
 
-mcp = FastMCP("automation-database")
+mcp = FastMCP("script-sandbox")
 
-@mcp.tool(
-    name="list_automations",
-    description="List all available automation scripts"
-)
-def list_automations() -> str:
-    df = pd.read_csv(DB_PATH)
-    return df[['id', 'name', 'description']].to_string()
+@mcp.tool()
+def save_script(filename: str, code: str) -> str:
+    """Save a Python script to the scripts directory."""
+    # Validates filename, writes to sandboxed directory
+    ...
 
-@mcp.tool(
-    name="get_automation",
-    description="Get script template by ID"
-)
-def get_automation(automation_id: int) -> str:
-    # Returns full script template
+@mcp.tool()
+def run_script(filename: str, args: str = "") -> str:
+    """Run a script with 30-second timeout."""
+    # subprocess.run with capture_output and timeout
     ...
 ```
 
-**Key Points:**
-- Uses FastMCP for quick setup
-- Two simple tools: list and get
-- Returns data from CSV database
-- Runs on stdio transport (perfect for agent integration)
+5 tools total: `save_script`, `list_scripts`, `read_script`, `run_script`, `delete_script`
 
-### 3. automation_agent.py
-
-**Claude agent that uses the MCP server.**
+### automation_agent.py — The Intelligence Layer
 
 ```python
 from claude_agent_sdk import ClaudeAgentOptions, query
 
 options = ClaudeAgentOptions(
     model="claude-sonnet-4-5",
-    system_prompt="You help generate automation scripts...",
+    system_prompt="You are a Python automation assistant...",
     mcp_servers={
-        "automation-db": {
+        "scripts": {
             "type": "stdio",
             "command": "uv",
-            "args": ["run", "automation_mcp_server.py"]
+            "args": ["run", "automation_mcp_server.py"],
         }
     },
     permission_mode="bypassPermissions",
 )
 
+# Interactive loop
 async for message in query(prompt=user_input, options=options):
     print(message, end="", flush=True)
 ```
 
-**Key Points:**
-- Uses Claude Agent SDK (simple query interface)
-- Connects to MCP server via stdio
-- Streams responses to user
-- Handles file writing automatically
+## How the Agent Workflow Looks
 
-## How It Works
+1. User: "Create a password generator"
+2. Agent writes Python code
+3. Agent calls `save_script("password_generator.py", code)`
+4. Agent calls `run_script("password_generator.py")` to test it
+5. If errors → agent reads output, fixes code, saves again, re-runs
+6. Reports back with the working script and output
 
-### Step 1: User asks a question
-```
-You: Show me file management automations
-```
+## Key Concepts for the Course
 
-### Step 2: Agent calls MCP tool
-Agent uses `list_automations` tool from MCP server.
+### MCP Tools vs Raw Shell Access
 
-### Step 3: MCP server queries database
-```python
-def list_automations():
-    df = pd.read_csv("automations_database.csv")
-    return df[['id', 'name', 'description', 'category']].to_string()
-```
-
-### Step 4: Agent gets results
-Returns formatted list of automations.
-
-### Step 5: User requests generation
-```
-You: Generate automation ID 1
-```
-
-### Step 6: Agent retrieves template
-Uses `get_automation(1)` to get full script.
-
-### Step 7: Agent writes file
-Creates `generated_scripts/backup_files.sh` with the template.
-
-### Step 8: Agent explains usage
-Provides instructions on how to run the script.
-
-## Key Concepts
-
-### MCP (Model Context Protocol)
-
-MCP standardizes how AI agents access tools and data:
-
-- **Tools** - Functions the agent can call (list_automations, get_automation)
-- **Transport** - How agent communicates with server (stdio)
-- **Server** - Provides the tools (automation_mcp_server.py)
+Instead of giving the agent `Bash` access (dangerous!), we give it **specific tools**
+with **built-in guardrails**:
+- Filename validation (no path traversal)
+- Execution timeouts (no infinite loops)
+- Confined to one directory (no system access)
 
 ### Claude Agent SDK
 
-Simplified SDK for building Claude-powered agents:
+The SDK handles the agent loop:
+- Sends user prompt to Claude
+- Claude decides which MCP tools to call
+- SDK executes the tools via MCP
+- Claude sees results, decides next action
+- Streams responses back to user
 
-- **ClaudeAgentOptions** - Configuration for model, prompts, MCP servers
-- **query()** - Simple function to run agent queries
-- **Streaming** - Real-time response streaming
-- **MCP Integration** - Built-in MCP server support
+### stdio Transport
 
-### Why This Pattern Works
+Agent ↔ MCP server communication uses stdio (stdin/stdout):
+- Agent spawns the MCP server as a subprocess
+- Sends JSON-RPC messages over stdin
+- Receives responses over stdout
+- No network setup needed
 
-**Separation of Concerns:**
-- MCP server = Data access layer
-- Agent = Intelligence layer
-- CSV database = Storage layer
-
-**Benefits:**
-- Clean, maintainable code
-- Easy to test each component
-- Can swap out database without changing agent
-- Can reuse MCP server in other agents
-
-## Testing the MCP Server
-
-Test the server independently:
+## Testing the MCP Server Alone
 
 ```bash
 mcp dev automation_mcp_server.py
 ```
 
-This opens a web interface where you can test tools directly.
+This opens the MCP Inspector — a web UI where you can test each tool independently.
 
-## Customization
+## Extending This Demo
 
-### Add New Automations
-
-Edit `automations_database.csv`:
-
-```csv
-8,new_script,My new automation,Custom,python,"#!/usr/bin/env python3
-print('Hello')"
-```
-
-### Add New Tools
-
-In `automation_mcp_server.py`:
-
+**Add a new tool** to the MCP server:
 ```python
-@mcp.tool(
-    name="search_by_category",
-    description="Search automations by category"
-)
-def search_by_category(category: str) -> str:
-    df = pd.read_csv(DB_PATH)
-    return df[df['category'] == category].to_string()
+@mcp.tool()
+def lint_script(filename: str) -> str:
+    """Check a script for common issues."""
+    # Run py_compile or basic checks
+    ...
 ```
 
-### Modify Agent Behavior
-
-In `automation_agent.py`, update the `system_prompt`:
-
+**Change the agent's focus** by editing the system prompt:
 ```python
-system_prompt="""
-Your custom instructions here...
-- Always add detailed comments
-- Use consistent naming
-- Etc.
-"""
+system_prompt="You specialize in data processing scripts..."
 ```
-
-## Common Issues
-
-**"ANTHROPIC_API_KEY not set"**
-```bash
-export ANTHROPIC_API_KEY='your-key'
-```
-
-**"Database file not found"**
-Make sure you're in the right directory:
-```bash
-cd 05-automations-agent
-```
-
-**MCP server not connecting**
-Test the server independently:
-```bash
-mcp dev automation_mcp_server.py
-```
-
-## Next Steps
-
-1. Run the demo and try different queries
-2. Add your own automation to the CSV
-3. Create a new MCP tool for searching
-4. Modify the system prompt to change agent behavior
-5. Build your own agent using this pattern!
-
-## Related Examples
-
-- `live-demo-from-scratch/` - PDF analysis agent (similar pattern)
-- `03-claude-agents-sdk-filesystem-agent/` - More Claude SDK examples
-- `04-query-tabular-data/` - Similar CSV querying patterns
-
----
-
-**Built for O'Reilly MCP Course - Simple, Clean, Educational**

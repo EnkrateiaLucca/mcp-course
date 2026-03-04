@@ -1,44 +1,137 @@
 # /// script
 # requires-python = ">=3.12"
-# dependencies = ["mcp[cli]>=1.0.0", "pandas>=2.0.0"]
+# dependencies = ["mcp[cli]>=1.0.0"]
 # ///
 
+"""
+MCP Server: Script Automation Sandbox
+
+Provides constrained tools for an AI agent to create, test, and run
+Python automation scripts in a sandboxed directory.
+
+The key idea: the MCP server controls WHERE scripts are saved and
+HOW they execute (with timeouts, output capture, etc.), while the
+agent provides the intelligence to WRITE the scripts.
+
+Test independently with: mcp dev automation_mcp_server.py
+"""
+
 from mcp.server.fastmcp import FastMCP
-import pandas as pd
+import subprocess
 import os
 
-mcp = FastMCP("automation-database")
+mcp = FastMCP("script-sandbox")
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "automations_database.csv")
+# All scripts live in this directory - our sandbox boundary
+SCRIPTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "generated_scripts")
+os.makedirs(SCRIPTS_DIR, exist_ok=True)
 
-@mcp.tool(
-    name="list_automations",
-    description="List all available automation scripts with their ID, name, and description"
-)
-def list_automations() -> str:
-    df = pd.read_csv(DB_PATH)
-    return df[['id', 'name', 'description', 'category']].to_string(index=False)
 
-@mcp.tool(
-    name="get_automation",
-    description="Get the full script template for a specific automation by ID"
-)
-def get_automation(automation_id: int) -> str:
-    df = pd.read_csv(DB_PATH)
-    automation = df[df['id'] == automation_id]
+@mcp.tool()
+def save_script(filename: str, code: str) -> str:
+    """Save a Python script to the scripts directory.
 
-    if automation.empty:
-        return f"No automation found with ID: {automation_id}"
+    Args:
+        filename: Name for the script (e.g. 'hello.py'). Must end in .py
+        code: The Python source code to save
+    """
+    if not filename.endswith(".py"):
+        return "Error: filename must end with .py"
 
-    auto = automation.iloc[0]
-    return f"""ID: {auto['id']}
-Name: {auto['name']}
-Description: {auto['description']}
-Script Type: {auto['script_type']}
+    if "/" in filename or "\\" in filename:
+        return "Error: filename cannot contain path separators"
 
-Template:
-{auto['template']}"""
+    filepath = os.path.join(SCRIPTS_DIR, filename)
+    with open(filepath, "w") as f:
+        f.write(code)
+
+    return f"Saved: {filepath}"
+
+
+@mcp.tool()
+def list_scripts() -> str:
+    """List all Python scripts in the scripts directory."""
+    scripts = [f for f in os.listdir(SCRIPTS_DIR) if f.endswith(".py")]
+
+    if not scripts:
+        return "No scripts found."
+
+    return "\n".join(f"- {s}" for s in sorted(scripts))
+
+
+@mcp.tool()
+def read_script(filename: str) -> str:
+    """Read the contents of a saved script.
+
+    Args:
+        filename: Name of the script to read (e.g. 'hello.py')
+    """
+    filepath = os.path.join(SCRIPTS_DIR, filename)
+
+    if not os.path.exists(filepath):
+        return f"Error: {filename} not found"
+
+    with open(filepath) as f:
+        return f.read()
+
+
+@mcp.tool()
+def run_script(filename: str, args: str = "") -> str:
+    """Run a saved Python script with a 30-second timeout.
+
+    Args:
+        filename: Name of the script to run
+        args: Optional space-separated arguments to pass to the script
+    """
+    filepath = os.path.join(SCRIPTS_DIR, filename)
+
+    if not os.path.exists(filepath):
+        return f"Error: {filename} not found"
+
+    cmd = ["python3", filepath]
+    if args:
+        cmd.extend(args.split())
+
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=30,
+            cwd=SCRIPTS_DIR,
+        )
+
+        output = ""
+        if result.stdout:
+            output += f"STDOUT:\n{result.stdout}"
+        if result.stderr:
+            output += f"STDERR:\n{result.stderr}"
+        output += f"\nExit code: {result.returncode}"
+
+        return output if output.strip() else "Script ran successfully (no output)"
+
+    except subprocess.TimeoutExpired:
+        return "Error: Script timed out after 30 seconds"
+    except Exception as e:
+        return f"Error running script: {e}"
+
+
+@mcp.tool()
+def delete_script(filename: str) -> str:
+    """Delete a script from the scripts directory.
+
+    Args:
+        filename: Name of the script to delete
+    """
+    filepath = os.path.join(SCRIPTS_DIR, filename)
+
+    if not os.path.exists(filepath):
+        return f"Error: {filename} not found"
+
+    os.remove(filepath)
+    return f"Deleted: {filename}"
+
 
 if __name__ == "__main__":
-    print("Starting Automation MCP Server...")
+    print("Starting Script Sandbox MCP Server...")
     mcp.run(transport="stdio")
