@@ -62,7 +62,6 @@ class FileCompleter(Completer):
                         display_meta="File",
                     )
 
-
 class MCPChatApp:
     def __init__(self, server_command: str, server_args: list[str], docs_dir: str = "./docs"):
         self.client = MCPClient(command=server_command, args=server_args)

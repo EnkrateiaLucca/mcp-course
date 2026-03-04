@@ -1,0 +1,151 @@
+order_id,order_date,customer_id,product,category,unit_price,quantity,total_amount,region,sales_channel,status,satisfaction_score
+ORD-0015,2025-01-02,CUST-0030,Bluetooth Speaker,Electronics,62.52,3,187.56,South,Online,Completed,5
+ORD-0041,2025-01-02,CUST-0003,Desk Lamp,Office,43.07,1,43.07,North,In-Store,Completed,3
+ORD-0143,2025-01-02,CUST-0039,Cable Organizer,Accessories,9.96,2,19.92,West,Online,Completed,3
+ORD-0060,2025-01-03,CUST-0045,Ergonomic Chair Cushion,Office,46.07,1,46.07,South,Online,Cancelled,
+ORD-0042,2025-01-05,CUST-0036,USB-C Hub,Electronics,42.1,2,84.2,East,In-Store,Completed,2
+ORD-0144,2025-01-08,CUST-0009,USB-C Hub,Electronics,45.3,5,226.5,West,Online,Completed,4
+ORD-0067,2025-01-11,CUST-0045,Bluetooth Speaker,Electronics,51.93,2,103.86,West,Online,Returned,
+ORD-0107,2025-01-15,CUST-0008,Monitor Stand,Office,30.89,1,30.89,North,Partner,Completed,5
+ORD-0147,2025-01-16,CUST-0042,Ergonomic Chair Cushion,Office,47.05,1,47.05,West,In-Store,Completed,2
+ORD-0078,2025-01-22,CUST-0037,Monitor Stand,Office,36.5,1,36.5,West,In-Store,Completed,3
+ORD-0009,2025-01-29,CUST-0050,Webcam HD,Electronics,75.68,1,75.68,East,Online,Completed,3
+ORD-0018,2025-01-30,CUST-0016,Notebook Set,Office,11.4,2,22.8,South,Partner,Completed,3
+ORD-0032,2025-01-30,CUST-0011,Phone Stand,Accessories,13.79,1,13.79,South,Partner,Returned,
+ORD-0031,2025-02-01,CUST-0035,Phone Stand,Accessories,14.35,2,28.7,North,Online,Cancelled,
+ORD-0013,2025-02-02,CUST-0039,Cable Organizer,Accessories,8.77,1,8.77,East,In-Store,Completed,4
+ORD-0023,2025-02-06,CUST-0022,Monitor Stand,Office,35.93,1,35.93,North,Online,Completed,4
+ORD-0098,2025-02-06,CUST-0010,Cable Organizer,Accessories,9.55,4,38.2,South,In-Store,Completed,2
+ORD-0036,2025-02-07,CUST-0007,Desk Lamp,Office,41.51,1,41.51,North,Online,Returned,
+ORD-0148,2025-02-11,CUST-0005,Desk Lamp,Office,38.25,3,114.75,North,In-Store,Completed,3
+ORD-0141,2025-02-16,CUST-0030,Portable Charger,Electronics,33.82,5,169.1,South,Online,Completed,4
+ORD-0028,2025-02-17,CUST-0001,Mechanical Keyboard,Electronics,95.87,2,191.74,East,Online,Returned,
+ORD-0085,2025-02-17,CUST-0002,Desk Lamp,Office,36.39,2,72.78,South,In-Store,Completed,3
+ORD-0039,2025-02-24,CUST-0008,Screen Protector,Accessories,8.65,2,17.3,North,Partner,Completed,5
+ORD-0079,2025-02-24,CUST-0032,Webcam HD,Electronics,60.7,2,121.4,East,Online,Completed,4
+ORD-0014,2025-02-28,CUST-0044,Ergonomic Chair Cushion,Office,44.19,5,220.95,West,Partner,Completed,4
+ORD-0033,2025-03-03,CUST-0026,Bluetooth Speaker,Electronics,53.78,1,53.78,East,In-Store,Completed,5
+ORD-0053,2025-03-05,CUST-0043,Monitor Stand,Office,30.35,1,30.35,East,Online,Completed,5
+ORD-0019,2025-03-06,CUST-0050,Ergonomic Chair Cushion,Office,39.2,4,156.8,South,Online,Returned,
+ORD-0070,2025-03-07,CUST-0030,Desk Lamp,Office,37.35,1,37.35,East,Online,Completed,5
+ORD-0071,2025-03-11,CUST-0028,Bluetooth Speaker,Electronics,56.9,1,56.9,East,Online,Cancelled,
+ORD-0074,2025-03-20,CUST-0040,Cable Organizer,Accessories,8.59,5,42.95,North,Online,Completed,3
+ORD-0045,2025-03-21,CUST-0048,Laptop Sleeve,Accessories,26.12,1,26.12,West,Online,Returned,
+ORD-0003,2025-03-23,CUST-0049,Phone Stand,Accessories,14.47,2,28.94,East,Partner,Completed,4
+ORD-0047,2025-03-23,CUST-0018,Notebook Set,Office,12.38,3,37.14,East,In-Store,Completed,5
+ORD-0103,2025-03-24,CUST-0007,Screen Protector,Accessories,6.97,2,13.94,South,Online,Cancelled,
+ORD-0029,2025-03-26,CUST-0004,Portable Charger,Electronics,32.72,3,98.16,South,Online,Completed,4
+ORD-0120,2025-03-27,CUST-0029,Phone Stand,Accessories,17.5,1,17.5,West,In-Store,Completed,4
+ORD-0046,2025-04-02,CUST-0002,Portable Charger,Electronics,38.37,4,153.48,West,Partner,Completed,5
+ORD-0050,2025-04-02,CUST-0017,Bluetooth Speaker,Electronics,65.71,1,65.71,South,Partner,Completed,4
+ORD-0054,2025-04-09,CUST-0009,Standing Desk Mat,Office,50.83,2,101.66,South,In-Store,Returned,
+ORD-0087,2025-04-09,CUST-0008,Phone Stand,Accessories,15.0,2,30.0,South,Online,Completed,3
+ORD-0142,2025-04-16,CUST-0037,Laptop Sleeve,Accessories,27.31,2,54.62,North,Online,Completed,2
+ORD-0044,2025-04-18,CUST-0023,USB-C Hub,Electronics,43.28,1,43.28,West,Partner,Completed,4
+ORD-0020,2025-04-19,CUST-0028,USB-C Hub,Electronics,49.98,2,99.96,North,In-Store,Returned,
+ORD-0069,2025-04-23,CUST-0032,Screen Protector,Accessories,8.28,2,16.56,South,In-Store,Completed,3
+ORD-0073,2025-04-25,CUST-0023,Screen Protector,Accessories,8.46,2,16.92,South,In-Store,Completed,4
+ORD-0108,2025-04-26,CUST-0006,Ergonomic Chair Cushion,Office,46.22,3,138.66,South,Online,Completed,5
+ORD-0006,2025-04-27,CUST-0043,Laptop Sleeve,Accessories,26.63,2,53.26,East,In-Store,Completed,5
+ORD-0119,2025-04-27,CUST-0019,Cable Organizer,Accessories,9.84,2,19.68,East,Online,Cancelled,
+ORD-0125,2025-05-02,CUST-0007,Webcam HD,Electronics,67.48,2,134.96,South,Partner,Completed,4
+ORD-0095,2025-05-03,CUST-0011,Phone Stand,Accessories,16.64,1,16.64,East,Online,Completed,3
+ORD-0084,2025-05-04,CUST-0006,Portable Charger,Electronics,38.51,2,77.02,East,In-Store,Completed,5
+ORD-0008,2025-05-06,CUST-0035,Laptop Sleeve,Accessories,27.09,1,27.09,East,In-Store,Completed,3
+ORD-0121,2025-05-06,CUST-0010,Portable Charger,Electronics,33.51,1,33.51,North,Online,Completed,4
+ORD-0011,2025-05-07,CUST-0009,Monitor Stand,Office,33.2,2,66.4,West,Online,Completed,5
+ORD-0027,2025-05-08,CUST-0030,Mechanical Keyboard,Electronics,80.77,1,80.77,South,Online,Completed,5
+ORD-0083,2025-05-13,CUST-0023,Laptop Sleeve,Accessories,21.42,1,21.42,West,Online,Completed,3
+ORD-0081,2025-05-18,CUST-0038,Standing Desk Mat,Office,53.98,2,107.96,West,Online,Cancelled,
+ORD-0131,2025-05-20,CUST-0033,Webcam HD,Electronics,61.8,1,61.8,South,Partner,Returned,
+ORD-0126,2025-05-21,CUST-0026,Notebook Set,Office,14.27,2,28.54,North,Partner,Cancelled,
+ORD-0064,2025-05-22,CUST-0041,Desk Lamp,Office,41.43,4,165.72,South,Online,Completed,5
+ORD-0049,2025-05-23,CUST-0050,Screen Protector,Accessories,6.84,1,6.84,North,Online,Completed,4
+ORD-0037,2025-05-26,CUST-0024,Bluetooth Speaker,Electronics,54.97,1,54.97,West,Partner,Completed,3
+ORD-0096,2025-05-28,CUST-0015,Mechanical Keyboard,Electronics,85.68,1,85.68,East,Online,Completed,5
+ORD-0130,2025-06-01,CUST-0006,Laptop Sleeve,Accessories,26.17,1,26.17,North,Online,Completed,3
+ORD-0016,2025-06-02,CUST-0041,Portable Charger,Electronics,39.34,3,118.02,West,In-Store,Completed,5
+ORD-0089,2025-06-04,CUST-0012,Bluetooth Speaker,Electronics,65.7,2,131.4,West,Online,Completed,1
+ORD-0092,2025-06-05,CUST-0037,Mechanical Keyboard,Electronics,78.16,2,156.32,East,Online,Completed,2
+ORD-0137,2025-06-05,CUST-0003,Screen Protector,Accessories,8.19,2,16.38,East,Online,Completed,5
+ORD-0048,2025-06-06,CUST-0023,Mechanical Keyboard,Electronics,77.36,1,77.36,South,Online,Completed,5
+ORD-0058,2025-06-08,CUST-0044,Mechanical Keyboard,Electronics,91.43,1,91.43,East,Online,Completed,3
+ORD-0076,2025-06-09,CUST-0002,Phone Stand,Accessories,16.7,3,50.1,North,Online,Returned,
+ORD-0010,2025-06-11,CUST-0046,Wireless Mouse,Electronics,28.5,3,85.5,North,Partner,Returned,
+ORD-0056,2025-06-14,CUST-0042,Bluetooth Speaker,Electronics,55.55,3,166.65,North,In-Store,Returned,
+ORD-0100,2025-06-15,CUST-0028,Webcam HD,Electronics,68.25,4,273.0,South,Online,Completed,4
+ORD-0065,2025-06-21,CUST-0018,Bluetooth Speaker,Electronics,54.58,2,109.16,South,In-Store,Completed,3
+ORD-0026,2025-06-23,CUST-0047,Screen Protector,Accessories,8.14,3,24.42,West,Online,Completed,5
+ORD-0117,2025-06-23,CUST-0017,Wireless Mouse,Electronics,28.57,3,85.71,East,Online,Completed,4
+ORD-0132,2025-06-23,CUST-0048,Screen Protector,Accessories,8.62,1,8.62,West,Partner,Completed,5
+ORD-0004,2025-07-03,CUST-0007,Notebook Set,Office,11.74,1,11.74,West,Online,Completed,5
+ORD-0007,2025-07-09,CUST-0011,Mechanical Keyboard,Electronics,95.99,4,383.96,South,Online,Completed,4
+ORD-0021,2025-07-11,CUST-0042,Portable Charger,Electronics,37.16,2,74.32,North,Online,Cancelled,
+ORD-0072,2025-07-14,CUST-0022,Screen Protector,Accessories,6.89,2,13.78,South,Online,Completed,3
+ORD-0110,2025-07-16,CUST-0010,Phone Stand,Accessories,16.93,1,16.93,West,Online,Returned,
+ORD-0068,2025-07-19,CUST-0049,Screen Protector,Accessories,7.94,4,31.76,South,Partner,Completed,5
+ORD-0133,2025-07-23,CUST-0044,Desk Lamp,Office,35.4,5,177.0,West,Partner,Cancelled,
+ORD-0055,2025-07-27,CUST-0020,Webcam HD,Electronics,66.13,2,132.26,East,Online,Returned,
+ORD-0114,2025-07-30,CUST-0050,Portable Charger,Electronics,32.29,1,32.29,East,In-Store,Completed,1
+ORD-0059,2025-08-01,CUST-0030,Monitor Stand,Office,30.15,1,30.15,West,In-Store,Completed,5
+ORD-0066,2025-08-01,CUST-0005,Bluetooth Speaker,Electronics,53.25,1,53.25,South,Online,Completed,4
+ORD-0111,2025-08-01,CUST-0050,Monitor Stand,Office,34.19,4,136.76,West,Partner,Completed,3
+ORD-0025,2025-08-05,CUST-0023,Monitor Stand,Office,36.81,3,110.43,North,Online,Completed,4
+ORD-0086,2025-08-06,CUST-0023,Webcam HD,Electronics,64.85,2,129.7,East,Online,Returned,
+ORD-0043,2025-08-09,CUST-0010,Portable Charger,Electronics,31.93,2,63.86,North,Online,Returned,
+ORD-0106,2025-08-15,CUST-0041,Screen Protector,Accessories,7.62,2,15.24,North,Online,Completed,5
+ORD-0104,2025-08-21,CUST-0003,Notebook Set,Office,12.65,2,25.3,East,Online,Returned,
+ORD-0134,2025-08-21,CUST-0008,Screen Protector,Accessories,7.52,3,22.56,West,Online,Returned,
+ORD-0113,2025-08-22,CUST-0025,Desk Lamp,Office,38.46,4,153.84,South,Online,Returned,
+ORD-0082,2025-08-26,CUST-0049,Notebook Set,Office,13.74,4,54.96,North,Partner,Completed,4
+ORD-0123,2025-08-27,CUST-0001,Portable Charger,Electronics,32.68,2,65.36,East,Online,Cancelled,
+ORD-0024,2025-08-31,CUST-0037,Standing Desk Mat,Office,45.17,2,90.34,North,Partner,Returned,
+ORD-0091,2025-09-02,CUST-0017,Wireless Mouse,Electronics,29.01,2,58.02,South,Online,Completed,2
+ORD-0090,2025-09-09,CUST-0041,Bluetooth Speaker,Electronics,51.67,1,51.67,North,Online,Completed,2
+ORD-0115,2025-09-11,CUST-0010,Phone Stand,Accessories,17.24,2,34.48,South,Partner,Cancelled,
+ORD-0127,2025-09-12,CUST-0048,Wireless Mouse,Electronics,30.63,2,61.26,East,Online,Returned,
+ORD-0146,2025-09-15,CUST-0029,Mechanical Keyboard,Electronics,87.21,3,261.63,West,In-Store,Completed,3
+ORD-0040,2025-09-16,CUST-0017,USB-C Hub,Electronics,46.05,1,46.05,East,Online,Cancelled,
+ORD-0012,2025-09-18,CUST-0009,Bluetooth Speaker,Electronics,59.76,1,59.76,West,Online,Completed,4
+ORD-0109,2025-09-18,CUST-0019,Portable Charger,Electronics,39.11,1,39.11,East,Online,Cancelled,
+ORD-0051,2025-09-19,CUST-0039,Standing Desk Mat,Office,49.95,1,49.95,South,In-Store,Completed,2
+ORD-0061,2025-09-23,CUST-0045,Portable Charger,Electronics,37.52,3,112.56,North,Online,Completed,4
+ORD-0034,2025-09-25,CUST-0037,Ergonomic Chair Cushion,Office,44.93,1,44.93,East,Online,Returned,
+ORD-0093,2025-09-25,CUST-0050,Monitor Stand,Office,36.43,1,36.43,East,In-Store,Completed,4
+ORD-0116,2025-09-27,CUST-0007,Wireless Mouse,Electronics,32.73,1,32.73,South,Online,Completed,5
+ORD-0145,2025-09-27,CUST-0027,Cable Organizer,Accessories,9.3,1,9.3,North,Online,Cancelled,
+ORD-0001,2025-10-07,CUST-0044,Laptop Sleeve,Accessories,25.87,1,25.87,North,Online,Completed,2
+ORD-0063,2025-10-08,CUST-0028,Ergonomic Chair Cushion,Office,46.74,1,46.74,South,Partner,Returned,
+ORD-0005,2025-10-10,CUST-0006,Ergonomic Chair Cushion,Office,38.73,1,38.73,South,Online,Completed,3
+ORD-0150,2025-10-10,CUST-0042,Desk Lamp,Office,38.29,2,76.58,West,Online,Cancelled,
+ORD-0022,2025-10-11,CUST-0038,Desk Lamp,Office,38.51,4,154.04,North,Online,Completed,3
+ORD-0062,2025-10-14,CUST-0034,Bluetooth Speaker,Electronics,63.71,1,63.71,South,Partner,Cancelled,
+ORD-0102,2025-10-27,CUST-0012,Ergonomic Chair Cushion,Office,46.75,1,46.75,South,In-Store,Completed,4
+ORD-0088,2025-10-29,CUST-0018,Phone Stand,Accessories,16.64,2,33.28,North,Online,Completed,5
+ORD-0149,2025-11-02,CUST-0025,USB-C Hub,Electronics,42.25,1,42.25,East,In-Store,Completed,4
+ORD-0017,2025-11-03,CUST-0001,Bluetooth Speaker,Electronics,53.28,2,106.56,West,In-Store,Returned,
+ORD-0075,2025-11-07,CUST-0011,Desk Lamp,Office,39.63,2,79.26,North,In-Store,Completed,4
+ORD-0094,2025-11-09,CUST-0004,Portable Charger,Electronics,38.33,2,76.66,West,Online,Returned,
+ORD-0139,2025-11-12,CUST-0032,Bluetooth Speaker,Electronics,62.12,2,124.24,North,Online,Completed,4
+ORD-0118,2025-11-17,CUST-0021,Webcam HD,Electronics,74.4,2,148.8,West,Partner,Completed,5
+ORD-0129,2025-11-18,CUST-0007,Standing Desk Mat,Office,51.5,2,103.0,East,Partner,Cancelled,
+ORD-0128,2025-11-22,CUST-0015,Screen Protector,Accessories,7.36,4,29.44,West,In-Store,Completed,3
+ORD-0136,2025-11-22,CUST-0005,Wireless Mouse,Electronics,32.56,2,65.12,South,In-Store,Cancelled,
+ORD-0124,2025-11-24,CUST-0020,Portable Charger,Electronics,35.51,1,35.51,North,Partner,Returned,
+ORD-0002,2025-11-29,CUST-0013,Webcam HD,Electronics,61.13,1,61.13,North,In-Store,Returned,
+ORD-0080,2025-11-30,CUST-0034,Notebook Set,Office,13.73,2,27.46,East,Online,Cancelled,
+ORD-0105,2025-12-03,CUST-0001,Mechanical Keyboard,Electronics,83.76,1,83.76,West,Online,Returned,
+ORD-0057,2025-12-04,CUST-0011,Desk Lamp,Office,40.75,2,81.5,South,In-Store,Cancelled,
+ORD-0112,2025-12-04,CUST-0038,Cable Organizer,Accessories,10.54,2,21.08,North,Online,Returned,
+ORD-0030,2025-12-05,CUST-0036,Webcam HD,Electronics,73.21,1,73.21,South,Online,Cancelled,
+ORD-0097,2025-12-05,CUST-0038,Phone Stand,Accessories,13.88,4,55.52,North,Online,Cancelled,
+ORD-0038,2025-12-08,CUST-0001,Screen Protector,Accessories,7.4,2,14.8,West,Partner,Returned,
+ORD-0035,2025-12-10,CUST-0009,Notebook Set,Office,11.7,4,46.8,East,Online,Completed,4
+ORD-0052,2025-12-10,CUST-0044,Portable Charger,Electronics,32.88,2,65.76,East,Online,Returned,
+ORD-0101,2025-12-11,CUST-0049,Wireless Mouse,Electronics,32.7,1,32.7,West,In-Store,Completed,5
+ORD-0135,2025-12-12,CUST-0007,Notebook Set,Office,13.22,2,26.44,East,Partner,Completed,3
+ORD-0122,2025-12-16,CUST-0040,Ergonomic Chair Cushion,Office,40.27,2,80.54,North,In-Store,Completed,3
+ORD-0140,2025-12-18,CUST-0007,Standing Desk Mat,Office,47.12,1,47.12,South,Partner,Completed,4
+ORD-0099,2025-12-19,CUST-0030,Cable Organizer,Accessories,10.36,1,10.36,East,Online,Completed,3
+ORD-0077,2025-12-20,CUST-0038,Ergonomic Chair Cushion,Office,49.02,2,98.04,South,In-Store,Completed,5
+ORD-0138,2025-12-23,CUST-0048,Mechanical Keyboard,Electronics,96.45,1,96.45,North,Online,Cancelled,
