@@ -517,6 +517,54 @@
     .center[📖 [Anthropic Docs — Tool Search](https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool)]
 
     ---
+
+    # MCP Limitations in Practice
+
+    --
+
+    - Tool definitions **eat context fast** — large setups consume 50k+ tokens before any work is done
+
+    --
+
+    - LLMs are trained on code, not on tool-calling syntax → **reliability degrades** with complex or many tools
+
+    --
+
+    - Common workaround: **handcraft simpler tool definitions** to make the LLM behave reliably
+
+    --
+
+    - This doesn't scale — and it puts the burden on developers, not the protocol
+
+    ---
+
+    # New Direction: Code as the Interface
+
+    --
+
+    **The insight:** *LLMs are better at writing code to call MCP than at calling MCP directly*
+
+    --
+
+    - **Cloudflare Code Mode** — converts MCP schemas into TypeScript APIs, LLM writes code, runs in V8 sandbox
+
+    --
+
+    - **Anthropic's approach** — agent explores MCP as a filesystem of tools, writes code to interact with them
+
+    --
+
+    - Intermediate results stay in the execution environment — **never enter the model's context**
+
+    --
+
+    - Token savings up to **98.7%** vs direct tool calling
+
+    --
+
+    .center[📖 [Cloudflare Code Mode](https://blog.cloudflare.com/code-mode/) &nbsp;·&nbsp; [Anthropic Code Execution](https://www.anthropic.com/engineering/code-execution-with-mcp)]
+
+    ---
     # The Growing MCP Ecosystem
 
     .center[
