@@ -458,6 +458,65 @@
     </h1>
 
     ---
+
+    # Tool Search: Scaling MCP to Thousands of Tools
+
+    --
+
+    **The scaling problem as tool libraries grow:**
+
+    --
+
+    - **Context bloat** — a typical multi-server setup (GitHub, Slack, Sentry, Grafana) consumes ~55k tokens in tool definitions *before Claude does any work*
+
+    --
+
+    - **Selection accuracy** — Claude's ability to pick the right tool degrades significantly beyond 30–50 available tools
+
+    --
+
+    **Tool Search solves both:** Claude dynamically discovers and loads only the tools it needs
+
+    --
+
+    - Reduces context consumption by **over 85%**
+
+    --
+
+    - Supports up to **10,000 tools** in a catalog
+
+    ---
+
+    # How Tool Search Works
+
+    --
+
+    **Two search variants:**
+    - `tool_search_tool_regex_20251119` — Claude constructs regex patterns
+    - `tool_search_tool_bm25_20251119` — Claude uses natural language queries
+
+    --
+
+    **The key primitive:** `defer_loading: true` on tool definitions
+
+    ```python
+    tools=[
+        {"type": "tool_search_tool_bm25_20251119", "name": "tool_search_tool_bm25"},
+        {"name": "get_weather", "description": "...", "defer_loading": True},
+        {"name": "query_database", "description": "...", "defer_loading": True},
+        # ... thousands more
+    ]
+    ```
+
+    --
+
+    Claude searches → API returns 3–5 relevant tools → Claude invokes them
+
+    --
+
+    .center[📖 [Anthropic Docs — Tool Search](https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool)]
+
+    ---
     class: center, middle
 
     # MCP Security Considerations
