@@ -1,14 +1,14 @@
 # Claude Agent SDK — core AI backend
 claude-agent-sdk>=0.1.0
 
-# Gradio — chat UI (also the ASGI app for Vercel)
-gradio>=5.0.0,<6.0.0
+# FastAPI — lightweight ASGI web framework (replaces Gradio for Vercel compatibility)
+fastapi>=0.100.0
+uvicorn>=0.20.0
 
 # Data analysis
 pandas>=2.0.0
 numpy>=1.26.0
 matplotlib>=3.8.0
-seaborn>=0.13.0
 tabulate>=0.9.0
 
 # Environment variables

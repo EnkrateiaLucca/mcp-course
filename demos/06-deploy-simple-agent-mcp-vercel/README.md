@@ -1,28 +1,29 @@
-# Demo 06 — Data Analysis Agent with Gradio + Claude Agent SDK + Vercel
+# Demo 06 — Data Analysis Agent with FastAPI + Claude Agent SDK + Vercel
 
-A Gradio chat UI backed by the **Claude Agent SDK** with an **in-process MCP server** for data analysis. Ask questions about a dataset in plain English — the agent picks the right tool, runs it, and renders tables and plots inline in the chat.
+A chat UI backed by the **Claude Agent SDK** with an **in-process MCP server** for data analysis. Ask questions about a synthetic Portuguese company dataset in plain English — the agent picks the right tool, runs it, and renders tables and plots inline in the chat.
 
 ## Architecture
 
 ```
-User → Gradio ChatInterface
-           ↓
-       chat_fn (async generator)
+User → HTML/JS (SSE client)
+           ↓  POST /chat
+       FastAPI
            ↓
        ClaudeSDKClient (Claude Agent SDK)
            ↓
        In-process MCP server ("analysis")
            ↓
-       Tools operate on pandas DataFrame (tips dataset)
+       Tools operate on pandas DataFrame (250 Portuguese companies)
            ↓
-       Text  → returned via tool result → rendered as markdown
-       Plots → saved to /tmp → pushed to artifact queue → rendered as gr.Image
+       Text  → SSE text events → rendered as markdown
+       Plots → base64 PNG → SSE image events → rendered as <img>
 ```
 
 **Key design decisions:**
 - **In-process MCP** via `create_sdk_mcp_server` — no subprocess, no HTTP, tools run in the same Python process
-- **Side-channel artifacts** — plots travel outside MCP (which is text-only) via a module-level `_ARTIFACTS` list drained between messages
-- **ALLOWED_TOOLS whitelist** — skips per-tool permission prompts, required for Vercel
+- **SSE streaming** — agent responses stream token-by-token to the browser via Server-Sent Events
+- **Base64 plots** — images encoded inline, no temp file disk dependency
+- **ALLOWED_TOOLS whitelist** — skips per-tool permission prompts
 
 ## Available Tools
 
@@ -35,11 +36,15 @@ User → Gradio ChatInterface
 | `correlation_matrix` | Heatmap + numeric correlation table |
 | `plot_data` | bar, line, scatter, hist, or box plot |
 
+## Dataset
+
+Synthetic dataset of **250 Portuguese companies** based on the `sabi_hubspot` schema (`main_financials` table). Columns: `company_name`, `region`, `sector`, `sector_code`, `size`, `status`, `revenue`, `ebitda`, `ebit`, `net_profit`, `total_assets`, `equity`, `employees`, `exports`.
+
 ## Project Structure
 
 ```
 06-deploy-simple-agent-mcp-vercel/
-├── main.py           # Gradio app + MCP tools + Claude Agent SDK
+├── main.py           # FastAPI app + MCP tools + Claude Agent SDK
 ├── requirements.txt  # Python dependencies
 ├── vercel.json       # Vercel routing config
 ├── .env.example      # Environment variable template
@@ -68,7 +73,7 @@ pip install -r requirements.txt
 python main.py
 ```
 
-Open **http://localhost:7860** in your browser.
+Open **http://localhost:8000** in your browser.
 
 ## Environment Variables
 
@@ -79,53 +84,54 @@ Open **http://localhost:7860** in your browser.
 ## Example Prompts
 
 - "Describe the dataset"
-- "Show me the first 10 rows"
-- "What's the average tip by day of the week?"
-- "Plot a histogram of total_bill"
-- "Show a scatter plot of total_bill vs tip"
-- "Create a bar chart of average tip by day"
+- "Show me the first 10 companies"
+- "What is the average EBITDA by sector?"
+- "Plot a histogram of revenue"
+- "Scatter plot of revenue vs net_profit"
+- "Which region has the highest average revenue?"
 - "Show the correlation matrix"
-- "Box plot of total_bill by smoker status"
+- "Box plot of ebitda by size"
 
 ## Deploy to Vercel
 
 ```bash
 # Install Vercel CLI
 npm install -g vercel
+# or with mise:
+mise use -g npm:vercel
 
 # Login
 vercel login
 
-# Add your Anthropic API key as a secret
-vercel env add ANTHROPIC_API_KEY
+# Link project and add your API key
+vercel link
+vercel env add ANTHROPIC_API_KEY production --value YOUR_KEY_HERE --yes
 
 # Deploy
 vercel --prod
 ```
 
-The `vercel.json` routes all traffic to `main.py`, which exports `app = demo.app` as the ASGI handler.
-
-> **Note:** Vercel's hobby plan has a 10s function timeout. The Claude Agent SDK calls can take longer — upgrade to Pro (60s timeout) for reliable production use.
+> **Note:** Vercel's hobby plan has a 10s function timeout. The Claude Agent SDK initialization can exceed this on cold starts — the app will show a friendly retry message. Upgrade to Vercel Pro (60s timeout) for reliable production use.
 
 ## Tech Stack
 
 - **AI:** Claude (via Claude Agent SDK)
 - **MCP:** In-process MCP server (`create_sdk_mcp_server`)
-- **UI:** Gradio 5.x (`gr.ChatInterface`)
-- **Data:** pandas, seaborn, matplotlib
-- **Deployment:** Vercel (ASGI / `@vercel/python`)
+- **UI:** Vanilla HTML + JavaScript (SSE streaming)
+- **Data:** pandas, numpy, matplotlib
+- **Deployment:** Vercel (`@vercel/python` ASGI runtime)
 
 ## Troubleshooting
 
 **`ANTHROPIC_API_KEY not set`** — Copy `.env.example` to `.env` and add your key, then restart.
 
-**Gradio deprecation warnings** — Safe to ignore; they relate to Gradio 6.0 API changes that don't affect functionality with the pinned `<6.0.0` version.
+**"Agent timed out during initialization"** — This is Vercel's hobby plan 10s limit hitting during a cold start. Try again immediately (warm instance) or upgrade to Vercel Pro for the 60s timeout.
 
-**Plot not rendering** — Make sure `matplotlib` is installed (`pip install matplotlib seaborn`).
+**Plot not rendering** — Make sure `matplotlib` is installed (`pip install matplotlib`).
 
 ## Learn More
 
 - [Claude Agent SDK](https://github.com/anthropics/claude-agent-sdk-python)
 - [Model Context Protocol](https://modelcontextprotocol.io)
-- [Gradio Docs](https://www.gradio.app/docs)
+- [FastAPI Docs](https://fastapi.tiangolo.com)
 - [Vercel Python Runtime](https://vercel.com/docs/functions/runtimes/python)
