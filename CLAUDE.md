@@ -26,7 +26,7 @@ pip install -r requirements/requirements.txt
 
 ### Environment Variables
 Required API keys (depending on which demos you run):
-- `OPENAI_API_KEY` - For OpenAI agent demos and chat applications
+- `ANTHROPIC_API_KEY` - For Claude agent demos
 - `REPLICATE_API_TOKEN` - For image generation demos
 
 Create `.env` file in root directory with these keys.
@@ -68,11 +68,11 @@ Demos are organized sequentially by learning progression:
 
 1. **00-intro-agents/** - AI agent fundamentals and architecture
 2. **01-introduction-to-mcp/** - Basic MCP server/client implementation using FastMCP
-3. **02-study-case-anthropic-tools-resources-prompts-chat-app/** - Complete chat app integrating OpenAI function calling with MCP
+3. **02-study-case-anthropic-tools-resources-prompts-chat-app/** - Complete chat app with Claude tool use and MCP
 4. **03-claude-agents-sdk-filesystem-agent/** - Claude Agent SDK with filesystem operations via MCP servers
-5. **04-query-tabular-data/** - CSV/tabular data querying with MCP tools, plus image generation
-6. **05-deployment-example/** - Production deployment with FastAPI, OpenAI agents, and MCP
-7. **06-deploy-simple-agent-mcp-vercel/** - Serverless deployment to Vercel using MCP HTTP transport
+5. **04-query-tabular-data/** - CSV/tabular data querying with Claude Agent SDK and MCP tools
+6. **05-automations-agent/** - Link health checker using Claude Agent SDK + external MCP server
+7. **06-deploy-simple-agent-mcp-vercel/** - Data analysis agent deployed to Vercel serverless
 
 ### MCP Server Patterns
 
@@ -111,22 +111,17 @@ if __name__ == "__main__":
 
 ### Agent Integration Patterns
 
-**Claude Agent SDK** (demos/03-*):
+**Claude Agent SDK** (demos/03-*, 04-*, 05-*, 06-*):
 - In-process MCP servers for better performance
 - Tool permissions and callbacks for security
 - Response handling with streaming support
 - Error handling with PreToolUse/PostToolUse hooks
 
-**OpenAI Agents SDK** (demos/02-*, 05-*, 06-*):
-- MCP client wraps MCP server communication
-- Converts MCP tools to OpenAI function calling format
-- Agent loops handle tool execution and response processing
-
-### Deployment Architecture (demos/05-*, 06-*)
+### Deployment Architecture (demo 06)
 
 **Key Components**:
-- **MCP Server**: Provides tools/resources via stdio or HTTP
-- **Agent**: OpenAI/Claude Agent SDK with tool execution
+- **MCP Server**: In-process MCP tools via `create_sdk_mcp_server`
+- **Agent**: Claude Agent SDK with tool execution
 - **FastAPI Wrapper**: Web API layer for HTTP requests
 - **Client Interface**: HTML/JavaScript frontend
 
@@ -214,8 +209,9 @@ def get_data(key: str) -> str:
 
 ### Agent with Tool Execution
 ```python
-# OpenAI Agents SDK pattern
-from agents import Agent, tool
+# Claude Agent SDK pattern
+import asyncio
+from claude_agent_sdk import Agent, tool
 
 @tool
 def custom_tool(input: str) -> str:
@@ -226,10 +222,10 @@ agent = Agent(
     name="helper",
     instructions="System instructions",
     tools=[custom_tool],
-    model="gpt-4o"
+    model="claude-sonnet-4-5"
 )
 
-response = agent.run_sync("Task for agent")
+asyncio.run(agent.run("Task for agent"))
 ```
 
 ## Troubleshooting
@@ -261,4 +257,3 @@ chmod +x script.py
 - [MCP Specification](https://modelcontextprotocol.io/specification/)
 - [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)
 - [Claude Agent SDK](https://github.com/anthropics/claude-agent-sdk-python)
-- [OpenAI Agents SDK](https://openai.github.io/openai-agents-python/)

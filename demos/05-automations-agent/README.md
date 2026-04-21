@@ -1,23 +1,38 @@
-# Automation Agent Demo
+# Link Health Checker Agent
 
-Claude Agent SDK + MCP server for creating, testing, and running Python automation scripts.
+Claude Agent SDK + MCP server that audits markdown files for broken links.
 
 ## Quick Start
 
 ```bash
-export ANTHROPIC_API_KEY='your-key'
-uv run automation_agent.py
+uv run link_checker_agent.py
 ```
 
-## Files
+## What to Try
 
-- `automation_agent.py` — Claude agent (interactive CLI)
-- `automation_mcp_server.py` — MCP server with sandboxed script tools
-- `generated_scripts/` — Where scripts are saved and executed
-- `WALKTHROUGH.md` — Full explanation of how this works
+```
+"Audit all course links"
+"Check only the demos folder"
+"Find broken links in the presentation"
+```
+
+The agent will scan markdown files, extract every URL, check each one with an HTTP request, and write a report to `reports/`.
+
+## How It Works
+
+The **MCP server** (`link_checker_mcp_server.py`) exposes 4 tools:
+
+| Tool | What it does |
+|------|-------------|
+| `list_markdown_files(directory)` | Recursively finds all `.md` files |
+| `extract_links(filepath)` | Pulls unique URLs from a markdown file |
+| `check_url(url)` | HEAD request — returns status code + response time |
+| `write_report(filename, content)` | Writes the audit report to `reports/` |
+
+The **agent** (`link_checker_agent.py`) uses Claude to compose these tools intelligently: it discovers files, deduplicates URLs across files before checking, and produces a structured report with broken/working/redirect counts.
 
 ## Test the MCP Server Independently
 
 ```bash
-mcp dev automation_mcp_server.py
+mcp dev link_checker_mcp_server.py
 ```

@@ -32,7 +32,7 @@ Features:
 
 import asyncio
 import logging
-from typing import Any, List, Dict
+from typing import Any
 from pathlib import Path
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -275,6 +275,54 @@ Writable: {path.stat().st_mode & 0o200 != 0}
         }
 
 
+@tool("find_files", "Find files matching a glob pattern under a directory", {"directory": str, "pattern": str})
+async def find_files(args: dict[str, Any]) -> dict[str, Any]:
+    """
+    Recursively find files matching a glob pattern.
+
+    Args:
+        directory: Root directory to search from
+        pattern: Glob pattern (e.g. '**/*.py', '*.md')
+
+    Returns:
+        List of matching file paths
+    """
+    directory = args["directory"]
+    pattern = args["pattern"]
+    logger.info(f"Finding files matching '{pattern}' in {directory}")
+
+    try:
+        root = Path(directory)
+
+        if not root.exists():
+            return {
+                "content": [{"type": "text", "text": f"Error: Directory not found: {directory}"}],
+                "is_error": True
+            }
+
+        if not root.is_dir():
+            return {
+                "content": [{"type": "text", "text": f"Error: Not a directory: {directory}"}],
+                "is_error": True
+            }
+
+        matches = sorted(str(p) for p in root.glob(pattern) if p.is_file())
+        logger.info(f"Found {len(matches)} files")
+
+        if not matches:
+            return {"content": [{"type": "text", "text": f"No files found matching '{pattern}' in {directory}"}]}
+
+        result = f"Found {len(matches)} file(s) matching '{pattern}':\n\n" + "\n".join(matches)
+        return {"content": [{"type": "text", "text": result}]}
+
+    except Exception as e:
+        logger.exception(f"Error finding files: {e}")
+        return {
+            "content": [{"type": "text", "text": f"Error: {type(e).__name__}: {str(e)}"}],
+            "is_error": True
+        }
+
+
 @tool("search_in_file", "Search for text in a file", {"filepath": str, "search_term": str})
 async def search_in_file(args: dict[str, Any]) -> dict[str, Any]:
     """
@@ -306,13 +354,13 @@ async def search_in_file(args: dict[str, Any]) -> dict[str, Any]:
                 "is_error": True
             }
 
-        # Search file
+        # Search file — plain substring match (case-insensitive)
         content = path.read_text()
         lines = content.split('\n')
 
         matches = []
         for i, line in enumerate(lines, 1):
-            if search_term.lower() in line.lower():
+            if search_term in line:
                 matches.append(f"  Line {i}: {line.strip()}")
 
         if matches:
@@ -345,6 +393,15 @@ async def search_in_file(args: dict[str, Any]) -> dict[str, Any]:
 # Permission Management
 # =============================================================================
 
+ALLOWED_TOOLS = {
+    "mcp__files__read_file",
+    "mcp__files__list_directory",
+    "mcp__files__file_info",
+    "mcp__files__search_in_file",
+    "mcp__files__find_files",
+}
+
+
 async def permission_callback(
     tool_name: str,
     input_data: dict,
@@ -354,12 +411,19 @@ async def permission_callback(
     Custom permission callback for tool authorization.
 
     Security policies:
+    - Only allow the custom MCP file tools
     - Block access to system directories
     - Block sensitive file patterns
-    - Allow read operations in safe locations
     """
 
     logger.debug(f"Permission check: {tool_name}")
+
+    # Restrict to custom MCP tools only
+    if tool_name not in ALLOWED_TOOLS:
+        logger.warning(f"Blocked non-MCP tool: {tool_name}")
+        return PermissionResultDeny(
+            message=f"Only custom MCP file tools are allowed. Blocked: {tool_name}"
+        )
 
     # Extract filepath from input
     filepath = input_data.get("filepath") or input_data.get("directory") or ""
@@ -439,10 +503,9 @@ async def monitor_tool_execution(
     """
 
     tool_response = input_data.get("tool_response", "")
-    response_text = str(tool_response).lower()
 
-    # Check for errors
-    if "error" in response_text or "is_error" in str(tool_response):
+    # Check for explicit error flag only — avoid false positives from file contents
+    if isinstance(tool_response, dict) and tool_response.get("is_error"):
         logger.warning("Tool execution resulted in error")
         return {
             "systemMessage": "⚠️  Tool encountered an error",
@@ -467,8 +530,8 @@ class ExecutionTracker:
     end_time: datetime | None = None
 
     messages_received: int = 0
-    assistant_responses: List[str] = field(default_factory=list)
-    tool_calls: List[Dict[str, Any]] = field(default_factory=list)
+    assistant_responses: list[str] = field(default_factory=list)
+    tool_calls: list[dict[str, Any]] = field(default_factory=list)
 
     total_cost: float = 0.0
     status: str = "running"
@@ -542,7 +605,7 @@ class FileReaderAgent:
         self.file_server = create_sdk_mcp_server(
             name="file-reader",
             version="1.0.0",
-            tools=[read_file, list_directory, file_info, search_in_file]
+            tools=[read_file, list_directory, file_info, search_in_file, find_files]
         )
 
         # Configure agent options
@@ -553,6 +616,11 @@ class FileReaderAgent:
                 "mcp__files__list_directory",
                 "mcp__files__file_info",
                 "mcp__files__search_in_file",
+                "mcp__files__find_files",
+            ],
+            disallowed_tools=[
+                "Bash", "Read", "Write", "Edit", "Glob", "Grep",
+                "WebFetch", "WebSearch", "TodoRead", "TodoWrite",
             ],
             can_use_tool=permission_callback,
             hooks={
@@ -561,12 +629,14 @@ class FileReaderAgent:
                     HookMatcher(matcher="mcp__files__list_directory", hooks=[validate_file_access]),
                     HookMatcher(matcher="mcp__files__file_info", hooks=[validate_file_access]),
                     HookMatcher(matcher="mcp__files__search_in_file", hooks=[validate_file_access]),
+                    HookMatcher(matcher="mcp__files__find_files", hooks=[validate_file_access]),
                 ],
                 "PostToolUse": [
                     HookMatcher(matcher="mcp__files__read_file", hooks=[monitor_tool_execution]),
                     HookMatcher(matcher="mcp__files__list_directory", hooks=[monitor_tool_execution]),
                     HookMatcher(matcher="mcp__files__file_info", hooks=[monitor_tool_execution]),
                     HookMatcher(matcher="mcp__files__search_in_file", hooks=[monitor_tool_execution]),
+                    HookMatcher(matcher="mcp__files__find_files", hooks=[monitor_tool_execution]),
                 ],
             },
             cwd=self.working_dir

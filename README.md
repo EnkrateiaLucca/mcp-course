@@ -82,11 +82,8 @@ pip install -r requirements/requirements.txt
 Create a `.env` file in the root directory:
 
 ```env
-# Required for Claude Agents SDK demos
+# Required for Claude Agent SDK demos
 ANTHROPIC_API_KEY=your-anthropic-api-key-here
-
-# Required for OpenAI demos
-OPENAI_API_KEY=your-openai-api-key-here
 
 # Optional: for image generation demo
 REPLICATE_API_TOKEN=your-replicate-token-here
@@ -250,7 +247,7 @@ uv run file_reader_agent.py
 ### Demo 04: Query Tabular Data
 **Path**: `demos/04-query-tabular-data/`
 
-**What it covers**: MCP server for CSV/tabular data queries with both **Claude and OpenAI** agent implementations.
+**What it covers**: MCP server for CSV/tabular data queries with the **Claude Agent SDK**.
 
 **Key Files**:
 - `csv_query_mcp_server.py` - MCP server with 7 CSV query tools
@@ -297,35 +294,35 @@ jupyter notebook claude_agents_csv_demo.ipynb
 
 ---
 
-### Demo 05: Automation Agent
+### Demo 05: Link Health Checker Agent
 **Path**: `demos/05-automations-agent/`
 
-**What it covers**: An AI agent that **writes, tests, and runs** Python automation scripts using **Claude Agent SDK** + an MCP server that provides sandboxed script execution.
+**What it covers**: An AI agent that audits markdown files for broken links using the **Claude Agent SDK** + a dedicated MCP server for link-checking operations.
 
 **Key Files**:
-- `automation_agent.py` - Interactive Claude Agent (CLI)
-- `automation_mcp_server.py` - MCP server with sandboxed script tools
-- `generated_scripts/` - Where scripts are saved and executed
-- `WALKTHROUGH.md` - Full architecture explanation
+- `link_checker_agent.py` - Claude Agent (CLI) that orchestrates the audit
+- `link_checker_mcp_server.py` - MCP server with 4 link-checking tools
+- `reports/` - Where audit reports are written
 
 **Learning Objectives**:
-- Use MCP as a **capability boundary** (constrained, auditable tools)
-- Build agentic write→test→fix loops
 - Connect Claude Agent SDK to an external MCP server via stdio
-- Implement sandboxed script execution with timeouts
+- Use MCP as a **capability boundary** (constrained, auditable tools)
+- Build agents that compose multiple tools intelligently
+- Generate structured reports from agentic workflows
 
 **Architecture**:
 ```
-User Request ("Create a CSV converter")
+User Request ("Audit all course links")
     ↓
-Automation Agent (Claude Agent SDK)
-    ↓ writes code, calls MCP tools
-MCP Server (script-sandbox)
-    - save_script(name, code)
-    - run_script(name, args)  ← 30s timeout
-    - list_scripts / read_script / delete_script
+Link Checker Agent (Claude Agent SDK)
+    ↓ discovers files, deduplicates URLs, checks each
+MCP Server (link-checker)
+    - list_markdown_files(directory)
+    - extract_links(filepath)
+    - check_url(url)  ← HEAD request, returns status + latency
+    - write_report(filename, content)
     ↓
-generated_scripts/  (sandboxed directory)
+reports/  (audit output)
 ```
 
 **Run it**:
@@ -333,114 +330,94 @@ generated_scripts/  (sandboxed directory)
 cd demos/05-automations-agent
 
 export ANTHROPIC_API_KEY="your-key"
-uv run automation_agent.py
+uv run link_checker_agent.py
 ```
 
-**Example Workflow**:
+**Example Queries**:
 ```
-You: Create a script that finds duplicate files in a folder
-Agent: [Writes Python script → saves via MCP → runs to test → fixes errors → reports back]
-      ✅ Saved: generated_scripts/find_duplicates.py
-      ✅ Tested successfully
-
-You: List my scripts
-Agent: [Calls list_scripts tool]
-      - find_duplicates.py
-
-You: Run find_duplicates.py /tmp/test
-Agent: [Calls run_script with args → shows output]
+"Audit all course links"
+"Check only the demos folder"
+"Find broken links in the presentation"
 ```
 
 ---
 
-### Demo 06: Deploy to Vercel (Serverless)
+### Demo 06: Data Analysis Agent — FastAPI + Claude Agent SDK + Vercel
 **Path**: `demos/06-deploy-simple-agent-mcp-vercel/`
 
-**What it covers**: Production deployment of AI agents with MCP to **Vercel serverless** platform. Includes **two complete implementations**:
-
-1. **OpenAI Agents SDK** (Stateless) - `main.py`
-2. **Claude Agents SDK** (Sandboxed) - `main_claude.py`
+**What it covers**: A chat UI backed by the **Claude Agent SDK** with an **in-process MCP server** for data analysis, deployed to **Vercel serverless**. Ask questions about a synthetic Portuguese company dataset in plain English.
 
 **Key Files**:
-- `main.py` - OpenAI Agents SDK implementation
-- `main_claude.py` - Claude Agents SDK with sandbox
-- `claude_agent_sandbox.py` - Agent code for sandbox execution
-- `mcp_fetch_server.py` - MCP server with HTTP transport (FastMCP)
-- `static/index.html` - Beautiful chat interface
-- `requirements.txt` / `requirements_claude.txt` - Dependencies
-- `vercel.json` - Vercel configuration
-- `deployment_agents_sdk_vercel.md` - OpenAI deployment guide
-- `deployment_claude_agents_sdk_vercel.md` - Claude deployment guide
-- `README.md` - Overview and comparison
+- `main.py` - FastAPI app + in-process MCP tools + Claude Agent SDK + SSE streaming
+- `requirements.txt` - Python dependencies
+- `vercel.json` - Vercel routing config
+- `.env.example` - Environment variable template
 
 **Learning Objectives**:
-- Deploy MCP servers with HTTP transport (not just stdio)
-- Use `MCPServerStreamableHttp` from OpenAI Agents SDK
-- Build with official MCP Python SDK (`mcp[cli]`)
-- Compare stateless vs sandboxed architectures
-- Implement production security patterns
-- Create FastAPI wrappers for agent endpoints
-- Deploy to serverless platforms
+- Use **in-process MCP** (`create_sdk_mcp_server`) — no subprocess, tools run in same process
+- Stream agent responses token-by-token via **Server-Sent Events**
+- Deploy a Claude Agent SDK app to **Vercel serverless**
+- Implement FastAPI as the HTTP layer for an agent endpoint
 
-**Architecture Comparison**:
+**Architecture**:
+```
+User → HTML/JS (SSE client)
+           ↓  POST /chat
+       FastAPI
+           ↓
+       Claude Agent SDK
+           ↓
+       In-process MCP server ("analysis")
+           ↓  tools operate on pandas DataFrame
+       Text  → SSE text events → rendered as markdown
+       Plots → base64 PNG      → SSE image events → <img>
+```
 
-| Feature | OpenAI (main.py) | Claude (main_claude.py) |
-|---------|------------------|-------------------------|
-| Model | Stateless serverless | Sandboxed containers |
-| Complexity | Low ⭐ | Medium ⭐⭐⭐ |
-| File Operations | Limited | Full (sandboxed) |
-| Command Execution | No | Yes (in sandbox) |
-| Best For | Chat apps | Complex agents |
-| Cost | API only | API + sandbox compute |
+**Available Tools**:
 
-**Run Locally (OpenAI)**:
+| Tool | What it does |
+|---|---|
+| `describe_data` | pandas `.describe()` summary stats |
+| `show_head` | First N rows as a markdown table |
+| `column_info` | Dtypes, non-null counts, unique values |
+| `group_aggregate` | GroupBy + aggregate (mean/sum/count/etc.) |
+| `correlation_matrix` | Heatmap + numeric correlation table |
+| `plot_data` | bar, line, scatter, hist, or box plot |
+
+**Run it**:
 ```bash
 cd demos/06-deploy-simple-agent-mcp-vercel
 
 cp .env.example .env
-# Add OPENAI_API_KEY to .env
+# Add ANTHROPIC_API_KEY to .env
 
-# Terminal 1: MCP Server
-python mcp_fetch_server.py
-
-# Terminal 2: Main App
-python main.py
-
+uv run main.py
 # Open http://localhost:8000
-```
-
-**Run Locally (Claude)**:
-```bash
-export ANTHROPIC_API_KEY="your-key"
-python main_claude.py
 ```
 
 **Deploy to Vercel**:
 ```bash
-# Install Vercel CLI
 npm install -g vercel
-
-# Login and configure
 vercel login
-vercel env add OPENAI_API_KEY  # or ANTHROPIC_API_KEY
-
-# Deploy
+vercel link
+vercel env add ANTHROPIC_API_KEY production --value YOUR_KEY_HERE --yes
 vercel --prod
 ```
 
 **Example Queries**:
 ```
-"Fetch content from https://modelcontextprotocol.io"
-"What's the latest on the OpenAI blog?"
-"Read https://github.com/anthropics/claude-agent-sdk-python and summarize"
+"Describe the dataset"
+"What is the average EBITDA by sector?"
+"Plot a histogram of revenue"
+"Which region has the highest average revenue?"
+"Show the correlation matrix"
 ```
 
 **★ Insight ─────────────────────────────────────**
-**MCP HTTP Transport** (New in this demo):
-- MCP traditionally uses stdio (standard input/output)
-- HTTP transport enables serverless deployment
-- FastMCP supports both stdio and HTTP via `transport="sse"`
-- OpenAI SDK uses `MCPServerStreamableHttp` to connect
+**In-Process MCP** (the pattern used here):
+- MCP tools run directly in your Python process — no subprocess
+- `create_sdk_mcp_server` wires Claude Agent SDK tools as an MCP server
+- Vercel's hobby plan has a 10s timeout — cold starts may hit it; Pro plan gives 60s
 **─────────────────────────────────────────────────**
 
 ---
@@ -481,46 +458,45 @@ vercel --prod
 
 ## 🎨 Architecture Patterns
 
-### Pattern 1: In-Process MCP Tools (Claude Agents SDK)
+### Pattern 1: In-Process MCP Tools (Claude Agent SDK)
 
-**Used in**: Demos 03, 04, 05
+**Used in**: Demos 03, 04, 05, 06
 
 ```python
-from agents import tool
-from agents.extensions.mcp import create_sdk_mcp_server
+import asyncio
+from claude_agent_sdk import Agent, create_sdk_mcp_server, tool
 
-@tool("query_data", "Query the database", {"query": str})
-async def query_data(args: dict) -> dict:
-    result = execute_query(args["query"])
-    return {"content": [{"type": "text", "text": result}]}
+@tool
+async def query_data(query: str) -> str:
+    """Query the database"""
+    return execute_query(query)
 
-# Create in-process MCP server
 server = create_sdk_mcp_server(
     name="data-tools",
-    version="1.0.0",
     tools=[query_data]
 )
 
-# Agent has direct access
 agent = Agent(
     name="assistant",
     instructions="You help query data",
-    mcp_servers={"data": server},
-    model="claude-sonnet-4-5-20250929"
+    mcp_servers=[server],
+    model="claude-sonnet-4-5"
 )
+
+asyncio.run(agent.run("Find top products"))
 ```
 
-**Pros**: Fast, simple deployment, easy debugging
+**Pros**: Fast, no subprocess, easy debugging, single deployment artifact
 **Cons**: All in one process, Python-only
 
 ---
 
 ### Pattern 2: External MCP Server (Traditional)
 
-**Used in**: Demos 01, 02, 04 (external server version)
+**Used in**: Demos 01, 02, 05
 
 ```python
-# Server (FastMCP)
+# Server (FastMCP) — runs as a separate process
 from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP("tool-server")
@@ -531,53 +507,52 @@ def process_data(input: str) -> str:
 
 if __name__ == "__main__":
     mcp.run(transport="stdio")
-
-# Client connects via subprocess
-from agents.mcp import MCPServerConfig
-
-config = MCPServerConfig(
-    command="uv",
-    args=["run", "server.py"]
-)
-
-agent = Agent(mcp_servers=[config])
 ```
 
-**Pros**: Language-agnostic, isolated, restartable
+```python
+# Agent connects to server via subprocess
+import asyncio
+from claude_agent_sdk import Agent, MCPServerStdio
+
+server = MCPServerStdio(command="uv", args=["run", "server.py"])
+
+agent = Agent(
+    name="assistant",
+    instructions="You have data tools",
+    mcp_servers=[server]
+)
+
+asyncio.run(agent.run("Process this input"))
+```
+
+**Pros**: Language-agnostic, isolated, restartable independently
 **Cons**: Subprocess overhead, more complex deployment
 
 ---
 
-### Pattern 3: HTTP Transport (Serverless)
+### Pattern 3: FastAPI + SSE Streaming (Serverless)
 
 **Used in**: Demo 06
 
 ```python
-# Server with HTTP transport
-mcp = FastMCP("web-tools")
+# FastAPI wraps the agent and streams responses via SSE
+from fastapi import FastAPI
+from fastapi.responses import StreamingResponse
+from claude_agent_sdk import Agent, create_sdk_mcp_server
 
-@mcp.tool()
-def fetch_url(url: str) -> str:
-    return httpx.get(url).text
+app = FastAPI()
+agent = Agent(name="assistant", mcp_servers=[...])
 
-if __name__ == "__main__":
-    mcp.run(transport="sse")  # Server-Sent Events transport
-
-# Client via HTTP
-from agents_mcp import MCPServerStreamableHttp
-
-agent = Agent(
-    mcp_servers=[
-        MCPServerStreamableHttp(
-            name="web",
-            url="http://localhost:8001/sse"
-        )
-    ]
-)
+@app.post("/chat")
+async def chat(request: ChatRequest):
+    async def stream():
+        async for event in agent.stream(request.message):
+            yield f"data: {event.json()}\n\n"
+    return StreamingResponse(stream(), media_type="text/event-stream")
 ```
 
-**Pros**: Serverless-friendly, scalable, network-accessible
-**Cons**: Network latency, requires HTTP infrastructure
+**Pros**: Serverless-friendly, real-time streaming, scalable
+**Cons**: Vercel hobby plan 10s timeout can hit cold starts
 
 ---
 
@@ -681,7 +656,6 @@ Create `.env` file:
 
 ```env
 ANTHROPIC_API_KEY=your-key
-OPENAI_API_KEY=your-key
 # Use forward slashes in paths
 MCP_DEMO_PATH=C:/path/to/files
 ```
@@ -756,15 +730,8 @@ pip install mcp model-context-protocol
 
 ### API Key Issues
 
-**Claude SDK**:
 ```bash
 export ANTHROPIC_API_KEY="your-key"
-# Or add to .env file
-```
-
-**OpenAI**:
-```bash
-export OPENAI_API_KEY="your-key"
 # Or add to .env file
 ```
 
@@ -800,7 +767,7 @@ tasklist | findstr python  # Windows
 - Check API quota in your provider dashboard
 - Implement exponential backoff
 - Add request delays in loops
-- Use cheaper models for testing (gpt-4o-mini, claude-haiku)
+- Use cheaper models for testing (claude-haiku)
 
 ---
 
@@ -811,8 +778,7 @@ tasklist | findstr python  # Windows
 - **MCP Specification**: https://modelcontextprotocol.io/specification/
 - **MCP Introduction**: https://modelcontextprotocol.io/introduction
 - **FastMCP SDK**: https://github.com/modelcontextprotocol/python-sdk
-- **Claude Agents SDK**: https://github.com/anthropics/claude-agent-sdk-python
-- **OpenAI Agents SDK**: https://openai.github.io/openai-agents-python/
+- **Claude Agent SDK**: https://github.com/anthropics/claude-agent-sdk-python
 
 ### Community Resources
 
@@ -824,7 +790,6 @@ tasklist | findstr python  # Windows
 
 - `presentation/presentation.html` - Interactive HTML course slides
 - `presentation/presentation-mcp-updated.pdf` - PDF version of slides
-- `walkthrough_for_beginners.md` - Comprehensive beginner's guide
 - `demos/assets-resources/MCP_TECHNICAL_CHEATSHEET.md` - Quick reference cheatsheet
 - `CLAUDE.md` - Project development guidelines
 
@@ -866,7 +831,7 @@ This course material is provided for educational purposes as part of the O'Reill
 2. ✅ **Build MCP basics** (Demo 01) - Create your first server
 3. ✅ **Build a chat app** (Demo 02) - Connect Claude tool use with MCP
 4. ✅ **Master the Claude Agents SDK** (Demos 03, 04, 05) - In-process tools, data queries, automation
-5. ✅ **Deploy to production** (Demo 06) - Vercel serverless deployment with both SDKs
+5. ✅ **Deploy to production** (Demo 06) - Data analysis agent on Vercel serverless
 6. ✅ **Level up** (Demo 07) - Explore hacks, tips, and workflow tools
 7. ✅ **Build your own** - Create custom MCP servers for your use cases
 
