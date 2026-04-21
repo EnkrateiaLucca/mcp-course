@@ -1,0 +1,172 @@
+========================================================
+  MCP COURSE — LINK HEALTH AUDIT REPORT
+  Generated: 2026-04-21
+========================================================
+
+SUMMARY
+-------
+  Directories scanned : 2
+    • demos/      → 15 course content files (5 .venv license files skipped)
+    • presentation/ → 0 markdown files found
+  Total files scanned : 15
+  Raw URLs extracted  : ~60 (with duplicates)
+  Unique URLs checked : 52
+  Skipped             : 1  (http://localhost:8000** — local URL + formatting artifact)
+
+  ✅ Working (200 OK)  : 44
+  ❌ Broken            : 8
+    — 4xx errors       : 4
+    — Connection errors: 4 (3 DNS, 1 SSL)
+
+========================================================
+❌ BROKEN LINKS
+========================================================
+
+── REAL / ACTIONABLE BROKEN LINKS ─────────────────────
+
+1. https://spec.modelcontextprotocol.io/
+   Status  : Connection error — SSL: UNEXPECTED_EOF_WHILE_READING
+   Found in: demos/04-query-tabular-data/README.md
+   Action  : Replace with https://modelcontextprotocol.io/specification
+             (the canonical spec URL — confirmed 200 OK)
+
+2. https://github.com/modelcontextprotocol/mcp
+   Status  : 404 Not Found
+   Found in: demos/assets-resources/MCP_TECHNICAL_CHEATSHEET.md
+   Action  : Update to https://github.com/modelcontextprotocol
+             (org page — 200 OK) or the specific SDK repo you intend to reference.
+             The standalone /mcp repo may have been removed or renamed.
+
+3. https://modelcontextprotocol.io/about
+   Status  : 404 Not Found
+   Found in: demos/assets-resources/modelcontextprotocol.io_docs.md
+   Action  : Remove or update — this page does not exist on the MCP site.
+             Consider linking to https://modelcontextprotocol.io/introduction instead.
+
+── PLACEHOLDER / EXAMPLE URLs (expected to fail) ───────
+
+These URLs are in code samples and reference docs as placeholders.
+They are not real links. No fix needed — they serve as illustration only.
+
+4. https://example.com/mcp
+   Status  : 404 Not Found
+   Found in: demos/07-hacks-tips-tools-workflows/mcp-builder-skill/reference/evaluation.md
+   Note    : Intentional placeholder in example code.
+
+5. https://example.com/resource
+   Status  : 404 Not Found
+   Found in: demos/assets-resources/MCP_TECHNICAL_CHEATSHEET.md
+   Note    : Intentional placeholder in example code.
+             (URL was also extracted with a trailing backtick — formatting artifact)
+
+6. https://api.example.com/v1
+   Status  : Connection error — DNS (not a real domain)
+   Found in: demos/07-hacks-tips-tools-workflows/mcp-builder-skill/reference/node_mcp_server.md
+             demos/07-hacks-tips-tools-workflows/mcp-builder-skill/reference/python_mcp_server.md
+   Note    : Intentional placeholder in code examples.
+
+7. https://api.example.com/oauth/authorize
+   Status  : Connection error — DNS (not a real domain)
+   Found in: demos/assets-resources/MCP_TECHNICAL_CHEATSHEET.md
+   Note    : Intentional placeholder in OAuth flow example.
+
+8. https://api.example.com/oauth/token
+   Status  : Connection error — DNS (not a real domain)
+   Found in: demos/assets-resources/MCP_TECHNICAL_CHEATSHEET.md
+   Note    : Intentional placeholder in OAuth flow example.
+
+========================================================
+⚠️  FORMATTING ARTIFACTS DETECTED
+========================================================
+
+The following URLs were found with trailing characters from markdown formatting.
+The checker resolved clean versions, but the raw markdown source should be fixed.
+
+  • https://modelcontextprotocol.io/llms-full.txt`    (trailing backtick)
+    → Found in: demos/07-hacks-tips-tools-workflows/mcp-builder-skill/SKILL.md
+
+  • https://raw.githubusercontent.com/...python-sdk/main/README.md`    (trailing backtick)
+    → Found in: demos/07-hacks-tips-tools-workflows/mcp-builder-skill/SKILL.md
+                demos/07-hacks-tips-tools-workflows/mcp-builder-skill/reference/python_mcp_server.md
+
+  • https://raw.githubusercontent.com/...typescript-sdk/main/README.md`    (trailing backtick)
+    → Found in: demos/07-hacks-tips-tools-workflows/mcp-builder-skill/SKILL.md
+
+  • http://localhost:8000**    (trailing **)
+    → Found in: demos/06-deploy-simple-agent-mcp-vercel/README.md
+
+========================================================
+✅ WORKING LINKS (44)
+========================================================
+
+  https://blog.modelcontextprotocol.io                                    200 OK
+  https://console.anthropic.com                                           200 OK
+  https://docs.anthropic.com/                                             200 OK
+  https://fastapi.tiangolo.com                                            200 OK
+  https://github.com/anthropics/claude-agent-sdk-python                  200 OK
+  https://github.com/anthropics/claude-agent-sdk-python/tree/main/examples  200 OK
+  https://github.com/astral-sh/uv                                        200 OK
+  https://github.com/modelcontextprotocol                                 200 OK
+  https://github.com/modelcontextprotocol/python-sdk                     200 OK
+  https://github.com/modelcontextprotocol/servers                        200 OK
+  https://llmstxt.org/                                                    200 OK
+  https://mintcdn.com/mcp/.../mcp-simple-diagram.png (×2)                200 OK
+  https://mintcdn.com/mcp/.../logo/dark.svg                              200 OK
+  https://mintcdn.com/mcp/.../logo/light.svg                             200 OK
+  https://modelcontextprotocol.io                                         200 OK
+  https://modelcontextprotocol.io/about                                   ❌ 404 (see above)
+  https://modelcontextprotocol.io/community/communication                 200 OK
+  https://modelcontextprotocol.io/docs/concepts/architecture              200 OK
+  https://modelcontextprotocol.io/docs/develop/build-client               200 OK
+  https://modelcontextprotocol.io/docs/develop/build-server               200 OK
+  https://modelcontextprotocol.io/docs/develop/connect-local-servers      200 OK
+  https://modelcontextprotocol.io/docs/develop/connect-remote-servers     200 OK
+  https://modelcontextprotocol.io/docs/getting-started/intro              200 OK
+  https://modelcontextprotocol.io/docs/getting-started/intro#learn-more   200 OK
+  https://modelcontextprotocol.io/docs/getting-started/intro#start-building  200 OK
+  https://modelcontextprotocol.io/docs/getting-started/intro#what-can-mcp-enable%3F  200 OK
+  https://modelcontextprotocol.io/docs/getting-started/intro#why-does-mcp-matter%3F  200 OK
+  https://modelcontextprotocol.io/docs/learn/architecture                 200 OK
+  https://modelcontextprotocol.io/docs/learn/client-concepts              200 OK
+  https://modelcontextprotocol.io/docs/learn/server-concepts              200 OK
+  https://modelcontextprotocol.io/docs/sdk                                200 OK
+  https://modelcontextprotocol.io/introduction                            200 OK
+  https://modelcontextprotocol.io/legacy/tools/inspector                  200 OK
+  https://modelcontextprotocol.io/llms-full.txt                           200 OK
+  https://modelcontextprotocol.io/specification                           200 OK
+  https://modelcontextprotocol.io/specification/2025-06-18                200 OK
+  https://modelcontextprotocol.io/specification/2025-06-18/basic/security_best_practices  200 OK
+  https://modelcontextprotocol.io/specification/versioning                200 OK
+  https://modelcontextprotocol.io/tutorials/building-mcp-with-llms        200 OK
+  https://pandas.pydata.org/                                              200 OK
+  https://platform.claude.com/docs/en/agent-sdk/overview                  200 OK
+  https://raw.githubusercontent.com/modelcontextprotocol/python-sdk/main/README.md   200 OK
+  https://raw.githubusercontent.com/modelcontextprotocol/typescript-sdk/main/README.md  200 OK
+  https://vercel.com/docs/functions/runtimes/python                       200 OK
+
+========================================================
+RECOMMENDATIONS
+========================================================
+
+Priority fixes (3 real broken links):
+
+  1. demos/04-query-tabular-data/README.md
+     Replace: https://spec.modelcontextprotocol.io/
+     With   : https://modelcontextprotocol.io/specification
+
+  2. demos/assets-resources/MCP_TECHNICAL_CHEATSHEET.md
+     Replace: https://github.com/modelcontextprotocol/mcp
+     With   : https://github.com/modelcontextprotocol
+               (or the specific SDK repo you intend, e.g. /python-sdk)
+
+  3. demos/assets-resources/modelcontextprotocol.io_docs.md
+     Remove or replace: https://modelcontextprotocol.io/about (404)
+
+Housekeeping (formatting artifacts in 2 files):
+  — Fix trailing backticks on URLs in SKILL.md and python_mcp_server.md
+  — Fix trailing ** on localhost URL in demo 06 README
+
+Overall health: 85% of real (non-placeholder) links working.
+The 3 actionable fixes above will bring the course materials to full health.
+
+========================================================

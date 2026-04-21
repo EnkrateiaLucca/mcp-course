@@ -1,1 +1,0 @@
-testing mcp inspector tool for debugging mcp servers
