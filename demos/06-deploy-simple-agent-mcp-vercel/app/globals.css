@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body { background: #0b0f1a; color: #e5e7eb; }
+
+/* Plotly's default modebar is loud against the dark panel; mute it. */
+.js-plotly-plot .modebar { filter: opacity(0.3); }
+.js-plotly-plot .modebar:hover { filter: opacity(1); }
