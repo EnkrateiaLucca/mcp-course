@@ -287,9 +287,10 @@ async def create_chart(args: dict[str, Any]) -> dict[str, Any]:
 
 
 def _wrap(payload: dict[str, Any]) -> dict[str, Any]:
-    """MCP tools must return {"content": [{"type":"text","text": ...}]}. We
-    stuff our typed-dict payload as JSON inside the text block; the frontend
-    parses it back out on the SSE stream."""
+    """claude-agent-sdk @tool handlers return a dict with a `content` key that
+    holds a list of content blocks. Our typed-dict payload is JSON-encoded
+    inside a single text block; the frontend parses it back out on the SSE
+    stream."""
     return {"content": [{"type": "text", "text": json.dumps(payload)}]}
 
 

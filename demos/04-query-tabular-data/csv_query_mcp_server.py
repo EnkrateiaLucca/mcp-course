@@ -3,7 +3,8 @@
 # requires-python = ">=3.9"
 # dependencies = [
 #     "mcp[cli]>=1.0.0",
-#     "pandas>=2.0.0"
+#     "pandas>=2.0.0",
+#     "matplotlib>=3.0.0",
 # ]
 # ///
 
@@ -17,10 +18,14 @@ Based on MCP Python SDK documentation:
 https://github.com/modelcontextprotocol/python-sdk
 """
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP, Image
 import pandas as pd
 from typing import List, Optional
 import os
+import io
+import matplotlib
+matplotlib.use("Agg")  # non-interactive backend — required for headless/subprocess environments
+import matplotlib.pyplot as plt
 
 # Initialize FastMCP server
 mcp = FastMCP("csv-query-mcp-server")
@@ -173,6 +178,30 @@ def get_category_statistics() -> str:
 
     stats.columns = ['count', 'avg_price', 'avg_rating', 'total_stock']
     return stats.to_string()
+
+@mcp.tool(
+    name="visualize_price_distribution",
+    description="It plots a graph of the distribution of all product prices"
+)
+def visualize_price_distribution() -> str:
+    """
+    Visualize the distribution of all product prices, saving a PNG next to the CSV.
+
+    Returns:
+        The absolute path to the saved PNG file.
+    """
+    df = pd.read_csv(CSV_FILE_PATH)
+
+    fig, ax = plt.subplots(figsize=(8, 5))
+    ax.hist(df['price'], bins=12, color='skyblue', edgecolor='black')
+    ax.set_xlabel('Product Price')
+    ax.set_ylabel('Count')
+    ax.set_title('Distribution of Product Prices')
+
+    output_path = os.path.join(os.path.dirname(__file__), "price_distribution.png")
+    fig.savefig(output_path, format='png', bbox_inches='tight')
+    plt.close(fig)
+    return output_path
 
 
 if __name__ == "__main__":

@@ -102,7 +102,7 @@ def write_report(filename: str, content: str) -> str:
     """Write a link audit report to the reports directory.
 
     Args:
-        filename: Report filename, e.g. 'link_audit_2026-04-20.txt'
+        filename: Report filename, e.g. 'link_audit_2026-04-20.md'
         content: The report content
     """
     if "/" in filename or "\\" in filename:

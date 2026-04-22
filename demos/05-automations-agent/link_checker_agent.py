@@ -106,7 +106,7 @@ Your report should include:
 - Working links count
 - Recommendation if many links are broken
 
-Name report files descriptively, e.g.: link_audit_2026-04-20.txt
+Name report files descriptively, e.g.: link_audit_2026-04-20.md
 You MUST always write a report file — do not just describe findings in chat.
 Deduplicate URLs before checking — the same URL may appear in multiple files.
 """,

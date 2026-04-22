@@ -1,13 +1,9 @@
 {
   "functions": {
     "api/agent.py": {
-      "runtime": "python3.12",
+      "runtime": "@vercel/python@6.36.0",
       "maxDuration": 300,
       "memory": 1024
     }
-  },
-  "rewrites": [
-    { "source": "/api/agent/stream", "destination": "/api/agent" },
-    { "source": "/api/agent/cleanup", "destination": "/api/agent" }
-  ]
+  }
 }
