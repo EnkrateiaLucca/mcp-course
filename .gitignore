@@ -1,0 +1,23 @@
+# Node
+node_modules/
+.next/
+out/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Env
+.env
+.env.*.local
+.vercel
+
+# Editor
+.DS_Store
+.idea/
+.vscode/
+.gstack/
