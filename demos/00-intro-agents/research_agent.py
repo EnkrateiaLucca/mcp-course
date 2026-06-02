@@ -171,7 +171,7 @@ SYSTEM = (
 )
 
 
-def run_agent(user_query: str, max_iterations: int = 10) -> str:
+def run_agent(user_query: str, max_iterations: int = 15) -> str:
     client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
     messages = [{"role": "user", "content": user_query}]
     print(f"User: {user_query}\n")

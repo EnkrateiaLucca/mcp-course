@@ -5,6 +5,7 @@
 #     "mcp[cli]>=1.9.3",
 #     "anthropic",
 #     "python-dotenv",
+#     "ddgs",
 # ]
 # ///
 """Host application — same agent loop as demo 00, but tools come from an MCP server.
@@ -35,7 +36,7 @@ from dotenv import load_dotenv
 from mcp_client import SimpleMCPClient
 
 load_dotenv()
-MODEL = "claude-sonnet-4-5-20250929"
+MODEL = "claude-sonnet-4-6"
 SYSTEM = (
     "You are a personal research assistant. You can search the web and organize "
     "findings as files in the user's workspace. When asked to research a topic, "

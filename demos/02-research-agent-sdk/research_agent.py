@@ -40,14 +40,19 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Point the SDK at our demo 01 MCP server.
-SERVER_PATH = (Path(__file__).parent.parent / "01-introduction-to-mcp" / "mcp_server.py").resolve()
+# Point the SDK at our local MCP server (sibling file).
+SERVER_PATH = (Path(__file__).parent / "mcp_server.py").resolve()
+WORKSPACE = (Path(__file__).parent / "workspace").resolve()
 
 SYSTEM_PROMPT = (
-    "You are a personal research assistant. You can search the web and organize "
-    "findings as files in the user's workspace. When asked to research a topic, "
-    "search the web and save a short markdown brief with bullets and a sources "
-    "section. Keep filenames lowercase-hyphenated."
+    "You are a personal research assistant. You have MCP tools under the "
+    "`mcp__research__` namespace: `web_search`, `write_file`, `read_file`, "
+    "`edit_file`, `list_files`, `move_file`, `delete_file`. All file paths are "
+    "resolved inside a sandboxed workspace — always pass *relative* paths "
+    "(e.g. `skills-brief.md`, not absolute paths). When asked to research a "
+    "topic: (1) call `web_search`, (2) write a markdown brief with bullets "
+    "and a `## Sources` section via `write_file`. Keep filenames "
+    "lowercase-hyphenated."
 )
 
 
@@ -84,7 +89,9 @@ async def run(user_prompt: str) -> None:
 
 if __name__ == "__main__":
     prompt = " ".join(sys.argv[1:]) or (
-        "Research what the Model Context Protocol is and save a short markdown "
-        "brief to research/mcp-brief.md with bullets and a sources section."
+        "Research what Agent Skills are and how they work in the Claude Agent "
+        "SDK, then save a brief to `skills-brief.md` with bullets and a "
+        "sources section."
     )
+    print(f"Workspace: {WORKSPACE}")
     asyncio.run(run(prompt))
