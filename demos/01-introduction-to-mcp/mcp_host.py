@@ -1,95 +1,132 @@
 #!/usr/bin/env -S uv run --script
 # /// script
-# requires-python = ">=3.9"
+# requires-python = ">=3.10"
 # dependencies = [
-#     "mcp[cli]==1.9.3",
+#     "mcp[cli]>=1.9.3",
 #     "anthropic",
 #     "python-dotenv",
-#     "rich"
 # ]
 # ///
+"""Host application — same agent loop as demo 00, but tools come from an MCP server.
 
-# The HOST is the user-facing application.
-# It imports and uses the MCP CLIENT, which handles protocol communication
-# with the MCP SERVER.
-#
-# Architecture: Host (this file) -> Client (mcp_client.py) -> Server (mcp_server.py)
+Architecture:
+    Host (this file)  ->  MCP Client (mcp_client.py)  ->  MCP Server (mcp_server.py)
+
+The agent loop is identical to demo 00. The only difference is *where the tools
+live*: instead of being Python functions in the same file, they are advertised
+by an MCP server and called over the protocol. That's the whole point of MCP —
+one server, many hosts.
+
+Run:
+    uv run mcp_host.py ./mcp_server.py
+    uv run mcp_host.py ./mcp_server.py "Research what MCP is and save a brief."
+"""
+
+from __future__ import annotations
 
 import asyncio
+import json
+import os
 import sys
+
+from anthropic import Anthropic
+from dotenv import load_dotenv
+
 from mcp_client import SimpleMCPClient
 
+load_dotenv()
+MODEL = "claude-sonnet-4-5-20250929"
+SYSTEM = (
+    "You are a personal research assistant. You can search the web and organize "
+    "findings as files in the user's workspace. When asked to research a topic, "
+    "search the web and save a short markdown brief with sources. Keep filenames "
+    "lowercase-hyphenated."
+)
 
-async def interactive_mode(client: SimpleMCPClient):
-    """Simple interactive loop to test the tools — this is our 'Host' UI."""
-    print("\n🤖 Interactive Mode - Type 'help' for commands or 'quit' to exit")
 
+def mcp_tools_to_claude(mcp_tools) -> list[dict]:
+    """MCP tool schemas are already JSON Schema — just rename for Claude's API."""
+    return [
+        {
+            "name": t.name,
+            "description": t.description or "",
+            "input_schema": t.inputSchema,
+        }
+        for t in mcp_tools
+    ]
+
+
+async def run_agent(client: SimpleMCPClient, user_query: str, max_iterations: int = 10) -> str:
+    anthropic = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+    tools = mcp_tools_to_claude(await client.list_tools())
+    messages = [{"role": "user", "content": user_query}]
+    print(f"\nUser: {user_query}\n")
+
+    for i in range(max_iterations):
+        response = anthropic.messages.create(
+            model=MODEL,
+            max_tokens=2048,
+            system=SYSTEM,
+            messages=messages,
+            tools=tools,
+        )
+
+        if response.stop_reason != "tool_use":
+            text = "".join(b.text for b in response.content if hasattr(b, "text"))
+            print(f"\nAgent: {text}")
+            return text
+
+        messages.append({"role": "assistant", "content": response.content})
+        tool_results = []
+        for block in response.content:
+            if block.type == "tool_use":
+                args_preview = json.dumps(block.input)[:120]
+                print(f"  [{i + 1}] mcp:{block.name}({args_preview})")
+                result = await client.call_tool(block.name, block.input)
+                # CallToolResult.content is a list of content blocks; flatten the text.
+                content_text = "".join(
+                    getattr(c, "text", str(c)) for c in (result.content or [])
+                )
+                tool_results.append({
+                    "type": "tool_result",
+                    "tool_use_id": block.id,
+                    "content": content_text or "(no output)",
+                    "is_error": bool(result.isError),
+                })
+        messages.append({"role": "user", "content": tool_results})
+
+    return "(max iterations reached)"
+
+
+async def interactive(client: SimpleMCPClient) -> None:
+    print("\n🤖 Research assistant ready. Type a request, or 'quit' to exit.\n")
     while True:
         try:
-            command = input("\n> ").strip().lower()
-
-            if command == "quit":
-                break
-            elif command == "help":
-                print(
-                    """
-Available commands:
-  time          - Get current time
-  add X Y       - Add two numbers
-  write F C     - Write to file C content F
-  read_resource - Read the documents resource
-  help          - Show this help
-  quit          - Exit
-                    """
-                )
-            elif command == "time":
-                result = await client.call_tool("get_current_time", {})
-                print(f"Current time: {result.content}")
-            elif command.startswith("add "):
-                parts = command.split()
-                if len(parts) == 3:
-                    a, b = float(parts[1]), float(parts[2])
-                    result = await client.call_tool("add_numbers", {"a": a, "b": b})
-                    print(f"Result: {result.content}")
-                else:
-                    print("Usage: add <number1> <number2>")
-            elif command.startswith("write "):
-                parts = command.split(maxsplit=2)
-                if len(parts) == 3:
-                    filename = parts[1]
-                    content = parts[2]
-                    result = await client.call_tool(
-                        "write_file",
-                        {"file_name": filename, "file_content": content},
-                    )
-                    print(f"File written: {result.content}")
-                else:
-                    print("Usage: write <filename> <content>")
-            elif command == "read_resource":
-                result = await client.read_resource("docs://documents.txt")
-                print(f"Document content:\n{result if result else 'No content'}")
-            else:
-                print("Unknown command. Type 'help' for available commands.")
-
-        except Exception as e:
-            print(f"Error: {e}")
+            line = input("> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            break
+        if not line or line.lower() in {"quit", "exit"}:
+            break
+        await run_agent(client, line)
 
 
-async def main():
+async def main() -> None:
     if len(sys.argv) < 2:
-        print("Usage: python mcp_host.py <path_to_server.py>")
-        print("Example: python mcp_host.py ./mcp_server.py")
+        print("Usage: uv run mcp_host.py <path_to_server.py> [\"one-shot prompt\"]")
         sys.exit(1)
 
     server_path = sys.argv[1]
-    client = SimpleMCPClient()
+    one_shot = " ".join(sys.argv[2:]) if len(sys.argv) > 2 else None
 
+    client = SimpleMCPClient()
     try:
         await client.connect_to_server(server_path)
-        await interactive_mode(client)
+        if one_shot:
+            await run_agent(client, one_shot)
+        else:
+            await interactive(client)
     finally:
         await client.cleanup()
-        print("\n👋 Goodbye!")
 
 
 if __name__ == "__main__":

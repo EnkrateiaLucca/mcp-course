@@ -23,6 +23,8 @@ attrs==25.3.0
     # via
     #   jsonschema
     #   referencing
+brotli==1.2.0
+    # via httpx
 certifi==2025.8.3
     # via
     #   httpcore
@@ -34,12 +36,15 @@ claude-agent-sdk==0.1.20
     # via -r ./requirements/requirements.in
 click==8.2.1
     # via
+    #   ddgs
     #   typer
     #   uvicorn
 colorama==0.4.6
     # via griffe
 comm==0.2.3
     # via ipykernel
+ddgs==9.14.4
+    # via -r ./requirements/requirements.in
 debugpy==1.8.16
     # via ipykernel
 decorator==5.2.1
@@ -52,6 +57,8 @@ docstring-parser==0.17.0
     # via anthropic
 executing==2.2.0
     # via stack-data
+fake-useragent==2.2.0
+    # via ddgs
 feedparser==6.0.12
     # via arxiv
 griffe==1.14.0
@@ -60,16 +67,23 @@ h11==0.16.0
     # via
     #   httpcore
     #   uvicorn
+h2==4.3.0
+    # via httpx
+hpack==4.1.0
+    # via h2
 httpcore==1.0.9
     # via httpx
 httpx==0.28.1
     # via
     #   -r ./requirements/requirements.in
     #   anthropic
+    #   ddgs
     #   mcp
     #   openai
 httpx-sse==0.4.1
     # via mcp
+hyperframe==6.1.0
+    # via h2
 idna==3.10
     # via
     #   anyio
@@ -97,6 +111,8 @@ jupyter-core==5.8.1
     # via
     #   ipykernel
     #   jupyter-client
+lxml==6.1.1
+    # via ddgs
 markdown-it-py==3.0.0
     # via rich
 matplotlib-inline==0.1.7
@@ -128,6 +144,8 @@ pexpect==4.9.0
     # via ipython
 platformdirs==4.3.8
     # via jupyter-core
+primp==1.3.1
+    # via ddgs
 prompt-toolkit==3.0.51
     # via ipython
 psutil==7.0.0
@@ -194,6 +212,8 @@ sniffio==1.3.1
     #   anthropic
     #   anyio
     #   openai
+socksio==1.0.0
+    # via httpx
 sse-starlette==3.0.2
     # via mcp
 stack-data==0.6.3

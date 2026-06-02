@@ -1,109 +1,62 @@
 #!/usr/bin/env -S uv run --script
 # /// script
-# requires-python = ">=3.9"
-# dependencies = [
-#     "mcp[cli]==1.9.3",
-#     "anthropic",
-#     "python-dotenv",
-#     "rich"
-# ]
+# requires-python = ">=3.10"
+# dependencies = ["mcp[cli]>=1.9.3"]
 # ///
+"""Minimal MCP client — pure protocol layer, no UI.
 
-# Main source from the mcp docs: https://modelcontextprotocol.io/docs/develop/build-client
-import asyncio
-from typing import Optional, Any
-from pydantic import AnyUrl
+Wraps an stdio MCP server connection and exposes the three primitives we
+care about: list_tools, call_tool, read_resource. Used by `mcp_host.py`.
+
+Reference: https://modelcontextprotocol.io/docs/develop/build-client
+"""
+
+from __future__ import annotations
+
 from contextlib import AsyncExitStack
-from mcp import ClientSession, StdioServerParameters
+from typing import Any, Optional
+
+from mcp import ClientSession, StdioServerParameters, types
 from mcp.client.stdio import stdio_client
-from mcp import types
+from pydantic import AnyUrl
+
 
 class SimpleMCPClient:
-    def __init__(self):
+    def __init__(self) -> None:
         self.session: Optional[ClientSession] = None
         self.exit_stack = AsyncExitStack()
-    
-    async def connect_to_server(self, server_path: str):
-        """Connect to your basic MCP server"""
-        print(f"Connecting to server: {server_path}")
-        
-        # Set up server parameters for Python script
-        server_params = StdioServerParameters(
-            command="python",
-            args=[server_path],
-            env=None
-        )
-        
-        # Use AsyncExitStack to manage the connection lifecycle
-        # This ensures the connection is properly closed when done
-        stdio_transport = await self.exit_stack.enter_async_context(
-            stdio_client(server_params)
-        )
-        
-        # Get the read/write streams
+
+    async def connect_to_server(self, server_path: str) -> None:
+        """Spawn the server as a subprocess and initialize the MCP session."""
+        params = StdioServerParameters(command="python", args=[server_path], env=None)
+        stdio_transport = await self.exit_stack.enter_async_context(stdio_client(params))
         self.stdio, self.write = stdio_transport
-        
-        # Create and initialize the session
         self.session = await self.exit_stack.enter_async_context(
             ClientSession(self.stdio, self.write)
         )
-        
         await self.session.initialize()
-        
-        # List available tools
+
         tools = await self.list_tools()
-        
-        print(f"✅ Connected! Available tools: {[tool.name for tool in tools]}")
-        
-        # List available resources
-        resources_response = await self.session.list_resources()
-        resources = resources_response.resources
-        print(f"📚 Available resources: {[r.uri for r in resources]}")
-    
+        print(f"✅ Connected. Tools: {[t.name for t in tools]}")
+
+        resources = (await self.session.list_resources()).resources
+        if resources:
+            print(f"📚 Resources: {[str(r.uri) for r in resources]}")
+
     async def list_tools(self) -> list[types.Tool]:
-        result = await self.session.list_tools()
-        return result.tools
-    
-    async def list_prompts(self) -> list[types.Prompt]:
-        result = await self.session.list_prompts()
-        return result.prompts
-    
-    async def get_prompt(self, prompt_name: str, args: dict[str, str]):
-        result = await self.session.get_prompt(prompt_name, args)
-        return result
-    
-    # The LLM is going to decide the tool and arguments to call
-    async def call_tool(self, tool_name: str, arguments: dict) -> types.CallToolResult | None:
-        """Call a tool on the server"""
-        if not self.session:
-            raise RuntimeError("Not connected to server")
-        
-        print(f"Calling tool: {tool_name} with args: {arguments}")
-        result = await self.session.call_tool(tool_name, arguments) # very similar to function calling in LLMs!
-        return result
-    
+        return (await self.session.list_tools()).tools
+
+    async def call_tool(self, name: str, arguments: dict) -> types.CallToolResult:
+        return await self.session.call_tool(name, arguments)
+
     async def read_resource(self, uri: str) -> Any:
         result = await self.session.read_resource(AnyUrl(uri))
         if not result.contents:
             return ""
-
         resource = result.contents[0]
-
-        # In MCP, text resources can come back as TextResourceContents or plain strings.
         if isinstance(resource, types.TextResourceContents):
             return resource.text
-        if isinstance(resource, str):
-            return resource
-
         return str(resource)
-    
-    async def cleanup(self):
-        """Clean up resources - AsyncExitStack handles this automatically"""
-        await self.exit_stack.aclose()
 
-## The MCP CLIENT is a pure protocol layer.
-## It knows how to connect to an MCP server, discover tools/resources,
-## and call them — but it has NO user interface.
-##
-## The HOST (mcp_host.py) is what the user actually runs.
-## Run with: python mcp_host.py ./mcp_server.py
+    async def cleanup(self) -> None:
+        await self.exit_stack.aclose()
