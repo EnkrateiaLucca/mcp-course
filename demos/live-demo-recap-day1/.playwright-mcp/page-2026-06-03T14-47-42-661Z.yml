@@ -1,0 +1,969 @@
+- generic [active] [ref=e1]:
+  - link "Skip to Content" [ref=e2] [cursor=pointer]:
+    - /url: "#main"
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]:
+        - button "Toggle site menu" [ref=e6] [cursor=pointer]:
+          - img [ref=e7]
+          - img [ref=e9]
+        - link "home page" [ref=e11] [cursor=pointer]:
+          - /url: https://www.oreilly.com
+          - img [ref=e12]
+      - button "Toggle search input visible" [ref=e14] [cursor=pointer]:
+        - img [ref=e15]
+        - img [ref=e18]
+  - navigation [ref=e20]:
+    - list [ref=e21]:
+      - listitem [ref=e22]:
+        - link [ref=e23] [cursor=pointer]:
+          - /url: https://www.oreilly.com/online-learning/teams.html
+          - text: For Enterprise
+      - listitem [ref=e24]:
+        - link [ref=e25] [cursor=pointer]:
+          - /url: https://www.oreilly.com/online-learning/government.html
+          - text: For Government
+      - listitem [ref=e26]:
+        - link [ref=e27] [cursor=pointer]:
+          - /url: https://www.oreilly.com/online-learning/academic.html
+          - text: For Higher Ed
+      - listitem [ref=e28]:
+        - link [ref=e29] [cursor=pointer]:
+          - /url: https://www.oreilly.com/online-learning/individuals.html
+          - text: For Individuals
+      - listitem [ref=e30]:
+        - link [ref=e31] [cursor=pointer]:
+          - /url: https://www.oreilly.com/content-marketing-solutions.html
+          - text: For Content Marketing
+    - separator [ref=e32]
+    - list [ref=e33]:
+      - listitem [ref=e34]:
+        - button [ref=e35] [cursor=pointer]:
+          - text: Explore Skills
+          - img [ref=e36]
+        - generic [ref=e38]:
+          - heading [level=2] [ref=e40]: Explore Skills
+          - list [ref=e41]:
+            - listitem [ref=e42]:
+              - button [ref=e43] [cursor=pointer]:
+                - text: Cloud Computing
+                - img [ref=e44]
+              - generic [ref=e46]:
+                - heading [level=2] [ref=e48]: Cloud Computing
+                - list [ref=e49]:
+                  - listitem [ref=e50]:
+                    - link [ref=e51] [cursor=pointer]:
+                      - /url: /search/skills/microsoft-azure/
+                      - text: Microsoft Azure
+                  - listitem [ref=e52]:
+                    - link [ref=e53] [cursor=pointer]:
+                      - /url: /search/skills/amazon-web-services-aws/
+                      - text: Amazon Web Services (AWS)
+                  - listitem [ref=e54]:
+                    - link [ref=e55] [cursor=pointer]:
+                      - /url: /search/skills/google-cloud/
+                      - text: Google Cloud
+                  - listitem [ref=e56]:
+                    - link [ref=e57] [cursor=pointer]:
+                      - /url: /search/skills/cloud-migration/
+                      - text: Cloud Migration
+                  - listitem [ref=e58]:
+                    - link [ref=e59] [cursor=pointer]:
+                      - /url: /search/skills/cloud-deployment/
+                      - text: Cloud Deployment
+                  - listitem [ref=e60]:
+                    - link [ref=e61] [cursor=pointer]:
+                      - /url: /search/skills/cloud-platforms/
+                      - text: Cloud Platforms
+                - button [ref=e63] [cursor=pointer]:
+                  - img [ref=e64]
+                  - text: Back
+            - listitem [ref=e66]:
+              - button [ref=e67] [cursor=pointer]:
+                - text: Data Engineering
+                - img [ref=e68]
+              - generic [ref=e70]:
+                - heading [level=2] [ref=e72]: Data Engineering
+                - list [ref=e73]:
+                  - listitem [ref=e74]:
+                    - link [ref=e75] [cursor=pointer]:
+                      - /url: /search/skills/data-warehouse/
+                      - text: Data Warehouse
+                  - listitem [ref=e76]:
+                    - link [ref=e77] [cursor=pointer]:
+                      - /url: /search/skills/sql/
+                      - text: SQL
+                  - listitem [ref=e78]:
+                    - link [ref=e79] [cursor=pointer]:
+                      - /url: /search/skills/apache-spark/
+                      - text: Apache Spark
+                  - listitem [ref=e80]:
+                    - link [ref=e81] [cursor=pointer]:
+                      - /url: /search/skills/microsoft-sql-server/
+                      - text: Microsoft SQL Server
+                  - listitem [ref=e82]:
+                    - link [ref=e83] [cursor=pointer]:
+                      - /url: /search/skills/mysql/
+                      - text: MySQL
+                  - listitem [ref=e84]:
+                    - link [ref=e85] [cursor=pointer]:
+                      - /url: /search/skills/kafka/
+                      - text: Kafka
+                  - listitem [ref=e86]:
+                    - link [ref=e87] [cursor=pointer]:
+                      - /url: /search/skills/data-lake/
+                      - text: Data Lake
+                  - listitem [ref=e88]:
+                    - link [ref=e89] [cursor=pointer]:
+                      - /url: /search/skills/streaming-messaging/
+                      - text: Streaming & Messaging
+                  - listitem [ref=e90]:
+                    - link [ref=e91] [cursor=pointer]:
+                      - /url: /search/skills/nosql-databases/
+                      - text: NoSQL Databases
+                  - listitem [ref=e92]:
+                    - link [ref=e93] [cursor=pointer]:
+                      - /url: /search/skills/relational-databases/
+                      - text: Relational Databases
+                - button [ref=e95] [cursor=pointer]:
+                  - img [ref=e96]
+                  - text: Back
+            - listitem [ref=e98]:
+              - button [ref=e99] [cursor=pointer]:
+                - text: Data Science
+                - img [ref=e100]
+              - generic [ref=e102]:
+                - heading [level=2] [ref=e104]: Data Science
+                - list [ref=e105]:
+                  - listitem [ref=e106]:
+                    - link [ref=e107] [cursor=pointer]:
+                      - /url: /search/topics/pandas/
+                      - text: Pandas
+                  - listitem [ref=e108]:
+                    - link [ref=e109] [cursor=pointer]:
+                      - /url: /search/topics/r/
+                      - text: R
+                  - listitem [ref=e110]:
+                    - link [ref=e111] [cursor=pointer]:
+                      - /url: /search/topics/matlab/
+                      - text: MATLAB
+                  - listitem [ref=e112]:
+                    - link [ref=e113] [cursor=pointer]:
+                      - /url: /search/topics/sas/
+                      - text: SAS
+                  - listitem [ref=e114]:
+                    - link [ref=e115] [cursor=pointer]:
+                      - /url: /search/topics/d3/
+                      - text: D3
+                  - listitem [ref=e116]:
+                    - link [ref=e117] [cursor=pointer]:
+                      - /url: /search/topics/power-bi/
+                      - text: Power BI
+                  - listitem [ref=e118]:
+                    - link [ref=e119] [cursor=pointer]:
+                      - /url: /search/topics/tableau/
+                      - text: Tableau
+                  - listitem [ref=e120]:
+                    - link [ref=e121] [cursor=pointer]:
+                      - /url: /search/topics/statistics/
+                      - text: Statistics
+                  - listitem [ref=e122]:
+                    - link [ref=e123] [cursor=pointer]:
+                      - /url: /search/topics/exploratory-data-analysis/
+                      - text: Exploratory Data Analysis
+                  - listitem [ref=e124]:
+                    - link [ref=e125] [cursor=pointer]:
+                      - /url: /search/topics/data-visualization/
+                      - text: Data Visualization
+                - button [ref=e127] [cursor=pointer]:
+                  - img [ref=e128]
+                  - text: Back
+            - listitem [ref=e130]:
+              - button [ref=e131] [cursor=pointer]:
+                - text: AI & ML
+                - img [ref=e132]
+              - generic [ref=e134]:
+                - heading [level=2] [ref=e136]: AI & ML
+                - list [ref=e137]:
+                  - listitem [ref=e138]:
+                    - link [ref=e139] [cursor=pointer]:
+                      - /url: /search/skills/generative-ai/
+                      - text: Generative AI
+                  - listitem [ref=e140]:
+                    - link [ref=e141] [cursor=pointer]:
+                      - /url: /search/skills/machine-learning/
+                      - text: Machine Learning
+                  - listitem [ref=e142]:
+                    - link [ref=e143] [cursor=pointer]:
+                      - /url: /search/skills/artificial-intelligence-ai/
+                      - text: Artificial Intelligence (AI)
+                  - listitem [ref=e144]:
+                    - link [ref=e145] [cursor=pointer]:
+                      - /url: /search/skills/deep-learning/
+                      - text: Deep Learning
+                  - listitem [ref=e146]:
+                    - link [ref=e147] [cursor=pointer]:
+                      - /url: /search/skills/reinforcement-learning/
+                      - text: Reinforcement Learning
+                  - listitem [ref=e148]:
+                    - link [ref=e149] [cursor=pointer]:
+                      - /url: /search/skills/natural-language-processing/
+                      - text: Natural Language Processing
+                  - listitem [ref=e150]:
+                    - link [ref=e151] [cursor=pointer]:
+                      - /url: /search/skills/tensorflow/
+                      - text: TensorFlow
+                  - listitem [ref=e152]:
+                    - link [ref=e153] [cursor=pointer]:
+                      - /url: /search/skills/scikit-learn/
+                      - text: Scikit-Learn
+                  - listitem [ref=e154]:
+                    - link [ref=e155] [cursor=pointer]:
+                      - /url: /search/skills/hyperparameter-tuning/
+                      - text: Hyperparameter Tuning
+                  - listitem [ref=e156]:
+                    - link [ref=e157] [cursor=pointer]:
+                      - /url: /search/skills/mlops/
+                      - text: MLOps
+                - button [ref=e159] [cursor=pointer]:
+                  - img [ref=e160]
+                  - text: Back
+            - listitem [ref=e162]:
+              - button [ref=e163] [cursor=pointer]:
+                - text: Programming Languages
+                - img [ref=e164]
+              - generic [ref=e166]:
+                - heading [level=2] [ref=e168]: Programming Languages
+                - list [ref=e169]:
+                  - listitem [ref=e170]:
+                    - link [ref=e171] [cursor=pointer]:
+                      - /url: /search/skills/java/
+                      - text: Java
+                  - listitem [ref=e172]:
+                    - link [ref=e173] [cursor=pointer]:
+                      - /url: /search/skills/javascript/
+                      - text: JavaScript
+                  - listitem [ref=e174]:
+                    - link [ref=e175] [cursor=pointer]:
+                      - /url: /search/skills/spring/
+                      - text: Spring
+                  - listitem [ref=e176]:
+                    - link [ref=e177] [cursor=pointer]:
+                      - /url: /search/skills/python/
+                      - text: Python
+                  - listitem [ref=e178]:
+                    - link [ref=e179] [cursor=pointer]:
+                      - /url: /search/skills/go/
+                      - text: Go
+                  - listitem [ref=e180]:
+                    - link [ref=e181] [cursor=pointer]:
+                      - /url: /search/skills/c-sharp/
+                      - text: C#
+                  - listitem [ref=e182]:
+                    - link [ref=e183] [cursor=pointer]:
+                      - /url: /search/skills/c-plus-plus/
+                      - text: C++
+                  - listitem [ref=e184]:
+                    - link [ref=e185] [cursor=pointer]:
+                      - /url: /search/skills/c/
+                      - text: C
+                  - listitem [ref=e186]:
+                    - link [ref=e187] [cursor=pointer]:
+                      - /url: /search/skills/swift/
+                      - text: Swift
+                  - listitem [ref=e188]:
+                    - link [ref=e189] [cursor=pointer]:
+                      - /url: /search/skills/rust/
+                      - text: Rust
+                  - listitem [ref=e190]:
+                    - link [ref=e191] [cursor=pointer]:
+                      - /url: /search/skills/functional-programming/
+                      - text: Functional Programming
+                - button [ref=e193] [cursor=pointer]:
+                  - img [ref=e194]
+                  - text: Back
+            - listitem [ref=e196]:
+              - button [ref=e197] [cursor=pointer]:
+                - text: Software Architecture
+                - img [ref=e198]
+              - generic [ref=e200]:
+                - heading [level=2] [ref=e202]: Software Architecture
+                - list [ref=e203]:
+                  - listitem [ref=e204]:
+                    - link [ref=e205] [cursor=pointer]:
+                      - /url: /search/skills/object-oriented-architecture/
+                      - text: Object-Oriented
+                  - listitem [ref=e206]:
+                    - link [ref=e207] [cursor=pointer]:
+                      - /url: /search/skills/distributed-systems/
+                      - text: Distributed Systems
+                  - listitem [ref=e208]:
+                    - link [ref=e209] [cursor=pointer]:
+                      - /url: /search/skills/domain-driven-design/
+                      - text: Domain-Driven Design
+                  - listitem [ref=e210]:
+                    - link [ref=e211] [cursor=pointer]:
+                      - /url: /search/skills/architectural-patterns/
+                      - text: Architectural Patterns
+                - button [ref=e213] [cursor=pointer]:
+                  - img [ref=e214]
+                  - text: Back
+            - listitem [ref=e216]:
+              - button [ref=e217] [cursor=pointer]:
+                - text: IT/Ops
+                - img [ref=e218]
+              - generic [ref=e220]:
+                - heading [level=2] [ref=e222]: IT/Ops
+                - list [ref=e223]:
+                  - listitem [ref=e224]:
+                    - link [ref=e225] [cursor=pointer]:
+                      - /url: /search/topics/kubernetes/
+                      - text: Kubernetes
+                  - listitem [ref=e226]:
+                    - link [ref=e227] [cursor=pointer]:
+                      - /url: /search/topics/docker/
+                      - text: Docker
+                  - listitem [ref=e228]:
+                    - link [ref=e229] [cursor=pointer]:
+                      - /url: /search/topics/github/
+                      - text: GitHub
+                  - listitem [ref=e230]:
+                    - link [ref=e231] [cursor=pointer]:
+                      - /url: /search/topics/terraform/
+                      - text: Terraform
+                  - listitem [ref=e232]:
+                    - link [ref=e233] [cursor=pointer]:
+                      - /url: /search/topics/continuous-delivery/
+                      - text: Continuous Delivery
+                  - listitem [ref=e234]:
+                    - link [ref=e235] [cursor=pointer]:
+                      - /url: /search/topics/continuous-integration/
+                      - text: Continuous Integration
+                  - listitem [ref=e236]:
+                    - link [ref=e237] [cursor=pointer]:
+                      - /url: /search/topics/database-administration/
+                      - text: Database Administration
+                  - listitem [ref=e238]:
+                    - link [ref=e239] [cursor=pointer]:
+                      - /url: /search/topics/computer-networking/
+                      - text: Computer Networking
+                  - listitem [ref=e240]:
+                    - link [ref=e241] [cursor=pointer]:
+                      - /url: /search/topics/operating-systems/
+                      - text: Operating Systems
+                  - listitem [ref=e242]:
+                    - link [ref=e243] [cursor=pointer]:
+                      - /url: /search/topics/it-certifications/
+                      - text: IT Certifications
+                - button [ref=e245] [cursor=pointer]:
+                  - img [ref=e246]
+                  - text: Back
+            - listitem [ref=e248]:
+              - button [ref=e249] [cursor=pointer]:
+                - text: Security
+                - img [ref=e250]
+              - generic [ref=e252]:
+                - heading [level=2] [ref=e254]: Security
+                - list [ref=e255]:
+                  - listitem [ref=e256]:
+                    - link [ref=e257] [cursor=pointer]:
+                      - /url: /search/skills/network-security/
+                      - text: Network Security
+                  - listitem [ref=e258]:
+                    - link [ref=e259] [cursor=pointer]:
+                      - /url: /search/skills/application-security/
+                      - text: Application Security
+                  - listitem [ref=e260]:
+                    - link [ref=e261] [cursor=pointer]:
+                      - /url: /search/skills/incident-response/
+                      - text: Incident Response
+                  - listitem [ref=e262]:
+                    - link [ref=e263] [cursor=pointer]:
+                      - /url: /search/skills/zero-trust-model/
+                      - text: Zero Trust Model
+                  - listitem [ref=e264]:
+                    - link [ref=e265] [cursor=pointer]:
+                      - /url: /search/skills/disaster-recovery/
+                      - text: Disaster Recovery
+                  - listitem [ref=e266]:
+                    - link [ref=e267] [cursor=pointer]:
+                      - /url: /search/skills/penetration-testing-ethical-hacking/
+                      - text: Penetration Testing / Ethical Hacking
+                  - listitem [ref=e268]:
+                    - link [ref=e269] [cursor=pointer]:
+                      - /url: /search/skills/governance/
+                      - text: Governance
+                  - listitem [ref=e270]:
+                    - link [ref=e271] [cursor=pointer]:
+                      - /url: /search/skills/malware/
+                      - text: Malware
+                  - listitem [ref=e272]:
+                    - link [ref=e273] [cursor=pointer]:
+                      - /url: /search/skills/security-architecture/
+                      - text: Security Architecture
+                  - listitem [ref=e274]:
+                    - link [ref=e275] [cursor=pointer]:
+                      - /url: /search/skills/security-engineering/
+                      - text: Security Engineering
+                  - listitem [ref=e276]:
+                    - link [ref=e277] [cursor=pointer]:
+                      - /url: /search/skills/security-certifications/
+                      - text: Security Certifications
+                - button [ref=e279] [cursor=pointer]:
+                  - img [ref=e280]
+                  - text: Back
+            - listitem [ref=e282]:
+              - button [ref=e283] [cursor=pointer]:
+                - text: Design
+                - img [ref=e284]
+              - generic [ref=e286]:
+                - heading [level=2] [ref=e288]: Design
+                - list [ref=e289]:
+                  - listitem [ref=e290]:
+                    - link [ref=e291] [cursor=pointer]:
+                      - /url: /search/skills/web-design/
+                      - text: Web Design
+                  - listitem [ref=e292]:
+                    - link [ref=e293] [cursor=pointer]:
+                      - /url: /search/skills/graphic-design/
+                      - text: Graphic Design
+                  - listitem [ref=e294]:
+                    - link [ref=e295] [cursor=pointer]:
+                      - /url: /search/skills/interaction-design/
+                      - text: Interaction Design
+                  - listitem [ref=e296]:
+                    - link [ref=e297] [cursor=pointer]:
+                      - /url: /search/skills/film-video/
+                      - text: Film & Video
+                  - listitem [ref=e298]:
+                    - link [ref=e299] [cursor=pointer]:
+                      - /url: /search/skills/user-experience-ux/
+                      - text: User Experience (UX)
+                  - listitem [ref=e300]:
+                    - link [ref=e301] [cursor=pointer]:
+                      - /url: /search/skills/design-process/
+                      - text: Design Process
+                  - listitem [ref=e302]:
+                    - link [ref=e303] [cursor=pointer]:
+                      - /url: /search/skills/design-tools/
+                      - text: Design Tools
+                - button [ref=e305] [cursor=pointer]:
+                  - img [ref=e306]
+                  - text: Back
+            - listitem [ref=e308]:
+              - button [ref=e309] [cursor=pointer]:
+                - text: Business
+                - img [ref=e310]
+              - generic [ref=e312]:
+                - heading [level=2] [ref=e314]: Business
+                - list [ref=e315]:
+                  - listitem [ref=e316]:
+                    - link [ref=e317] [cursor=pointer]:
+                      - /url: /search/skills/agile/
+                      - text: Agile
+                  - listitem [ref=e318]:
+                    - link [ref=e319] [cursor=pointer]:
+                      - /url: /search/skills/project-management/
+                      - text: Project Management
+                  - listitem [ref=e320]:
+                    - link [ref=e321] [cursor=pointer]:
+                      - /url: /search/skills/product-management/
+                      - text: Product Management
+                  - listitem [ref=e322]:
+                    - link [ref=e323] [cursor=pointer]:
+                      - /url: /search/skills/marketing/
+                      - text: Marketing
+                  - listitem [ref=e324]:
+                    - link [ref=e325] [cursor=pointer]:
+                      - /url: /search/skills/human-resources/
+                      - text: Human Resources
+                  - listitem [ref=e326]:
+                    - link [ref=e327] [cursor=pointer]:
+                      - /url: /search/skills/finance/
+                      - text: Finance
+                  - listitem [ref=e328]:
+                    - link [ref=e329] [cursor=pointer]:
+                      - /url: /search/skills/team-management/
+                      - text: Team Management
+                  - listitem [ref=e330]:
+                    - link [ref=e331] [cursor=pointer]:
+                      - /url: /search/skills/business-strategy/
+                      - text: Business Strategy
+                  - listitem [ref=e332]:
+                    - link [ref=e333] [cursor=pointer]:
+                      - /url: /search/skills/digital-transformation/
+                      - text: Digital Transformation
+                  - listitem [ref=e334]:
+                    - link [ref=e335] [cursor=pointer]:
+                      - /url: /search/skills/organizational-leadership/
+                      - text: Organizational Leadership
+                - button [ref=e337] [cursor=pointer]:
+                  - img [ref=e338]
+                  - text: Back
+            - listitem [ref=e340]:
+              - button [ref=e341] [cursor=pointer]:
+                - text: Soft Skills
+                - img [ref=e342]
+              - generic [ref=e344]:
+                - heading [level=2] [ref=e346]: Soft Skills
+                - list [ref=e347]:
+                  - listitem [ref=e348]:
+                    - link [ref=e349] [cursor=pointer]:
+                      - /url: /search/skills/professional-communication/
+                      - text: Professional Communication
+                  - listitem [ref=e350]:
+                    - link [ref=e351] [cursor=pointer]:
+                      - /url: /search/skills/emotional-intelligence/
+                      - text: Emotional Intelligence
+                  - listitem [ref=e352]:
+                    - link [ref=e353] [cursor=pointer]:
+                      - /url: /search/skills/presentation-skills/
+                      - text: Presentation Skills
+                  - listitem [ref=e354]:
+                    - link [ref=e355] [cursor=pointer]:
+                      - /url: /search/skills/innovation/
+                      - text: Innovation
+                  - listitem [ref=e356]:
+                    - link [ref=e357] [cursor=pointer]:
+                      - /url: /search/skills/critical-thinking/
+                      - text: Critical Thinking
+                  - listitem [ref=e358]:
+                    - link [ref=e359] [cursor=pointer]:
+                      - /url: /search/skills/public-speaking/
+                      - text: Public Speaking
+                  - listitem [ref=e360]:
+                    - link [ref=e361] [cursor=pointer]:
+                      - /url: /search/skills/collaboration/
+                      - text: Collaboration
+                  - listitem [ref=e362]:
+                    - link [ref=e363] [cursor=pointer]:
+                      - /url: /search/skills/personal-productivity/
+                      - text: Personal Productivity
+                  - listitem [ref=e364]:
+                    - link [ref=e365] [cursor=pointer]:
+                      - /url: /search/skills/confidence-motivation/
+                      - text: Confidence / Motivation
+                - button [ref=e367] [cursor=pointer]:
+                  - img [ref=e368]
+                  - text: Back
+          - button [ref=e371] [cursor=pointer]:
+            - img [ref=e372]
+            - text: Back
+      - listitem [ref=e374]:
+        - button [ref=e375] [cursor=pointer]:
+          - text: Features
+          - img [ref=e376]
+        - generic [ref=e378]:
+          - heading [level=2] [ref=e380]: Features
+          - list [ref=e381]:
+            - listitem [ref=e382]:
+              - link [ref=e383] [cursor=pointer]:
+                - /url: /online-learning/features.html
+                - text: All features
+            - listitem [ref=e384]:
+              - link [ref=e385] [cursor=pointer]:
+                - /url: /online-learning/verifiable-skills.html
+                - text: Verifiable skills
+            - listitem [ref=e386]:
+              - link [ref=e387] [cursor=pointer]:
+                - /url: /online-learning/academies.html
+                - text: Academies
+            - listitem [ref=e388]:
+              - link [ref=e389] [cursor=pointer]:
+                - /url: /online-learning/courses.html
+                - text: Courses
+            - listitem [ref=e390]:
+              - link [ref=e391] [cursor=pointer]:
+                - /url: /online-learning/feature-certification.html
+                - text: Certifications
+            - listitem [ref=e392]:
+              - link [ref=e393] [cursor=pointer]:
+                - /url: /online-learning/intro-interactive-learning.html
+                - text: Interactive learning
+            - listitem [ref=e394]:
+              - link [ref=e395] [cursor=pointer]:
+                - /url: /online-learning/live-events.html
+                - text: Live events
+            - listitem [ref=e396]:
+              - link [ref=e397] [cursor=pointer]:
+                - /url: /products/superstreams.html
+                - text: Superstreams
+            - listitem [ref=e398]:
+              - link [ref=e399] [cursor=pointer]:
+                - /url: /online-learning/feature-answers.html
+                - text: Answers
+            - listitem [ref=e400]:
+              - link [ref=e401] [cursor=pointer]:
+                - /url: /online-learning/insights-dashboard.html
+                - text: Insights reporting
+          - button [ref=e403] [cursor=pointer]:
+            - img [ref=e404]
+            - text: Back
+      - listitem [ref=e406]:
+        - link [ref=e407] [cursor=pointer]:
+          - /url: /radar/
+          - text: Radar Blog
+      - listitem [ref=e408]:
+        - link [ref=e409] [cursor=pointer]:
+          - /url: /live/
+          - text: Buy Courses
+    - separator [ref=e410]
+    - list [ref=e411]:
+      - listitem [ref=e412]:
+        - link [ref=e413] [cursor=pointer]:
+          - /url: https://www.oreilly.com/online-learning/pricing.html
+          - text: Plans
+      - listitem [ref=e414]:
+        - link [ref=e415] [cursor=pointer]:
+          - /url: https://www.oreilly.com/member/login/
+          - text: Sign In
+      - listitem [ref=e416]:
+        - link [ref=e417] [cursor=pointer]:
+          - /url: https://www.oreilly.com/online-learning/try-now.html
+          - text: Try Now
+          - img [ref=e418]
+  - generic [ref=e421]:
+    - img [ref=e423]
+    - generic [ref=e426]:
+      - generic [ref=e427]: Search for books, courses, events, and more
+      - searchbox [ref=e428]
+  - main [ref=e429]:
+    - article [ref=e430]:
+      - generic [ref=e431]:
+        - generic [ref=e432]:
+          - link "View all events" [ref=e433] [cursor=pointer]:
+            - /url: /live-events/?page=1
+            - generic [ref=e434]:
+              - generic [ref=e435]:
+                - generic [ref=e436]: 
+                - generic [ref=e437]: chevron left
+              - generic [ref=e438]: View all events
+          - 'heading "MCP Bootcamp: Building AI Agents with Model Context Protocol" [level=1] [ref=e439]'
+          - paragraph [ref=e440]:
+            - text: Published by
+            - link "O'Reilly Media, Inc." [ref=e441] [cursor=pointer]:
+              - /url: /publisher/oreilly-media-inc/
+          - generic [ref=e443]:
+            - img "Intermediate" [ref=e444]:
+              - img "Intermediate content level" [ref=e445]
+            - strong [ref=e450]: Intermediate
+          - paragraph [ref=e451]: Connecting LLMs to real-world data through standardized interfaces
+          - navigation [ref=e452]:
+            - link "What you’ll learn" [ref=e453] [cursor=pointer]:
+              - /url: "#whatYoullLearn"
+            - link "Is this live event for you?" [ref=e454] [cursor=pointer]:
+              - /url: "#thisLiveEventIsForYouIf"
+            - link "Schedule" [ref=e455] [cursor=pointer]:
+              - /url: "#liveEventSchedule"
+          - generic [ref=e456]:
+            - heading "Course outcomes" [level=3] [ref=e457]
+            - list [ref=e458]:
+              - listitem [ref=e459]: Create simple agents that can leverage tools powered by MCP
+              - listitem [ref=e460]: Build fully functional MCP servers that connect LLMs to external data sources and tools
+              - listitem [ref=e461]: Design and implement AI workflows that use MCP to provide context-aware responses
+              - listitem [ref=e462]: Create agents with Claude Agents SDK that can use MCP tools to perform tasks
+            - heading "Course description" [level=3] [ref=e463]
+            - paragraph [ref=e464]: The Model Context Protocol (MCP) is an open protocol that standardizes how AI applications connect to data sources and tools. Think of it as a USB-C port for AI—a universal connector that lets large language models seamlessly integrate with external systems.
+            - paragraph [ref=e465]: Join expert Lucas Soares to learn how to build MCP servers that expose tools, resources, and prompts to LLMs like Claude. You’ll explore how to create AI workflows that leverage external context and tools through MCP, enabling more powerful and context-aware AI assistants. Through practical examples, you’ll build agents that can leverage MCP servers for file systems and have the ability to leverage APIs using the Claude Agents SDK. By the end of the course, you’ll have the skills to build sophisticated AI-augmented workflows that connect LLMs to the data and tools they need to be truly useful.
+          - generic [ref=e466]:
+            - heading "What you’ll learn and how you can apply it" [level=2] [ref=e467]
+            - list [ref=e468]:
+              - listitem [ref=e469]: Design and implement composable agent architectures using MCP
+              - listitem [ref=e470]: Understand the MCP architecture and how it enables AI applications to access external context
+              - listitem [ref=e471]: Build MCP servers that expose tools, resources, and prompts to LLMs
+          - generic [ref=e472]:
+            - heading "This live event is for you because..." [level=2] [ref=e473]
+            - list [ref=e474]:
+              - listitem [ref=e475]: You’re a software engineer, AI engineer, data scientist, or technical product manager.
+              - listitem [ref=e476]: You work with large language models and AI-powered applications.
+              - listitem [ref=e477]: You want to build AI workflows that connect LLMs to real-world data and tools.
+            - heading "Prerequisites" [level=3] [ref=e478]
+            - list [ref=e479]:
+              - listitem [ref=e480]: A computer with Python 3.10+ and the MCP SDK installed (optionally, Node.js for JavaScript examples)
+              - listitem [ref=e481]: Access to Claude API (free tier sufficient) for testing MCP integrations, or access to Claude Desktop
+              - listitem [ref=e482]: Basic Python or JavaScript programming experience
+              - listitem [ref=e483]: Familiarity with REST APIs and web services
+              - listitem [ref=e484]: Understanding of basic LLM concepts
+              - listitem [ref=e485]: No prior experience with MCP required
+            - heading "Recommended preparation:" [level=3] [ref=e486]
+            - list [ref=e487]:
+              - listitem [ref=e488]:
+                - text: Read
+                - link "Building Applications with AI Agents" [ref=e489] [cursor=pointer]:
+                  - /url: https://www.oreilly.com/library/view/building-applications-with/9781098176495/
+                  - emphasis [ref=e490]: Building Applications with AI Agents
+                - text: (book)
+              - listitem [ref=e491]:
+                - text: Read
+                - link "AI Agents with MCP" [ref=e492] [cursor=pointer]:
+                  - /url: https://learning.oreilly.com/library/view/ai-agents-with/9798341639546/
+                  - emphasis [ref=e493]: AI Agents with MCP
+                - text: (book)
+            - heading "Recommended follow-up:" [level=3] [ref=e494]
+            - list [ref=e495]:
+              - listitem [ref=e496]:
+                - text: Take
+                - link "Getting Started with LangGraph" [ref=e497] [cursor=pointer]:
+                  - /url: https://www.oreilly.com/live-events/getting-started-with-langgraph/0642572005882/
+                - text: (live online course with Lucas Soares)
+              - listitem [ref=e498]:
+                - text: Take
+                - link "Working with o1, DeepSeek, and Gemini 2.0 Reasoning Capabilities" [ref=e499] [cursor=pointer]:
+                  - /url: https://www.oreilly.com/live-events/working-with-o1-deepseek-and-gemini-20-reasoning-capabilities/0642572015593/
+                - text: (live online course with Lucas Soares)
+              - listitem [ref=e500]:
+                - text: Take
+                - link "Getting Started with the OpenAI Agents SDK" [ref=e501] [cursor=pointer]:
+                  - /url: https://learning.oreilly.com/live-events/getting-started-with-the-openai-agents-sdk/0642572182465/
+                  - emphasis [ref=e502]: Getting Started with the OpenAI Agents SDK
+                - text: (live online course with Lucas Soares)
+          - generic [ref=e503]:
+            - heading "Schedule" [level=2] [ref=e504]
+            - paragraph [ref=e505]: The time frames are only estimates and may vary according to how the class is progressing.
+            - heading "Day 1" [level=3] [ref=e506]:
+              - strong [ref=e507]: Day 1
+            - paragraph [ref=e508]:
+              - strong [ref=e509]: Introduction to Agents & MCP
+              - text: (40 minutes)
+            - list [ref=e510]:
+              - listitem [ref=e511]: "Presentation: Agent Basics"
+              - listitem [ref=e512]: "Hands-on: Introduction to agents from scratch"
+              - listitem [ref=e513]: "Presentation: Where does MCP fit into the Agentic picture?"
+              - listitem [ref=e514]: "Demo: Examples of Agents with MCP (Claude Code)"
+              - listitem [ref=e515]: Introduction to MCP for Agent Builders (40 minutes)
+              - listitem [ref=e516]: "Presentation: MCP architecture & core concepts—tools, resources, prompts; MCP clients vs. servers; the MCP ecosystem"
+              - listitem [ref=e517]: "Presentation: MCP concepts for building Agents—clients vs. servers; capabilities (tools, resources, prompts); schemas & validation; local dev workflow"
+            - paragraph [ref=e518]:
+              - strong [ref=e519]: Q&A
+              - text: (10 minutes)
+            - paragraph [ref=e520]:
+              - strong [ref=e521]: Break
+              - text: (10 minutes)
+            - paragraph [ref=e522]:
+              - strong [ref=e523]: "MCP Quickstart: Build Your First Server"
+              - text: (50 minutes)
+            - list [ref=e524]:
+              - listitem [ref=e525]: "Presentation: Dev environment setup; MCP SDK project skeleton; define a minimal tool & prompt; run & inspect requests/responses"
+              - listitem [ref=e526]: "Hands-on exercise: Create a simple \"Utilities\" MCP server and a starter prompt"
+              - listitem [ref=e527]: "Demo: Use your MCP server with pre-built tools (Claude Code, Cursor)"
+            - paragraph [ref=e528]:
+              - strong [ref=e529]: Q&A
+              - text: (10 minutes)
+            - paragraph [ref=e530]:
+              - strong [ref=e531]: Break
+              - text: (10 minutes)
+            - paragraph [ref=e532]:
+              - strong [ref=e533]: Setup & First Working Agent with Claude Agent SDK
+              - text: (60 minutes)
+            - list [ref=e534]:
+              - listitem [ref=e535]: "Presentation: Intro to Claude Agent SDK + MCP"
+              - listitem [ref=e536]: "Hands-on exercise: Build a minimal “File Reader” agent—pip install claude-agent-sdk; start a streaming session; attach an MCP Filesystem server; list tools; invoke read + return a summary."
+            - paragraph [ref=e537]:
+              - strong [ref=e538]: Q&A
+              - text: (10 minutes)
+            - heading "Day 2" [level=3] [ref=e539]:
+              - strong [ref=e540]: Day 2
+            - paragraph [ref=e541]:
+              - strong [ref=e542]: Warm-up / Day-1 Recap
+              - text: (15 minutes)
+            - list [ref=e543]:
+              - listitem [ref=e544]: Building an Automation Agent with Claude Agent SDK + MCP (60 minutes)
+              - listitem [ref=e545]: "Presentation: Automating automations with Claude Agents SDK + MCP"
+              - listitem [ref=e546]: "Hands-on: Implement an agent that creates and tests automation scripts automatically from database"
+            - paragraph [ref=e547]:
+              - strong [ref=e548]: Q&A
+              - text: (10 minutes)
+            - paragraph [ref=e549]:
+              - strong [ref=e550]: Break
+              - text: (10 minutes)
+            - paragraph [ref=e551]:
+              - strong [ref=e552]: Claude Code + MCP as an Agentic Generalist System
+              - text: (60 minutes)
+            - list [ref=e553]:
+              - listitem [ref=e554]: "Presentation: Agentic Productivity with Claude Code + MCP (Framework & Workflow)"
+              - listitem [ref=e555]: "Hands-on: How to setup Claude Code as a Generalist System Leveraging Core MCP Servers"
+            - paragraph [ref=e556]:
+              - strong [ref=e557]: Q&A
+              - text: (10 minutes)
+            - paragraph [ref=e558]:
+              - strong [ref=e559]: Break
+              - text: (5 minutes)
+            - paragraph [ref=e560]:
+              - strong [ref=e561]: MCP Hacks & Tips for Devs
+              - text: (50 minutes)
+            - list [ref=e562]:
+              - listitem [ref=e563]: "Presentation: Practical patterns—multi-server layouts, schema validation in practice, logging & observability, local dev loops, safety guards, perf tips"
+            - paragraph [ref=e564]:
+              - strong [ref=e565]: "Demo: MCP for Everything with Claude Code"
+              - text: (10 minutes)
+            - list [ref=e566]:
+              - listitem [ref=e567]: "Build a centralized dashboard hub (Claude Code + MCP): attach servers, wire prompts/tools/resources, quick operator shortcuts"
+            - paragraph [ref=e568]:
+              - strong [ref=e569]: Final Recap & Q&A
+              - text: (10 minutes)
+        - generic [ref=e570]:
+          - generic [ref=e576]:
+            - heading "Your Instructor" [level=3] [ref=e577]
+            - list [ref=e578]:
+              - listitem [ref=e579]:
+                - article [ref=e580]:
+                  - heading "Lucas Soares" [level=4] [ref=e584]
+                  - generic [ref=e585]:
+                    - paragraph [ref=e588]: Lucas Soares is a machine learning engineer who has worked at K1 Digital and Biometrid, where he developed computer vision and NLP models for applications such as document verification, OCR-based...
+                    - button "Read more" [ref=e589]
+                  - generic [ref=e590]:
+                    - link "connect with Lucas Soares on linkedin" [ref=e591] [cursor=pointer]:
+                      - /url: https://www.linkedin.com/in/lucas-soares-969044167/
+                      - generic [ref=e592]:
+                        - generic [ref=e593]: 
+                        - generic [ref=e594]: linkedin
+                    - link "connect with Lucas Soares on X" [ref=e595] [cursor=pointer]:
+                      - /url: https://twitter.com/LucasEnkrateia
+                      - img "X" [ref=e596]
+                    - link "Lucas Soares official website" [ref=e598] [cursor=pointer]:
+                      - /url: https://lucas-soares.medium.com/
+                      - generic [ref=e599]:
+                        - generic [ref=e600]: 
+                        - generic [ref=e601]: link
+                    - link "search for Lucas Soares on O’Reilly" [ref=e602] [cursor=pointer]:
+                      - /url: https://learning.oreilly.com/search/?query=Lucas Soares
+                      - generic [ref=e603]:
+                        - generic [ref=e604]: 
+                        - generic [ref=e605]: search
+          - list [ref=e608]:
+            - listitem [ref=e609]
+            - listitem [ref=e610]
+            - listitem [ref=e611]
+          - generic [ref=e613]:
+            - heading "Skills covered" [level=3] [ref=e614]
+            - list [ref=e615]:
+              - listitem [ref=e616]:
+                - generic [ref=e617]: Claude
+              - listitem [ref=e618]:
+                - generic [ref=e619]: MLOps
+  - contentinfo [ref=e620]:
+    - generic [ref=e621]:
+      - generic [ref=e622]:
+        - paragraph [ref=e623]: Follow us
+        - list [ref=e624]:
+          - listitem [ref=e625]:
+            - link "O'Reilly on LinkedIn" [ref=e626] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/oreilly-media
+              - img [ref=e627]
+          - listitem [ref=e629]:
+            - link "O'Reilly on YouTube" [ref=e630] [cursor=pointer]:
+              - /url: https://www.youtube.com/user/OreillyMedia
+              - img [ref=e631]
+      - region "company info" [ref=e633]:
+        - generic [ref=e634]:
+          - generic [ref=e635]:
+            - heading "About O'Reilly" [level=2] [ref=e636]:
+              - link "About O'Reilly" [ref=e637] [cursor=pointer]:
+                - /url: /about/
+            - list [ref=e638]:
+              - listitem [ref=e639]:
+                - link "Teach/Write/Train" [ref=e640] [cursor=pointer]:
+                  - /url: /work-with-us.html
+              - listitem [ref=e641]:
+                - link "Careers" [ref=e642] [cursor=pointer]:
+                  - /url: /careers/
+              - listitem [ref=e643]:
+                - link "O'Reilly News" [ref=e644] [cursor=pointer]:
+                  - /url: /press/
+              - listitem [ref=e645]:
+                - link "Media Coverage" [ref=e646] [cursor=pointer]:
+                  - /url: /press/media-coverage.html
+              - listitem [ref=e647]:
+                - link "Community Partners" [ref=e648] [cursor=pointer]:
+                  - /url: /partner/signup.csp
+              - listitem [ref=e649]:
+                - link "Affiliate Program" [ref=e650] [cursor=pointer]:
+                  - /url: /affiliates/
+              - listitem [ref=e651]:
+                - link "Submit an RFP" [ref=e652] [cursor=pointer]:
+                  - /url: /online-learning/rfp.html
+              - listitem [ref=e653]:
+                - link "Diversity" [ref=e654] [cursor=pointer]:
+                  - /url: /diversity/
+              - listitem [ref=e655]:
+                - link "Content Sponsorship" [ref=e656] [cursor=pointer]:
+                  - /url: /content-marketing-solutions.html
+          - generic [ref=e657]:
+            - heading "Support" [level=2] [ref=e658]:
+              - link "Support" [ref=e659] [cursor=pointer]:
+                - /url: /online-learning/support/
+            - list [ref=e660]:
+              - listitem [ref=e661]:
+                - link "Contact Us" [ref=e662] [cursor=pointer]:
+                  - /url: /about/contact.html
+              - listitem [ref=e663]:
+                - link "Newsletters" [ref=e664] [cursor=pointer]:
+                  - /url: /emails/newsletters/
+              - listitem [ref=e665]:
+                - link "Privacy Policy" [ref=e666] [cursor=pointer]:
+                  - /url: /privacy.html
+              - listitem [ref=e667]:
+                - link "AI Policy" [ref=e668] [cursor=pointer]:
+                  - /url: /about/oreilly-approach-to-generative-ai.html
+          - generic [ref=e669]:
+            - heading "International" [level=2] [ref=e670]:
+              - link "International" [ref=e671] [cursor=pointer]:
+                - /url: "#"
+            - list [ref=e672]:
+              - listitem [ref=e673]:
+                - link "Australia & New Zealand" [ref=e674] [cursor=pointer]:
+                  - /url: /online-learning/anz.html
+              - listitem [ref=e675]:
+                - link "Japan" [ref=e676] [cursor=pointer]:
+                  - /url: https://www.oreilly.co.jp/index.shtml
+        - generic [ref=e677]:
+          - generic [ref=e678]:
+            - heading "Download the O'Reilly App" [level=2] [ref=e679]
+            - paragraph [ref=e680]: Take O'Reilly with you and learn anywhere, anytime on your phone and tablet.
+            - list [ref=e681]:
+              - listitem [ref=e682]:
+                - link "Apple app store" [ref=e683] [cursor=pointer]:
+                  - /url: https://itunes.apple.com/us/app/safari-to-go/id881697395
+                  - img "Apple app store" [ref=e684]
+              - listitem [ref=e685]:
+                - link "Google play store" [ref=e686] [cursor=pointer]:
+                  - /url: https://play.google.com/store/apps/details?id=com.safariflow.queue
+                  - img "Google play store" [ref=e687]
+          - generic [ref=e688]:
+            - heading "Watch on Your Big Screen" [level=2] [ref=e689]
+            - paragraph [ref=e690]: View all O'Reilly videos, virtual conferences, and live events on your home TV.
+            - list [ref=e691]:
+              - listitem [ref=e692]:
+                - link "Roku Players and TVs" [ref=e693] [cursor=pointer]:
+                  - /url: https://channelstore.roku.com/details/c9d25fa651f0ad84e484b0dfd4b20172:856a240ad268961983e91ae52c1e1e5c/oreilly
+                  - img "Roku Players and TVs" [ref=e694]
+              - listitem [ref=e695]:
+                - link "Amazon appstore" [ref=e696] [cursor=pointer]:
+                  - /url: https://www.amazon.com/OReilly-Media-Inc/dp/B087YYHL5C/ref=sr_1_2?dchild=1&keywords=oreilly&qid=1604964116&s=mobile-apps&sr=1-2
+                  - img "Amazon appstore" [ref=e697]
+      - generic [ref=e698]:
+        - link "O'Reilly home" [ref=e699] [cursor=pointer]:
+          - /url: https://www.oreilly.com
+          - img "O'Reilly home" [ref=e700]
+        - paragraph [ref=e702]:
+          - link "Do not sell or share my personal information" [ref=e703] [cursor=pointer]:
+            - /url: https://www.oreilly.com/privacy.html?donotsell=show
+          - text: .
+        - generic [ref=e704]:
+          - paragraph [ref=e705]: © 2025, O'Reilly Media, Inc. All trademarks and registered trademarks appearing on oreilly.com are the property of their respective owners.
+          - list [ref=e706]:
+            - listitem [ref=e707]:
+              - link "Terms of Service" [ref=e708] [cursor=pointer]:
+                - /url: https://www.oreilly.com/terms/
+              - text: •
+            - listitem [ref=e709]:
+              - link "Privacy Policy" [ref=e710] [cursor=pointer]:
+                - /url: /privacy
+              - text: •
+            - listitem [ref=e711]:
+              - link "Editorial Independence" [ref=e712] [cursor=pointer]:
+                - /url: /about/editorial_independence.html
+              - text: •
+            - listitem [ref=e713]:
+              - link "Modern Slavery Act Statement" [ref=e714] [cursor=pointer]:
+                - /url: https://www.oreilly.com/modern-slavery-act-transparency-statement.html
