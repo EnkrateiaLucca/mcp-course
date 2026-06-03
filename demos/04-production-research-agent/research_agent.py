@@ -1,9 +1,9 @@
 #!/usr/bin/env -S uv run --script
 # /// script
-# requires-python = ">=3.12"
-# dependencies = ["claude-agent-sdk", "python-dotenv"]
+# requires-python = ">=3.10"
+# dependencies = ["claude-agent-sdk>=0.1.0", "python-dotenv"]
 # ///
-"""Demo 03 — Production-shaped research agent on the Claude Agent SDK.
+"""Demo 04 — Production-shaped research agent on the Claude Agent SDK.
 
 The agent from demo 02 wearing a production jacket: same use case, same SDK,
 but now talking to a **remote HTTP MCP server** with the four production
@@ -150,14 +150,24 @@ class ExecutionTracker:
     tool_calls: list[dict[str, Any]] = field(default_factory=list)
     cost_usd: float = 0.0
     status: str = "running"
+    # Parallel tool calls emit multiple AssistantMessages sharing the same
+    # message_id with identical usage. Dedupe if we ever add token accounting.
+    _seen_message_ids: set[str] = field(default_factory=set)
 
     def on_message(self, message: Any) -> None:
         if isinstance(message, AssistantMessage):
+            mid = getattr(message, "message_id", None)
+            if mid and mid in self._seen_message_ids:
+                return
+            if mid:
+                self._seen_message_ids.add(mid)
             for block in message.content:
                 if isinstance(block, ToolUseBlock):
                     self.tool_calls.append({"name": block.name, "input": block.input})
         elif isinstance(message, ResultMessage):
             self.ended = datetime.now()
+            # ResultMessage.total_cost_usd is the authoritative per-call number
+            # but is a CLIENT-SIDE ESTIMATE, not billing-grade.
             self.cost_usd = message.total_cost_usd or 0.0
             self.status = message.subtype
 
@@ -167,7 +177,7 @@ class ExecutionTracker:
         for c in self.tool_calls:
             counts[c["name"]] = counts.get(c["name"], 0) + 1
         print("\n" + "─" * 60)
-        print(f"status: {self.status}   duration: {dur:.2f}s   cost: ${self.cost_usd:.4f}")
+        print(f"status: {self.status}   duration: {dur:.2f}s   cost (est): ${self.cost_usd:.4f}")
         for name, n in counts.items():
             print(f"  {name}: {n}")
         print("─" * 60)

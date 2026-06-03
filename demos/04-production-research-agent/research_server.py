@@ -1,9 +1,9 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["mcp[cli]>=1.9.3", "ddgs"]
+# dependencies = ["mcp[cli]>=1.9.3", "ddgs", "starlette", "uvicorn", "httpx"]
 # ///
-"""Demo 03 — Production-shaped MCP server for the research assistant.
+"""Demo 04 — Production-shaped MCP server for the research assistant.
 
 This is the SAME research-assistant use case from demos 00–02, but redesigned
 along the four production patterns from Anthropic's "Building agents that
