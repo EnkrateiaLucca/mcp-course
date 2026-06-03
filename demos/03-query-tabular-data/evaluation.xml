@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Ground-truth test set for the tabular-data agent.
+  Pattern from Anthropic's `tool_evaluation` cookbook:
+  https://github.com/anthropics/claude-cookbooks/tree/main/tool_evaluation
+
+  Each <task> has one <prompt> and one ground-truth <response> string.
+  The agent is graded by EXACT MATCH on the value it returns inside
+  <response>...</response>. Output format is constrained by the judge
+  system prompt to avoid false negatives like "$11,614.72" vs "11614.72".
+-->
+<evaluation>
+  <task>
+    <prompt>How many products are in the Electronics category?</prompt>
+    <response>9</response>
+  </task>
+  <task>
+    <prompt>How many products are in the Furniture category?</prompt>
+    <response>6</response>
+  </task>
+  <task>
+    <prompt>What is the price of the highest-rated product? Give just the number.</prompt>
+    <response>149.99</response>
+  </task>
+  <task>
+    <prompt>What is the name of the highest-rated product?</prompt>
+    <response>Mechanical Keyboard</response>
+  </task>
+  <task>
+    <prompt>How many products have a rating of 4.5 or higher?</prompt>
+    <response>7</response>
+  </task>
+</evaluation>
