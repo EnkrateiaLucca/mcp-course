@@ -46,9 +46,13 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
+import time
 from datetime import datetime, timezone
 from pathlib import Path
+from urllib.parse import urlparse
 
+import httpx
 from ddgs import DDGS
 from mcp.server.fastmcp import FastMCP
 
@@ -83,20 +87,75 @@ def _slugify(text: str) -> str:
 
 
 def _search(query: str, max_results: int) -> list[dict]:
-    hits = DDGS().text(query, max_results=max_results)
-    return [
-        {"title": h.get("title"), "url": h.get("href"), "snippet": h.get("body")}
-        for h in hits
-    ]
+    """Search via DDGS with retry/backoff.
+
+    ddgs throttles aggressively and can raise mid-class. Retry with backoff
+    and return [] on persistent failure so the caller can surface a
+    structured 'search_unavailable' error instead of crashing.
+    """
+    last_err: Exception | None = None
+    for attempt in range(3):
+        try:
+            hits = DDGS().text(query, max_results=max_results)
+            return [
+                {"title": h.get("title"), "url": h.get("href"), "snippet": h.get("body")}
+                for h in hits
+            ]
+        except Exception as exc:  # noqa: BLE001 - ddgs raises ad-hoc types
+            last_err = exc
+            if attempt < 2:
+                time.sleep(2 ** attempt)
+    logger.warning("search failed after retries: %r", last_err)
+    return []
+
+
+ALLOWED_FETCH_SCHEMES = {"http", "https"}
+
+
+def _fetch_page(url: str, max_chars: int = 4000) -> str:
+    """Fetch a URL and return a stripped-text excerpt.
+
+    Cheap text extraction (regex tag-strip). For a real product use
+    trafilatura or selectolax — but those add deps and live-class risk.
+    Returns an empty string on any failure so the caller can decide
+    whether to retry or skip.
+    """
+    if urlparse(url).scheme not in ALLOWED_FETCH_SCHEMES:
+        return ""
+    try:
+        resp = httpx.get(
+            url,
+            timeout=10,
+            follow_redirects=True,
+            headers={"User-Agent": "mcp-course-research/1.0"},
+        )
+        resp.raise_for_status()
+    except Exception as exc:  # noqa: BLE001
+        logger.info("fetch failed for %s: %r", url, exc)
+        return f"(fetch failed: {exc})"
+
+    text = re.sub(r"<script\b.*?</script>", " ", resp.text, flags=re.DOTALL | re.IGNORECASE)
+    text = re.sub(r"<style\b.*?</style>", " ", text, flags=re.DOTALL | re.IGNORECASE)
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text[:max_chars]
 
 
 def _format_brief(topic: str, hits: list[dict]) -> str:
-    """Compose the markdown a researcher would write themselves."""
+    """Compose the markdown a researcher would write themselves.
+
+    Each hit's optional 'excerpt' (from _fetch_page) is included so the
+    brief is a synthesis grounded in real text, not just a list of
+    one-line search snippets.
+    """
     when = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     lines = [f"# {topic}", "", f"_Researched {when}_", "", "## Findings", ""]
     for h in hits:
         snippet = (h["snippet"] or "").replace("\n", " ").strip()
         lines.append(f"- **{h['title']}** — {snippet}")
+        excerpt = (h.get("excerpt") or "").strip()
+        if excerpt:
+            lines.append(f"  > {excerpt[:600]}{'…' if len(excerpt) > 600 else ''}")
     lines += ["", "## Sources", ""]
     for h in hits:
         lines.append(f"- [{h['title']}]({h['url']})")
@@ -120,7 +179,14 @@ def research_topic(topic: str, max_sources: int = 5) -> dict:
     logger.info("research_topic: %s (max_sources=%d)", topic, max_sources)
     hits = _search(topic, max_results=max_sources)
     if not hits:
-        return {"ok": False, "error": "no_results", "topic": topic}
+        return {"ok": False, "error": "search_unavailable", "topic": topic}
+
+    # Fetch + extract real text from each source so the brief is a
+    # synthesis, not a link dump. Best-effort: a failed fetch leaves
+    # the entry with its snippet only.
+    for hit in hits:
+        url = hit.get("url") or ""
+        hit["excerpt"] = _fetch_page(url) if url else ""
 
     brief = _format_brief(topic, hits)
     filename = f"{_slugify(topic)}.md"
