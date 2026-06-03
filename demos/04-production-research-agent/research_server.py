@@ -63,7 +63,13 @@ BRIEFS_DIR.mkdir(exist_ok=True)
 
 # In production this would be OAuth/CIMD. For a live demo a shared bearer
 # token keeps the auth wiring visible without 100 lines of OAuth code.
-AUTH_TOKEN = os.getenv("MCP_AUTH_TOKEN", "demo-secret")
+# Fail fast if unset rather than silently defaulting to "demo-secret".
+try:
+    AUTH_TOKEN = os.environ["MCP_AUTH_TOKEN"]
+except KeyError as exc:  # pragma: no cover - startup guard
+    raise SystemExit(
+        "MCP_AUTH_TOKEN must be set. Example: export MCP_AUTH_TOKEN=demo-secret"
+    ) from exc
 
 mcp = FastMCP("research-assistant", host="127.0.0.1", port=8765)
 
@@ -161,14 +167,48 @@ def briefs_index() -> str:
 
 # --- Entry point -----------------------------------------------------------
 
+# --- Auth middleware -------------------------------------------------------
+#
+# FastMCP's streamable-http transport does not bundle OAuth. In production you
+# would put this server behind an API gateway that validates OAuth/CIMD tokens
+# (see MCP spec auth section). For the course we validate a static bearer
+# token at the ASGI layer — the *seam* where real auth would slot in.
+#
+# Per the official MCP authentication docs:
+#   "The SDK doesn't handle OAuth flows automatically, but you can pass access
+#    tokens via headers after completing the OAuth flow in your application."
+# So the client attaches `Authorization: Bearer ...` (research_agent.py does),
+# and the server validates it (this middleware does). Two halves, one seam.
+
+from starlette.middleware.base import BaseHTTPMiddleware  # noqa: E402
+from starlette.requests import Request  # noqa: E402
+from starlette.responses import JSONResponse  # noqa: E402
+
+
+class BearerAuthMiddleware(BaseHTTPMiddleware):
+    """Reject any request whose Authorization header doesn't match AUTH_TOKEN."""
+
+    async def dispatch(self, request: Request, call_next):
+        header = request.headers.get("authorization", "")
+        expected = f"Bearer {AUTH_TOKEN}"
+        if header != expected:
+            logger.warning("rejected request: bad/missing Authorization header")
+            return JSONResponse(
+                {"error": "unauthorized", "detail": "missing or invalid bearer token"},
+                status_code=401,
+            )
+        return await call_next(request)
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     logger.info("🚀 research-assistant MCP server on http://127.0.0.1:8765/mcp")
-    logger.info("    auth: Bearer %s  (set MCP_AUTH_TOKEN to override)", AUTH_TOKEN)
-    # NOTE on auth: FastMCP's streamable-http transport does not bundle OAuth.
-    # In production you would put this server behind an API gateway that
-    # validates OAuth/CIMD tokens (see MCP spec auth section), or wrap the
-    # ASGI app with a starlette middleware that checks Authorization headers.
-    # We pass the expected token to clients via MCP_AUTH_TOKEN so the *shape*
-    # of the auth handshake is in the code, even though the check is a stub.
-    mcp.run(transport="streamable-http")
+    logger.info("    auth: Bearer %s  (override with MCP_AUTH_TOKEN)", AUTH_TOKEN)
+
+    # FastMCP exposes the underlying Starlette ASGI app via streamable_http_app().
+    # We wrap it with auth middleware before handing it to uvicorn.
+    import uvicorn
+
+    app = mcp.streamable_http_app()
+    app.add_middleware(BearerAuthMiddleware)
+    uvicorn.run(app, host="127.0.0.1", port=8765)

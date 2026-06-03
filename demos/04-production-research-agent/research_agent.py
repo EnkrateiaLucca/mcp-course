@@ -60,7 +60,12 @@ log = logging.getLogger("research-agent")
 
 
 SERVER_URL = os.getenv("MCP_SERVER_URL", "http://127.0.0.1:8765/mcp")
-AUTH_TOKEN = os.getenv("MCP_AUTH_TOKEN", "demo-secret")
+try:
+    AUTH_TOKEN = os.environ["MCP_AUTH_TOKEN"]
+except KeyError as exc:
+    raise SystemExit(
+        "MCP_AUTH_TOKEN must be set so the agent can authenticate to the server."
+    ) from exc
 
 SYSTEM_PROMPT = (
     "You are a production research assistant. You have three MCP tools under "
@@ -220,6 +225,17 @@ async def run(user_prompt: str) -> ExecutionTracker:
             if isinstance(message, SystemMessage) and message.subtype == "init":
                 tools = message.data.get("tools", [])
                 log.info("session init — %d tools available", len(tools))
+                # Surface MCP connection/auth failures immediately. The SDK
+                # emits a per-server `status` in the init payload — a 401 or
+                # unreachable server shows up here, not as "agent didn't use
+                # the tool" 30 seconds later.
+                for srv in message.data.get("mcp_servers", []) or []:
+                    status = srv.get("status", "unknown")
+                    name = srv.get("name", "?")
+                    if status != "connected":
+                        log.error("MCP server %r: %s", name, status)
+                    else:
+                        log.info("MCP server %r: connected", name)
             elif isinstance(message, AssistantMessage):
                 for block in message.content:
                     if isinstance(block, TextBlock):
