@@ -2,7 +2,7 @@ ENV_NAME ?= mcp-course
 PYTHON_VERSION ?= 3.11
 CONDA_ACTIVATE = source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate ; conda activate
 
-.PHONY: all conda-create env-setup pip-tools-setup repo-setup notebook-setup env-update clean
+.PHONY: all conda-create env-setup pip-tools-setup repo-setup notebook-setup env-update clean test
 
 all: conda-create env-setup repo-setup notebook-setup env-update
 
@@ -34,3 +34,16 @@ clean:
 freeze:
 	$(CONDA_ACTIVATE) $(ENV_NAME) && \
 	uv pip freeze > requirements/requirements.txt
+
+# Run the offline test suite (no network, no LLM calls). Uses uv to
+# pull deps on the fly so this works without any conda/venv setup.
+test:
+	MCP_AUTH_TOKEN=test-token uv run \
+		--with pytest \
+		--with mcp \
+		--with ddgs \
+		--with starlette \
+		--with httpx \
+		--with python-dotenv \
+		--with claude-agent-sdk \
+		pytest tests/ -q
