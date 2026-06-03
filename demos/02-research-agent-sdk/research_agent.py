@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run --script
 # /// script
-# requires-python = ">=3.12"
-# dependencies = ["claude-agent-sdk", "python-dotenv"]
+# requires-python = ">=3.10"
+# dependencies = ["claude-agent-sdk>=0.1.0", "python-dotenv"]
 # ///
 """Demo 02 — Research assistant on the Claude Agent SDK.
 
