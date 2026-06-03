@@ -1,48 +1,45 @@
-# Model Context Protocol (MCP) — Research Brief
+# Model Context Protocol (MCP) — Brief
 
-## What Is It?
-- **MCP** is an **open standard and open-source framework** introduced by **Anthropic in November 2024**.
-- It standardizes how AI systems (particularly large language models) **integrate and share data with external tools, systems, and data sources**.
-- Often described as a **"universal connector"** for AI applications — analogous to USB-C for devices.
+## Overview
+- **MCP** is an open standard and open-source framework introduced by **Anthropic in November 2024**.
+- Its goal is to standardize how AI systems (especially large language models) **integrate and share data with external tools and services**.
+- Often described as a universal "plugin interface" or "USB-C port" for AI — one protocol to connect any model to any data source or tool.
 
 ## The Problem It Solves
-- Before MCP, developers had to build **custom, one-off connectors** for every tool or data source an AI needed to access.
-- This created an **"N×M" integration problem**: N models × M tools = an explosion of bespoke connectors.
-- Earlier partial solutions (e.g., OpenAI's 2023 function-calling API, ChatGPT plugins) helped but remained **vendor-specific**.
+- Before MCP, connecting an LLM to external systems required **bespoke, fragmented integrations** for each tool or data source.
+- MCP replaces this patchwork with a **single, consistent protocol**, reducing engineering overhead and improving reliability.
 
 ## How It Works
-- MCP defines a **client-server architecture**:
-  - **MCP Servers** expose tools, data resources, and preset prompts.
-  - **MCP Clients** (AI applications / LLMs) connect to those servers to retrieve context or invoke actions.
-- Communication is built around three core **primitives**:
-  - **Tools** — callable functions/actions (similar to function calling).
-  - **Resources** — structured data or documents the model can read.
-  - **Prompts** — reusable, preset prompt templates.
-- Uses a **JSON-RPC**-based transport layer, making it language- and platform-agnostic.
+- Follows a **client–server architecture**:
+  - **MCP Hosts** — AI applications (e.g., Claude, IDEs) that want to access external context.
+  - **MCP Clients** — Components inside the host that initiate connections.
+  - **MCP Servers** — Lightweight services that expose data, tools, or APIs using the MCP standard.
+- Communication is **bidirectional and secure**, allowing models to both read context and take actions.
+- Servers can expose three primitives: **Resources** (data/context), **Tools** (callable functions), and **Prompts** (reusable templates).
 
-## Key Features & Benefits
-- **Standardization** — one protocol works across models, frameworks, and vendors.
-- **Composability** — multiple MCP servers can be combined in a single AI workflow.
-- **Reduced complexity** — developers write one integration per tool, not one per (tool × model).
-- **Multi-step workflows** — enables richer AI agents that chain context across actions (e.g., reading a calendar, booking a flight, drafting an email).
+## Key Features
+- **Open standard** — freely available and not vendor-locked.
+- **Language/framework agnostic** — any LLM or application can implement it.
+- **Security-conscious** — designed with controlled, permissioned access to external systems.
+- **Composable** — a single AI host can connect to multiple MCP servers simultaneously.
+
+## Adoption & Ecosystem
+- Rapidly gained traction; by **March 2025** it had become one of the hottest topics in the AI developer space.
+- Supported by major platforms including **Anthropic (Claude), Google Cloud, Vercel, IBM**, and many open-source projects.
+- Used across domains: coding assistants, FinOps, business automation, development environments, and more.
 
 ## Common Use Cases
-- AI-powered IDEs and coding assistants accessing file systems and APIs.
-- Chatbots that can read/write documents, calendars, and emails.
-- Trip/vacation planning agents combining calendar, email, and booking services.
-- Custom enterprise AI workflows connecting internal data sources.
-
-## Ecosystem & Adoption
-- Rapidly gained momentum, becoming one of the **hottest topics in AI by early 2025**.
-- Supported by a growing library of community and vendor-built MCP servers.
-- Specification is maintained at **modelcontextprotocol.io**.
+- Connecting AI assistants to **databases, file systems, and code repositories**.
+- Enabling **automated cost analysis** and business intelligence queries.
+- Powering **agentic workflows** where an LLM takes multi-step actions across services.
+- Integrating AI into **IDEs and development environments** for real-time context.
 
 ---
 
 ## Sources
-1. Wikipedia — *Model Context Protocol* — https://en.wikipedia.org/wiki/Model_Context_Protocol
-2. Composio — *What is Model Context Protocol (MCP): Explained* — https://composio.dev/content/what-is-model-context-protocol-mcp-explained
-3. Weights & Biases — *The Model Context Protocol by Anthropic: Origins, functionality, and impact* — https://wandb.ai/onlineinference/mcp/reports/The-Model-Context-Protocol-MCP-by-Anthropic-Origins-functionality-and-impact--VmlldzoxMTY5NDI4MQ
-4. MCP Official Specification — https://modelcontextprotocol.io/specification/2025-11-25
-5. Anthropic Engineering Blog — *Code execution with MCP* — https://www.anthropic.com/engineering/code-execution-with-mcp
-6. Moveworks Blog — *Simplifying AI Connections: Understanding the Power of MCP* — https://www.moveworks.com/us/en/resources/blog/model-context-protocol-mcp-explained
+1. Anthropic — *Introducing the Model Context Protocol* (Nov 2024): https://www.anthropic.com/news/model-context-protocol
+2. Wikipedia — *Model Context Protocol*: https://en.wikipedia.org/wiki/Model_Context_Protocol
+3. Vercel Blog — *Model Context Protocol (MCP) explained: An FAQ*: https://vercel.com/blog/model-context-protocol-mcp-explained
+4. IBM Think — *What is Model Context Protocol (MCP)?*: https://www.ibm.com/think/topics/model-context-protocol
+5. Google Cloud — *What is Model Context Protocol (MCP)? A guide*: https://cloud.google.com/discover/what-is-model-context-protocol
+6. Composio — *What is Model Context Protocol (MCP): Explained*: https://composio.dev/content/what-is-model-context-protocol-mcp-explained

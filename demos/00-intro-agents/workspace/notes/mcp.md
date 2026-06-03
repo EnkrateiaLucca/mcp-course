@@ -1,31 +1,51 @@
 # Model Context Protocol (MCP) — Research Brief
 
 ## TL;DR
-MCP is an open standard by Anthropic (Nov 2024) that gives any LLM a single, consistent way to connect to external tools, APIs, and data sources — eliminating one-off integrations and solving the context bottleneck in production AI.
+MCP (Model Context Protocol) is Anthropic's open standard (Nov 2024) that acts as a **universal connector** between AI models and external tools/data sources. It replaces brittle, one-off integrations with a single client-server protocol built on three primitives — **Tools**, **Resources**, and **Prompts** — slashing the N×M integration problem down to N+M. Widely adopted by early 2025; spec lives at modelcontextprotocol.io.
 
-## What It Is
-The **Model Context Protocol (MCP)** is an open standard and open-source framework introduced by **Anthropic in November 2024**. It standardizes the way AI systems (like large language models) integrate with and share data from external tools, services, and data sources.
+## What Is It?
+- **MCP** is an **open standard and open-source framework** introduced by **Anthropic in November 2024**.
+- It standardizes how AI systems (particularly large language models) **integrate and share data with external tools, systems, and data sources**.
+- Often described as a **"universal connector"** for AI applications — analogous to USB-C for devices.
 
-## Key Points
+## The Problem It Solves
+- Before MCP, developers had to build **custom, one-off connectors** for every tool or data source an AI needed to access.
+- This created an **"N×M" integration problem**: N models × M tools = an explosion of bespoke connectors.
+- Earlier partial solutions (e.g., OpenAI's 2023 function-calling API, ChatGPT plugins) helped but remained **vendor-specific**.
 
-- **Universal "plug-and-play" standard for AI:** MCP acts like a universal adapter — similar to USB-C for hardware — allowing any LLM-powered application to connect to any data source or tool through one consistent protocol, eliminating the need for custom, one-off integrations.
+## How It Works
+- MCP defines a **client-server architecture**:
+  - **MCP Servers** expose tools, data resources, and preset prompts.
+  - **MCP Clients** (AI applications / LLMs) connect to those servers to retrieve context or invoke actions.
+- Communication is built around three core **primitives**:
+  - **Tools** — callable functions/actions (similar to function calling).
+  - **Resources** — structured data or documents the model can read.
+  - **Prompts** — reusable, preset prompt templates.
+- Uses a **JSON-RPC**-based transport layer, making it language- and platform-agnostic.
 
-- **Client–server architecture:** MCP defines *hosts* (e.g., Claude Desktop, Cursor IDE) that connect to *MCP servers*, which expose tools, resources, and prompts. This two-way, secure communication lets models both retrieve context *and* execute actions in external systems.
+## Key Features & Benefits
+- **Standardization** — one protocol works across models, frameworks, and vendors.
+- **Composability** — multiple MCP servers can be combined in a single AI workflow.
+- **Reduced complexity** — developers write one integration per tool, not one per (tool × model).
+- **Multi-step workflows** — enables richer AI agents that chain context across actions (e.g., reading a calendar, booking a flight, drafting an email).
 
-- **Model-agnostic by design:** Although created by Anthropic, MCP works with any LLM that implements the client protocol, making it a true open standard rather than a proprietary lock-in mechanism.
+## Common Use Cases
+- AI-powered IDEs and coding assistants accessing file systems and APIs.
+- Chatbots that can read/write documents, calendars, and emails.
+- Trip/vacation planning agents combining calendar, email, and booking services.
+- Custom enterprise AI workflows connecting internal data sources.
 
-- **Solves the "context bottleneck":** The critical challenge in production AI is not model capability, but reliably feeding models the *right information at the right time*. MCP addresses this by giving LLMs structured, controlled access to live data from databases, APIs, file systems, and business tools.
-
-- **Reduces developer complexity and accelerates adoption:** By providing a unified interface, MCP cuts development time for building or integrating AI agents, enables faster ecosystem growth, and allows teams to swap models or tools without rebuilding integrations from scratch.
-
-## Why It Matters
-MCP shifts AI development from brittle, bespoke integrations toward a composable ecosystem — one where agents, tools, and data sources interoperate freely. It is widely considered a foundational step toward reliable, real-world AI orchestration.
+## Ecosystem & Adoption
+- Rapidly gained momentum, becoming one of the **hottest topics in AI by early 2025**.
+- Supported by a growing library of community and vendor-built MCP servers.
+- Specification is maintained at **modelcontextprotocol.io**.
 
 ---
 
 ## Sources
-1. **Wikipedia** — Model Context Protocol overview: https://en.wikipedia.org/wiki/Model_Context_Protocol
-2. **Anthropic (Official Announcement)** — Introducing the Model Context Protocol: https://www.anthropic.com/news/model-context-protocol
-3. **modelcontextprotocol.io** — Official MCP documentation: https://modelcontextprotocol.io/
-4. **Streamkap** — MCP Explained (model-agnostic, infrastructure strategy): https://streamkap.com/resources-and-guides/model-context-protocol-explained
-5. **LinkedIn / Krishnan R.** — Bridging the gap between LLMs and real-world tools: https://www.linkedin.com/pulse/anthropics-model-context-protocol-mcp-bridging-gap-llms-krishnan-r-f43oc
+1. Wikipedia — *Model Context Protocol* — https://en.wikipedia.org/wiki/Model_Context_Protocol
+2. Composio — *What is Model Context Protocol (MCP): Explained* — https://composio.dev/content/what-is-model-context-protocol-mcp-explained
+3. Weights & Biases — *The Model Context Protocol by Anthropic: Origins, functionality, and impact* — https://wandb.ai/onlineinference/mcp/reports/The-Model-Context-Protocol-MCP-by-Anthropic-Origins-functionality-and-impact--VmlldzoxMTY5NDI4MQ
+4. MCP Official Specification — https://modelcontextprotocol.io/specification/2025-11-25
+5. Anthropic Engineering Blog — *Code execution with MCP* — https://www.anthropic.com/engineering/code-execution-with-mcp
+6. Moveworks Blog — *Simplifying AI Connections: Understanding the Power of MCP* — https://www.moveworks.com/us/en/resources/blog/model-context-protocol-mcp-explained

@@ -174,19 +174,19 @@ async def main():
             "Example 2: Price Range Query"
         )
 
-        # Example 3: Top rated products
-        await run_example(
-            client,
-            "What are the top 3 highest-rated products?",
-            "Example 3: Top Rated Products"
-        )
+        # # Example 3: Top rated products
+        # await run_example(
+        #     client,
+        #     "What are the top 3 highest-rated products?",
+        #     "Example 3: Top Rated Products"
+        # )
 
         # Example 4: Category statistics
-        await run_example(
-            client,
-            "Give me a summary of our product categories with average prices and ratings",
-            "Example 4: Category Statistics"
-        )
+        # await run_example(
+        #     client,
+        #     "Give me a summary of our product categories with average prices and ratings",
+        #     "Example 4: Category Statistics"
+        # )
 
         # Example 5: Complex multi-step query (with verbose output)
         await run_example(
