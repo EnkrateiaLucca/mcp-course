@@ -10,3 +10,8 @@
 venv/
 .venv/__pycache__/
 *.pyc
+
+# Course process artifacts (not student-facing content)
+Plans/
+research/
+walkthrough.md
