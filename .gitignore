@@ -11,6 +11,9 @@ venv/
 .venv/__pycache__/
 *.pyc
 
+# macOS
+.DS_Store
+
 # Course process artifacts (not student-facing content)
 Plans/
 research/

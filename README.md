@@ -24,7 +24,7 @@ The first four demos build a **single coherent use case** — a personal researc
 | `02` | Agent loop replaced by the **Claude Agent SDK**, same MCP server | ~15 |
 | `04` | **Production shape**: HTTP transport, auth, hooks, evals, intent-grouped tools | ~80 (with all the hardening) |
 
-Demo `03` then branches into a real use case (tabular data), demo `04` returns to harden the SDK pattern for production, and `05`–`07` cover automations, deployment, and tips & workflows.
+Demo `03` then branches into a real use case (tabular data), demo `04` returns to harden the SDK pattern for production, and `05`–`10` cover automations, deployment, tips & workflows, a security lab, multi-server composition, and sessions.
 
 ### Prerequisites
 
@@ -63,7 +63,7 @@ pip install -r requirements/requirements.txt
 # .env at the repo root
 ANTHROPIC_API_KEY=sk-...
 REPLICATE_API_TOKEN=...        # optional, demo 04
-MCP_AUTH_TOKEN=demo-secret     # demo 03
+MCP_AUTH_TOKEN=demo-secret     # demo 04
 ```
 
 ---
@@ -233,6 +233,62 @@ vercel link && vercel env add ANTHROPIC_API_KEY production && vercel --prod
 Curated practical material shown live: ecosystem tools, workflow shortcuts, and a Claude **skill** for scaffolding MCP servers.
 
 **Files**: `hacks_tips.md`, `mcp-builder-skill/`.
+
+---
+
+### Demo 08 — MCP security lab (tool poisoning: attack & defense)
+**Path**: `demos/08-mcp-security-lab/`
+
+Turns the "tool poisoning" slide into a runnable attack-and-defense pair. A poisoned MCP tool hides a directive telling the model to read and exfiltrate a *faked* secret; the defended version blocks it with a `PreToolUse` path firewall plus tool-description inspection. Everything runs locally — nothing real is exfiltrated.
+
+```bash
+cd demos/08-mcp-security-lab
+export ANTHROPIC_API_KEY=sk-...
+uv run attack_demo.py       # the attack succeeds
+uv run defended_demo.py     # the defense stops it
+```
+
+**Files**: `poisoned_server.py`, `attack_demo.py`, `defended_demo.py`, `secrets/api_key.txt` (fake bait).
+
+---
+
+### Demo 09 — Multi-server composition + subagents
+**Path**: `demos/09-multi-server-agent/`
+
+The first demo where the agent consumes an MCP server it **didn't write** and delegates deep work to a specialized **subagent** with a narrower toolset. Composes the in-process `research` server from demo 04 with public third-party servers (Playwright, Git).
+
+```bash
+cd demos/09-multi-server-agent
+uv run research_team.py         # research + Playwright fact-checker subagent
+uv run git_research_agent.py    # research + Git MCP server
+```
+
+**Files**: `research_team.py`, `git_research_agent.py`.
+
+---
+
+### Demo 10 — Sessions: resume + fork
+**Path**: `demos/10-sessions/`
+
+A focused look at the SDK's session model: **resume** a previous call with full conversation context, or **fork** an existing session to explore an alternative direction without touching the original.
+
+```bash
+cd demos/10-sessions
+export ANTHROPIC_API_KEY=sk-...
+uv run resume_and_fork.py
+```
+
+---
+
+### Live demo recap — Day 1
+**Path**: `demos/live-demo-recap-day1/`
+
+The agent built live at the end of day 1: a `ClaudeSDKClient` wired to MCP servers (including Playwright for browser screenshots), pulling the day's building blocks together in one script.
+
+```bash
+cd demos/live-demo-recap-day1
+uv run agent_mcp.py
+```
 
 ---
 
@@ -414,7 +470,7 @@ uv pip install mcp model-context-protocol     # or pip install ...
 
 **MCP server won't connect** — test with `mcp dev path/to/server.py`. Check the process is alive: `ps aux | grep mcp_server` (or `tasklist | findstr python` on Windows).
 
-**Demo 03 HTTP server** — confirm `MCP_AUTH_TOKEN` is set in **both** terminals, and that nothing else is using port 8765.
+**Demo 04 HTTP server** — confirm `MCP_AUTH_TOKEN` is set in **both** terminals, and that nothing else is using port 8765.
 
 **Rate limiting** — check API quota, exponential backoff, swap to a cheaper model (e.g. `claude-haiku`) for iteration.
 
@@ -429,7 +485,7 @@ uv pip install mcp model-context-protocol     # or pip install ...
 - [Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk/overview)
 
 ### Production reading
-- [Building agents that reach production systems with MCP](https://claude.com/blog/building-agents-that-reach-production-systems-with-mcp) — basis for demo 03
+- [Building agents that reach production systems with MCP](https://claude.com/blog/building-agents-that-reach-production-systems-with-mcp) — basis for demo 04
 - [Writing tools for agents](https://www.anthropic.com/engineering/writing-tools-for-agents)
 - [Code execution with MCP](https://www.anthropic.com/engineering/code-execution-with-mcp)
 - [Tool search tool](https://platform.claude.com/docs/en/agents-and-tools/tool-use/tool-search-tool)
@@ -441,7 +497,7 @@ uv pip install mcp model-context-protocol     # or pip install ...
 
 ### Course materials
 - `presentation/presentation.html` — interactive slides
-- `presentation/presentation-mcp-updated.pdf` — slide deck PDF
+- `presentation/presentation-mcp-updated.key` — Keynote slide deck
 - `demos/assets-resources/MCP_TECHNICAL_CHEATSHEET.md` — quick reference
 - `demos/04-production-research-agent/presenter_notes.md` — live-demo script for demo 04
 - `CLAUDE.md` — repo conventions for Claude Code
@@ -470,8 +526,11 @@ uv pip install mcp model-context-protocol     # or pip install ...
 6. **Demo 05** — branch to automations (link health auditor).
 7. **Demo 06** — deploy to Vercel serverless (FastAPI + SSE).
 8. **Demo 07** — tips, workflows, and the MCP-builder Claude skill.
+9. **Demo 08** — security lab: tool-poisoning attack & defense.
+10. **Demo 09** — compose third-party MCP servers and delegate to subagents.
+11. **Demo 10** — sessions: resume and fork long-running agent runs.
 
-Build your own MCP server for *your* workflow next.
+The `live-demo-recap-day1/` agent ties the day-1 building blocks together. Build your own MCP server for *your* workflow next.
 
 ---
 
