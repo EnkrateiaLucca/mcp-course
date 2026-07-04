@@ -193,7 +193,7 @@ class ExecutionTracker:
 
 def build_options() -> ClaudeAgentOptions:
     return ClaudeAgentOptions(
-        model="claude-sonnet-4-6",
+        model="claude-sonnet-5",
         system_prompt=SYSTEM_PROMPT,
         mcp_servers={
             "research": {

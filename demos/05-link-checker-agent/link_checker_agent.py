@@ -83,7 +83,7 @@ def format_tool_result(block):
 
 
 options = ClaudeAgentOptions(
-    model="claude-sonnet-4-6",
+    model="claude-sonnet-5",
     system_prompt=f"""You are a link health checker assistant. You help developers find broken links
 in their markdown documentation by checking each URL and producing an audit report.
 

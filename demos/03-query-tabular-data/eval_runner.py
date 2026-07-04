@@ -106,7 +106,7 @@ async def run_one(prompt: str) -> tuple[str, int, float]:
         ],
     )
     options = ClaudeAgentOptions(
-        model="claude-sonnet-4-6",
+        model="claude-sonnet-5",
         system_prompt=JUDGE_SYSTEM_PROMPT,
         mcp_servers={"csv": server},
         allowed_tools=["mcp__csv__*"],
