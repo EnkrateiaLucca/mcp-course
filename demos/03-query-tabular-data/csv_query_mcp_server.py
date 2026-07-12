@@ -22,6 +22,7 @@ from mcp.server.fastmcp import FastMCP, Image
 import pandas as pd
 from typing import List, Optional
 import os
+import sys
 import io
 import matplotlib
 matplotlib.use("Agg")  # non-interactive backend — required for headless/subprocess environments
@@ -206,5 +207,5 @@ def visualize_price_distribution() -> str:
 
 if __name__ == "__main__":
     # Run the MCP server with stdio transport
-    print("Starting CSV Query MCP Server...")
+    print("Starting CSV Query MCP Server...", file=sys.stderr)
     mcp.run(transport="stdio")
