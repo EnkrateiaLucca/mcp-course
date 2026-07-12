@@ -270,8 +270,8 @@ ClaudeAgentOptions(
         # OR for external servers:
         "external": {
             "type": "stdio",
-            "command": "python",
-            "args": ["server.py"]
+            "command": "uv",
+            "args": ["run", "server.py"]
         }
     },
 
