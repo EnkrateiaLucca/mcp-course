@@ -460,13 +460,17 @@ logging.basicConfig(level=logging.DEBUG)
 
 ## Quick Reference: Course Demo Progression
 
-1. **Demo 1**: Basic server with single tool
-2. **Demo 2**: Weather server with external API
-3. **Demo 3**: All 4 capabilities (tools, resources, prompts, sampling)
-4. **Demo 4**: Google ADK integration
-5. **Demo 5**: OpenAI Agents integration
-6. **Demo 6**: Claude Desktop configuration
-7. **Demo 7**: Security best practices
+1. **Demo 00**: Hand-rolled agent loop — web search + filesystem tools, no MCP yet
+2. **Demo 01**: Same tools behind a FastMCP server (`mcp_server.py` + client + host)
+3. **Demo 02**: Claude Agent SDK as the MCP host — loop collapses to ~15 lines
+4. **Demo 03**: Query tabular data — CSV/pandas MCP server + Agent SDK
+5. **Demo 04**: Production-shaped research agent — intent-grouped tools, HTTP transport, bearer auth, hooks + evals
+6. **Demo 05**: Link health checker agent — Agent SDK + dedicated link-checking MCP server
+7. **Demo 06**: Data analysis agent — FastAPI + SSE, in-process MCP server, deployed to Vercel
+8. **Demo 07**: Hacks, tips, tools & workflows — plus the `mcp-builder-skill` for scaffolding servers
+9. **Demo 08**: MCP security lab — tool poisoning attack and defense
+10. **Demo 09**: Multi-server composition + subagent delegation (Playwright, Git)
+11. **Demo 10**: Sessions — resume and fork
 
 ## Teaching Tips
 
