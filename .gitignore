@@ -8,7 +8,7 @@
 
 
 venv/
-.venv/__pycache__/
+.venv/
 *.pyc
 
 # macOS
@@ -18,3 +18,8 @@ venv/
 Plans/
 research/
 walkthrough.md
+
+# Notebook runtime artifacts (generated when running the demos)
+__pycache__/
+price_distribution.png
+demos/00-intro-agents/workspace/
