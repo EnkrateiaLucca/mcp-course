@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Course Cheatsheet — Building AI Agents with MCP</title>
+    <style>
+        /* ========================================
+           MODULAR GRID/CARD LAYOUT TEMPLATE
+           Modern, box-based design with visual sections
+           Optimized for A4 printing (210mm × 297mm)
+           ======================================== */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @page {
+            size: A4;
+            margin: 18mm;
+            @top-left { content: none; }
+            @top-center { content: none; }
+            @top-right { content: none; }
+            @bottom-left { content: none; }
+            @bottom-center { content: none; }
+            @bottom-right { content: none; }
+        }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 10pt;
+            line-height: 1.5;
+            color: #000;
+            background: #fff;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 18mm;
+        }
+
+        .page-header {
+            text-align: center;
+            padding-bottom: 12pt;
+            margin-bottom: 15pt;
+            border-bottom: 3px solid #000;
+        }
+
+        .page-header h1 {
+            font-size: 22pt;
+            font-weight: 700;
+            margin-bottom: 6pt;
+            text-transform: uppercase;
+            letter-spacing: 2pt;
+        }
+
+        .page-header .subtitle {
+            font-size: 11pt;
+            color: #333;
+            margin-bottom: 6pt;
+        }
+
+        .page-header .meta {
+            font-size: 9pt;
+            color: #666;
+        }
+
+        .section-title {
+            font-size: 13pt;
+            font-weight: 700;
+            margin: 14pt 0 9pt 0;
+            padding: 5pt 10pt;
+            background: #000;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1pt;
+            break-after: avoid;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8pt;
+            margin-bottom: 10pt;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8pt;
+            margin-bottom: 10pt;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 7pt;
+            margin-bottom: 10pt;
+        }
+
+        .card {
+            border: 2px solid #000;
+            padding: 8pt;
+            background: #fff;
+            break-inside: avoid;
+        }
+
+        .card-title {
+            font-size: 10.5pt;
+            font-weight: 700;
+            margin-bottom: 6pt;
+            padding-bottom: 4pt;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .card-content {
+            font-size: 9pt;
+        }
+
+        .card-light {
+            border: 2px solid #000;
+            background: #f9f9f9;
+            padding: 8pt;
+            break-inside: avoid;
+        }
+
+        .card-accent {
+            border: 3px solid #000;
+            background: #fff;
+            padding: 10pt;
+            break-inside: avoid;
+        }
+
+        .info-box {
+            border: 2px solid #666;
+            border-left: 5px solid #000;
+            padding: 8pt;
+            margin: 8pt 0;
+            background: #f5f5f5;
+            break-inside: avoid;
+        }
+
+        .info-box-title {
+            font-weight: 700;
+            font-size: 10pt;
+            margin-bottom: 4pt;
+        }
+
+        .icon-box {
+            text-align: center;
+            border: 2px solid #000;
+            padding: 10pt;
+            background: #fff;
+            break-inside: avoid;
+        }
+
+        .icon-placeholder {
+            width: 40pt;
+            height: 40pt;
+            background: #000;
+            margin: 0 auto 6pt auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 16pt;
+        }
+
+        .icon-label {
+            font-weight: 600;
+            font-size: 9pt;
+        }
+
+        .definition-card {
+            border: 2px solid #000;
+            padding: 8pt;
+            background: #fff;
+            break-inside: avoid;
+        }
+
+        .term {
+            font-weight: 700;
+            font-size: 10.5pt;
+            margin-bottom: 3pt;
+            color: #000;
+        }
+
+        .definition {
+            font-size: 9pt;
+            color: #333;
+        }
+
+        .code-card {
+            border: 2px solid #000;
+            background: #fff;
+            padding: 0;
+            break-inside: avoid;
+        }
+
+        .code-card-header {
+            background: #000;
+            color: #fff;
+            padding: 5pt 9pt;
+            font-weight: 700;
+            font-size: 9.5pt;
+        }
+
+        .code-card pre {
+            margin: 0;
+            padding: 8pt;
+            font-family: 'Courier New', 'Courier', monospace;
+            font-size: 8pt;
+            line-height: 1.35;
+            background: #f9f9f9;
+            overflow: hidden;
+            white-space: pre-wrap;
+            word-break: break-all;
+            overflow-wrap: break-word;
+        }
+
+        .table-card {
+            border: 2px solid #000;
+            background: #fff;
+            padding: 0;
+            break-inside: avoid;
+        }
+
+        .table-card-header {
+            background: #000;
+            color: #fff;
+            padding: 5pt 9pt;
+            font-weight: 700;
+            font-size: 10pt;
+        }
+
+        .table-card table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8.5pt;
+        }
+
+        .table-card th {
+            background: #f0f0f0;
+            color: #000;
+            font-weight: 700;
+            text-align: left;
+            padding: 5pt 7pt;
+            border-bottom: 2px solid #000;
+        }
+
+        .table-card td {
+            padding: 5pt 7pt;
+            border-bottom: 1px solid #ddd;
+            vertical-align: top;
+        }
+
+        .card ul, .card ol,
+        .card-light ul, .card-light ol,
+        .definition-card ul {
+            margin-left: 13pt;
+        }
+
+        .card li, .card-light li {
+            margin-bottom: 3pt;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8pt;
+            margin: 10pt 0;
+        }
+
+        .comparison-item {
+            border: 2px solid #000;
+            padding: 8pt;
+            background: #fff;
+        }
+
+        .comparison-header {
+            font-weight: 700;
+            font-size: 10.5pt;
+            margin-bottom: 6pt;
+            padding-bottom: 4pt;
+            border-bottom: 2px solid #000;
+            text-align: center;
+        }
+
+        .step-container {
+            display: flex;
+            gap: 6pt;
+            margin: 10pt 0;
+            align-items: stretch;
+        }
+
+        .step {
+            flex: 1;
+            border: 2px solid #000;
+            padding: 8pt;
+            text-align: center;
+            position: relative;
+            background: #fff;
+        }
+
+        .step-number {
+            background: #000;
+            color: #fff;
+            width: 24pt;
+            height: 24pt;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 6pt auto;
+            font-weight: 700;
+            font-size: 12pt;
+        }
+
+        .step-title {
+            font-weight: 700;
+            font-size: 9.5pt;
+            margin-bottom: 4pt;
+        }
+
+        .step-content {
+            font-size: 8.5pt;
+        }
+
+        .key-points {
+            border: 3px solid #000;
+            background: #f9f9f9;
+            padding: 10pt;
+            margin: 10pt 0;
+            break-inside: avoid;
+        }
+
+        .key-points-title {
+            font-weight: 700;
+            font-size: 11pt;
+            margin-bottom: 8pt;
+            text-transform: uppercase;
+        }
+
+        .key-points ul {
+            margin-left: 13pt;
+        }
+
+        .key-points li {
+            margin-bottom: 5pt;
+            font-size: 9.5pt;
+        }
+
+        footer {
+            margin-top: 16pt;
+            padding-top: 8pt;
+            border-top: 2px solid #000;
+            text-align: center;
+            font-size: 8pt;
+            color: #666;
+        }
+
+        .mb-small { margin-bottom: 6pt; }
+        .mb-medium { margin-bottom: 10pt; }
+        .mb-large { margin-bottom: 14pt; }
+
+        code {
+            font-family: 'Courier New', monospace;
+            font-size: 8.5pt;
+            background: #f0f0f0;
+            padding: 1pt 3pt;
+        }
+
+        @media print {
+            body { margin: 0; padding: 18mm; }
+
+            .card, .card-light, .card-accent, .info-box,
+            .code-card, .table-card, .comparison-item, .key-points {
+                break-inside: avoid;
+            }
+
+            .section-title { break-after: avoid; }
+
+            a { text-decoration: none; color: #000; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1>Building AI Agents with MCP</h1>
+        <div class="subtitle">The HTTP Moment of AI — O'Reilly Live Training Cheatsheet</div>
+        <div class="meta">Model Context Protocol · Claude Agent SDK · FastMCP · Deployment | 2025</div>
+    </div>
+
+    <!-- Section 1: What is MCP -->
+    <div class="section-title">1. What is MCP?</div>
+
+    <div class="grid-4">
+        <div class="icon-box">
+            <div class="icon-placeholder">H</div>
+            <div class="icon-label">Host</div>
+        </div>
+        <div class="icon-box">
+            <div class="icon-placeholder">C</div>
+            <div class="icon-label">Client</div>
+        </div>
+        <div class="icon-box">
+            <div class="icon-placeholder">S</div>
+            <div class="icon-label">Server</div>
+        </div>
+        <div class="icon-box">
+            <div class="icon-placeholder">T</div>
+            <div class="icon-label">Transport</div>
+        </div>
+    </div>
+
+    <div class="grid-2 mb-small">
+        <div class="definition-card">
+            <div class="term">MCP Host</div>
+            <div class="definition">Application that wants AI + tool access. Examples: Claude Desktop, VS Code, Cursor. Coordinates multiple MCP client connections.</div>
+        </div>
+        <div class="definition-card">
+            <div class="term">MCP Client</div>
+            <div class="definition">Protocol layer with 1:1 connection to one server. Handles JSON-RPC communication. Built into the host application.</div>
+        </div>
+        <div class="definition-card">
+            <div class="term">MCP Server</div>
+            <div class="definition">Lightweight program exposing tools, resources, or prompts. Runs as a separate process (or in-process). Speaks the MCP protocol.</div>
+        </div>
+        <div class="definition-card">
+            <div class="term">Transport Layer</div>
+            <div class="definition"><strong>stdio</strong> — subprocess pipe for local servers.<br><strong>HTTP/SSE</strong> — network transport for remote/deployed servers.</div>
+        </div>
+    </div>
+
+    <div class="info-box mb-small">
+        <div class="info-box-title">The Analogy</div>
+        <p>MCP is the <strong>"USB-C port for AI"</strong> — one universal standard that lets any AI model plug into any tool, database, or service. Like HTTP standardized the web, MCP standardizes how AI connects to the world.</p>
+    </div>
+
+    <!-- Section 2: The 4 MCP Capabilities -->
+    <div class="section-title">2. The 4 MCP Capabilities</div>
+
+    <div class="grid-2">
+        <div class="card">
+            <div class="card-title">Tools — Model-controlled</div>
+            <div class="card-content">
+                Functions the AI decides to call. Like function calling — LLM triggers execution.<br>
+                <code>@mcp.tool()</code>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">Resources — Application-controlled</div>
+            <div class="card-content">
+                Data the host app exposes to context. Files, DB rows, API data. URI-addressed.<br>
+                <code>@mcp.resource("uri://")</code>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">Prompts — User-controlled</div>
+            <div class="card-content">
+                Reusable prompt templates users invoke. Slash commands in Claude Desktop.<br>
+                <code>@server.list_prompts()</code>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">Sampling — Server-initiated</div>
+            <div class="card-content">
+                Server requests LLM completions. Enables agentic behavior inside servers.<br>
+                <code>session.create_message()</code>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 3: MCP Lifecycle -->
+    <div class="section-title">3. MCP Lifecycle</div>
+
+    <div class="step-container">
+        <div class="step">
+            <div class="step-number">1</div>
+            <div class="step-title">Initialize</div>
+            <div class="step-content">Client sends capabilities + version. Server responds with its capabilities.</div>
+        </div>
+        <div class="step">
+            <div class="step-number">2</div>
+            <div class="step-title">Handshake</div>
+            <div class="step-content">Client sends <code>notifications/initialized</code>. Both sides ready.</div>
+        </div>
+        <div class="step">
+            <div class="step-number">3</div>
+            <div class="step-title">Operate</div>
+            <div class="step-content">Tool calls, resource reads, prompt requests, sampling — all via JSON-RPC 2.0.</div>
+        </div>
+        <div class="step">
+            <div class="step-number">4</div>
+            <div class="step-title">Shutdown</div>
+            <div class="step-content">Client sends <code>notifications/closed</code>. Server cleans up.</div>
+        </div>
+    </div>
+
+    <!-- Section 4: Code Patterns -->
+    <div class="section-title">4. Core Code Patterns</div>
+
+    <div class="grid-2 mb-small">
+        <div class="code-card">
+            <div class="code-card-header">FastMCP Server Pattern</div>
+            <pre><code>#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.9"
+# dependencies = ["mcp[cli]>=1.0.0"]
+# ///
+
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("server-name")
+
+@mcp.tool()
+def my_tool(param: str) -> str:
+    """Description visible to LLM"""
+    return result
+
+@mcp.resource("data://{key}")
+def get_resource(key: str) -> str:
+    """Resource description"""
+    return load_data(key)
+
+if __name__ == "__main__":
+    mcp.run(transport="stdio")</code></pre>
+        </div>
+        <div class="code-card">
+            <div class="code-card-header">Claude Agent SDK Pattern</div>
+            <pre><code>import asyncio
+from claude_agent_sdk import (
+    Agent, tool, create_sdk_mcp_server
+)
+
+# Custom tool with decorator
+@tool
+def my_tool(input: str) -> str:
+    """Tool available to the agent"""
+    return process(input)
+
+# In-process MCP server (no subprocess)
+server = create_sdk_mcp_server("analysis")
+
+@server.tool()
+def analyze(data: str) -> str:
+    return run_analysis(data)
+
+# Run the agent
+agent = Agent(
+    name="helper",
+    instructions="System instructions",
+    tools=[my_tool],
+    model="claude-sonnet-4-5"
+)
+asyncio.run(agent.run("Task"))</code></pre>
+        </div>
+    </div>
+
+    <div class="grid-2 mb-small">
+        <div class="code-card">
+            <div class="code-card-header">JSON-RPC 2.0 — Tool Call</div>
+            <pre><code>{
+  "jsonrpc": "2.0",
+  "id": "req-1",
+  "method": "tools/call",
+  "params": {
+    "name": "get_weather",
+    "arguments": {"city": "Lisbon"}
+  }
+}
+
+// Response
+{
+  "jsonrpc": "2.0",
+  "id": "req-1",
+  "result": {
+    "content": [
+      {"type": "text", "text": "22°C, Sunny"}
+    ]
+  }
+}</code></pre>
+        </div>
+        <div class="code-card">
+            <div class="code-card-header">Security: PreToolUse Hook</div>
+            <pre><code">from claude_agent_sdk import PreToolUse
+
+def block_dangerous(tool_use):
+    """Block rm -rf and similar commands"""
+    if tool_use.tool_name == "Bash":
+        cmd = tool_use.input.get("command","")
+        dangerous = ["rm -rf", "sudo rm",
+                     "format", "> /dev/"]
+        for d in dangerous:
+            if d in cmd:
+                return {"type": "block",
+                        "reason": "Blocked"}
+    return {"type": "allow"}
+
+# Attach to agent
+agent = Agent(
+    hooks=[PreToolUse(block_dangerous)],
+    ...
+)</code></pre>
+        </div>
+    </div>
+
+    <!-- Section 5: Course Demo Progression -->
+    <div class="section-title">5. Course Demo Progression</div>
+
+    <div class="table-card mb-medium">
+        <div class="table-card-header">8 Hands-On Demos</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Demo</th>
+                    <th>What You Build</th>
+                    <th>Key Concept</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>00</strong></td>
+                    <td>Intro to Agents</td>
+                    <td>Agent loop fundamentals</td>
+                    <td>When agents vs simple LLM calls</td>
+                </tr>
+                <tr>
+                    <td><strong>01</strong></td>
+                    <td>Intro to MCP</td>
+                    <td>First FastMCP server + client</td>
+                    <td>stdio transport, MCP Inspector</td>
+                </tr>
+                <tr>
+                    <td><strong>02</strong></td>
+                    <td>Chat App (Claude API)</td>
+                    <td>Full chat app with tool use</td>
+                    <td>Tools + Resources + Prompts</td>
+                </tr>
+                <tr>
+                    <td><strong>03</strong></td>
+                    <td>Filesystem Agent</td>
+                    <td>File reader with SDK + MCP</td>
+                    <td>In-process server, hooks, permissions</td>
+                </tr>
+                <tr>
+                    <td><strong>04</strong></td>
+                    <td>Tabular Data Query</td>
+                    <td>CSV querying via MCP tools</td>
+                    <td>pandas ops as MCP tools</td>
+                </tr>
+                <tr>
+                    <td><strong>05</strong></td>
+                    <td>Link Checker Agent</td>
+                    <td>Markdown link health auditor</td>
+                    <td>Automation: 4-tool MCP server</td>
+                </tr>
+                <tr>
+                    <td><strong>06</strong></td>
+                    <td>Deploy to Vercel</td>
+                    <td>Data analysis app + chat UI</td>
+                    <td>FastAPI + SSE streaming + Vercel</td>
+                </tr>
+                <tr>
+                    <td><strong>07</strong></td>
+                    <td>Hacks &amp; Tips</td>
+                    <td>MCP builder skill workflow</td>
+                    <td>AI-assisted MCP server creation</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Section 6: Security & Gotchas -->
+    <div class="section-title">6. Security Checklist &amp; Common Gotchas</div>
+
+    <div class="grid-2 mb-small">
+        <div class="card-light">
+            <div class="card-title">Security Checklist</div>
+            <div class="card-content">
+                <ul>
+                    <li>Validate file paths — prevent directory traversal (<code>..</code>, leading <code>/</code>)</li>
+                    <li>Use <code>PreToolUse</code> hooks to block dangerous Bash commands</li>
+                    <li>Principle of least privilege — grant only needed tools</li>
+                    <li>Use HTTPS for remote server transport</li>
+                    <li>Audit log all sensitive operations</li>
+                    <li>Rate-limit tool calls in production</li>
+                    <li>Never commit <code>.env</code> files (API keys)</li>
+                </ul>
+            </div>
+        </div>
+        <div class="card-light">
+            <div class="card-title">Common Gotchas</div>
+            <div class="card-content">
+                <ul>
+                    <li>All MCP ops are <strong>async</strong> — don't forget <code>await</code></li>
+                    <li>Use <strong>absolute paths</strong> — relative paths break when server runs from a different directory</li>
+                    <li>Resource URIs must be valid: <code>file:///path</code> not <code>/path</code></li>
+                    <li>"Method not found" → server doesn't implement that capability</li>
+                    <li>"Invalid params" → check your JSON schema / type hints</li>
+                    <li>Vercel hobby plan: 10s timeout — upgrade to Pro for Agent SDK cold starts</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 7: Key Commands & Tools -->
+    <div class="section-title">7. Key Commands &amp; Tools</div>
+
+    <div class="grid-2 mb-small">
+        <div class="code-card">
+            <div class="code-card-header">Running Demos with UV</div>
+            <pre><code># UV handles all dependencies automatically
+uv run demos/01-introduction-to-mcp/mcp_server.py
+
+# Test any MCP server interactively
+mcp dev demos/01-introduction-to-mcp/mcp_server.py
+# Opens browser: tool test + message inspector
+
+# Enable debug logging in any server
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
+# Check Claude Desktop logs
+~/.config/Claude/logs/</code></pre>
+        </div>
+        <div class="code-card">
+            <div class="code-card-header">Claude Desktop Config</div>
+            <pre><code>// ~/.config/Claude/claude_desktop_config.json
+{
+  "mcpServers": {
+    "my-server": {
+      "command": "uv",
+      "args": [
+        "run",
+        "/absolute/path/to/server.py"
+      ]
+    }
+  }
+}
+
+// After editing: restart Claude Desktop
+// Use absolute paths — relative paths fail</code></pre>
+        </div>
+    </div>
+
+    <!-- Section 8: Ecosystem & Tips -->
+    <div class="section-title">8. Ecosystem Hacks &amp; Resources</div>
+
+    <div class="grid-3 mb-small">
+        <div class="card">
+            <div class="card-title">Build MCP Servers with AI</div>
+            <div class="card-content">
+                Use Claude Code to scaffold servers. Paste MCP SDK docs + requirements into the prompt. Iterate on one capability at a time.
+                <br><br>
+                <strong>Tip:</strong> Use Context7 MCP server for always-up-to-date SDK docs inside Claude Code.
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">LLM-Ready Repo Data</div>
+            <div class="card-content">
+                <strong>gitingest.com</strong> — Replace <code>github.com</code> with <code>gitingest.com</code> in any repo URL to get a single LLM-ready text dump of the whole repo.
+                <br><br>
+                <strong>deepwiki.com</strong> — Instant docs page for any GitHub repo.
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">Doc Indexing</div>
+            <div class="card-content">
+                <strong>llmstxt.org</strong> — Standard for AI-readable doc index files. Add <code>/llms.txt</code> to any site to make it LLM-navigable.
+                <br><br>
+                Check if a site has it: <code>site.com/llms.txt</code>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-card mb-medium">
+        <div class="table-card-header">Key References</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Resource</th>
+                    <th>URL</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>MCP Specification</td>
+                    <td>modelcontextprotocol.io/specification</td>
+                </tr>
+                <tr>
+                    <td>MCP Python SDK</td>
+                    <td>github.com/modelcontextprotocol/python-sdk</td>
+                </tr>
+                <tr>
+                    <td>Claude Agent SDK (Python)</td>
+                    <td>github.com/anthropics/claude-agent-sdk-python</td>
+                </tr>
+                <tr>
+                    <td>Community MCP Servers</td>
+                    <td>github.com/modelcontextprotocol/servers</td>
+                </tr>
+                <tr>
+                    <td>MCP Security Best Practices</td>
+                    <td>modelcontextprotocol.io/specification/.../security_best_practices</td>
+                </tr>
+                <tr>
+                    <td>Course Repository</td>
+                    <td>github.com/automata-learning-lab/mcp-course</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Key Takeaways -->
+    <div class="key-points">
+        <div class="key-points-title">Key Takeaways</div>
+        <ul>
+            <li><strong>MCP = USB-C for AI:</strong> One protocol connects any AI model to any tool, database, or service</li>
+            <li><strong>4 Capabilities:</strong> Tools (model runs), Resources (app exposes), Prompts (user invokes), Sampling (server asks LLM)</li>
+            <li><strong>FastMCP:</strong> Use <code>@mcp.tool()</code> decorators — Python type hints auto-generate the JSON schema</li>
+            <li><strong>In-process servers:</strong> <code>create_sdk_mcp_server()</code> runs MCP tools in the same Python process — no subprocess overhead</li>
+            <li><strong>Security first:</strong> Always validate paths, use PreToolUse hooks, grant least privilege, log everything</li>
+            <li><strong>Deploy anywhere:</strong> FastAPI + Claude Agent SDK + SSE streaming = production-ready agent in &lt;200 lines</li>
+            <li><strong>UV handles deps:</strong> Inline <code># /// script</code> headers mean zero setup — <code>uv run server.py</code> just works</li>
+        </ul>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2025 Automata Learning Lab | "Building AI Agents with MCP: The HTTP Moment of AI?" | O'Reilly Live Training</p>
+    </footer>
+
+</body>
+</html>
