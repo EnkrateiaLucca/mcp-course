@@ -63,7 +63,7 @@ SYSTEM_PROMPT = (
 
 def build_options() -> ClaudeAgentOptions:
     return ClaudeAgentOptions(
-        model="claude-sonnet-4-6",
+        model="claude-sonnet-5",
         system_prompt=SYSTEM_PROMPT,
         mcp_servers={
             # Our own server, run as a subprocess (stdio transport).

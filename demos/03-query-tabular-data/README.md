@@ -172,7 +172,7 @@ csv_server = create_sdk_mcp_server(
 
 ```python
 options = ClaudeAgentOptions(
-    model="claude-sonnet-4-5",
+    model="claude-sonnet-5",
     system_prompt="You are a helpful product assistant...",
     mcp_servers={"csv": csv_server},
     permission_mode="bypassPermissions",
@@ -258,7 +258,7 @@ Central configuration object for the SDK.
 ```python
 ClaudeAgentOptions(
     # Model Configuration
-    model="claude-sonnet-4-5",        # Primary model
+    model="claude-sonnet-5",        # Primary model
     fallback_model="claude-opus-4-1", # Backup if unavailable
 
     # System Instructions
@@ -270,8 +270,8 @@ ClaudeAgentOptions(
         # OR for external servers:
         "external": {
             "type": "stdio",
-            "command": "python",
-            "args": ["server.py"]
+            "command": "uv",
+            "args": ["run", "server.py"]
         }
     },
 
@@ -485,7 +485,7 @@ async def main():
 
     # Configure Claude
     options = ClaudeAgentOptions(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-5",
         system_prompt="You are a helpful product assistant...",
         mcp_servers={"csv": csv_server},
         permission_mode="bypassPermissions",
@@ -643,7 +643,7 @@ from claude_agent_sdk import query
 
 async def one_shot_query(user_question: str):
     options = ClaudeAgentOptions(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-5",
         mcp_servers={"csv": csv_server},
         permission_mode="bypassPermissions",
     )
@@ -726,7 +726,7 @@ async def monitor_tools(user_query: str):
 ```python
 async def cost_controlled_query(user_query: str, max_cost: float = 1.0):
     options = ClaudeAgentOptions(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-5",
         mcp_servers={"csv": csv_server},
         max_budget_usd=max_cost,  # Hard limit
         permission_mode="bypassPermissions",
@@ -850,7 +850,7 @@ allowed_tools=[
 **Use appropriate models:**
 ```python
 # For complex reasoning:
-model="claude-sonnet-4-5"
+model="claude-sonnet-5"
 
 # For simple queries (cheaper):
 model="claude-haiku-4-5"
@@ -1127,7 +1127,7 @@ async def chat_endpoint(websocket: WebSocket):
     await websocket.accept()
 
     options = ClaudeAgentOptions(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-5",
         mcp_servers={"csv": csv_server},
         permission_mode="bypassPermissions",
     )

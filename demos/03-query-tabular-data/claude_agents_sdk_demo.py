@@ -150,7 +150,7 @@ async def main():
 
     # Configure Claude to use the in-process MCP server
     options = ClaudeAgentOptions(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-5",
         system_prompt="""You are a helpful product assistant with access to a product catalog.
         Use the available tools to answer questions about products. Always provide clear, helpful responses.""",
         mcp_servers={"csv": csv_server},

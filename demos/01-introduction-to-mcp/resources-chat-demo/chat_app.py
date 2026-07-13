@@ -99,7 +99,7 @@ async def chat(req: ChatRequest):
         )
 
     resp = anthropic.messages.create(
-        model="claude-sonnet-4-5",
+        model="claude-sonnet-5",
         max_tokens=1024,
         system=system,
         messages=[{"role": "user", "content": req.message}],

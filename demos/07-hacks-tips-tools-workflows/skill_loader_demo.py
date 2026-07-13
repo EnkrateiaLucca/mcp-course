@@ -47,7 +47,7 @@ HERE = Path(__file__).parent.resolve()
 
 def build_options() -> ClaudeAgentOptions:
     return ClaudeAgentOptions(
-        model="claude-sonnet-4-6",
+        model="claude-sonnet-5",
         cwd=str(HERE),
         # REQUIRED: skills are discovered only through 'user' / 'project'
         # setting sources. Default is []; without this, skills="all" loads

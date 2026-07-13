@@ -36,7 +36,7 @@ from dotenv import load_dotenv
 from mcp_client import SimpleMCPClient
 
 load_dotenv()
-MODEL = "claude-sonnet-4-6"
+MODEL = "claude-sonnet-5"
 SYSTEM = (
     "You are a personal research assistant. You can search the web and organize "
     "findings as files in the user's workspace. When asked to research a topic, "

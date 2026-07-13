@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Technical Cheat Sheet</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        @page {
+            size: A4;
+            margin: 15mm;
+            @top-left { content: none; }
+            @top-center { content: none; }
+            @top-right { content: none; }
+            @bottom-left { content: none; }
+            @bottom-center { content: none; }
+            @bottom-right { content: none; }
+        }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 9pt;
+            line-height: 1.4;
+            color: #000;
+            background: #fff;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 15mm;
+        }
+
+        .header-banner {
+            background: #000;
+            color: #fff;
+            padding: 12pt 15pt;
+            margin: -15mm -15mm 12pt -15mm;
+            text-align: center;
+        }
+
+        .header-banner h1 {
+            font-size: 20pt;
+            font-weight: 700;
+            letter-spacing: 1.5pt;
+            text-transform: uppercase;
+            margin-bottom: 4pt;
+        }
+
+        .header-banner .subtitle {
+            font-size: 10.5pt;
+            font-weight: 300;
+            letter-spacing: 0.5pt;
+        }
+
+        .header-banner .meta {
+            font-size: 8pt;
+            margin-top: 6pt;
+            opacity: 0.9;
+        }
+
+        .two-column-container {
+            column-count: 2;
+            column-gap: 12mm;
+            column-rule: 1px solid #ccc;
+        }
+
+        h2 {
+            font-size: 13pt;
+            font-weight: 700;
+            margin-top: 12pt;
+            margin-bottom: 6pt;
+            padding-bottom: 3pt;
+            border-bottom: 2px solid #000;
+            text-transform: uppercase;
+            letter-spacing: 0.5pt;
+            column-span: all;
+            break-after: avoid;
+        }
+
+        h3 {
+            font-size: 10.5pt;
+            font-weight: 700;
+            margin-top: 10pt;
+            margin-bottom: 5pt;
+            background: #f0f0f0;
+            padding: 4pt 6pt;
+            border-left: 3px solid #000;
+            break-after: avoid;
+        }
+
+        h4 {
+            font-size: 9.5pt;
+            font-weight: 600;
+            margin-top: 8pt;
+            margin-bottom: 4pt;
+            break-after: avoid;
+        }
+
+        p { margin-bottom: 8pt; text-align: left; }
+
+        ul, ol { margin-left: 12pt; margin-bottom: 8pt; }
+        li { margin-bottom: 3pt; }
+
+        dl { margin-bottom: 8pt; }
+        dt {
+            font-weight: 700;
+            font-size: 9pt;
+            margin-top: 6pt;
+            padding: 2pt 4pt;
+            background: #f5f5f5;
+            border-left: 2px solid #333;
+        }
+        dd { margin-left: 8pt; margin-bottom: 5pt; font-size: 8.5pt; }
+
+        pre {
+            font-family: 'Courier New', 'Courier', monospace;
+            font-size: 7.5pt;
+            background: #f8f8f8;
+            border: 1px solid #ccc;
+            border-left: 2px solid #000;
+            padding: 6pt;
+            margin: 8pt 0;
+            overflow: hidden;
+            white-space: pre-wrap;
+            word-break: break-all;
+            overflow-wrap: break-word;
+            line-height: 1.3;
+            break-inside: avoid;
+        }
+
+        code {
+            font-family: 'Courier New', 'Courier', monospace;
+            font-size: 8.5pt;
+            background: #f0f0f0;
+            padding: 1pt 3pt;
+            border-radius: 2pt;
+            word-break: break-all;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+            overflow-wrap: break-word;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8pt 0;
+            font-size: 8pt;
+            break-inside: avoid;
+        }
+        th {
+            background: #000;
+            color: #fff;
+            font-weight: 700;
+            text-align: left;
+            padding: 4pt 6pt;
+            border: 1px solid #000;
+        }
+        td { padding: 4pt 6pt; border: 1px solid #999; }
+        tr:nth-child(even) { background: #f9f9f9; }
+
+        .ref-box {
+            background: #f9f9f9;
+            border: 2px solid #000;
+            padding: 8pt;
+            margin: 10pt 0;
+            break-inside: avoid;
+        }
+        .ref-box-title {
+            font-weight: 700;
+            font-size: 10pt;
+            margin-bottom: 5pt;
+            text-transform: uppercase;
+        }
+
+        .callout {
+            background: #f0f0f0;
+            border-left: 4px solid #000;
+            padding: 8pt;
+            margin: 8pt 0;
+            break-inside: avoid;
+        }
+        .callout-title { font-weight: 700; font-size: 9pt; margin-bottom: 4pt; }
+
+        .full-width { column-span: all; margin: 12pt 0; }
+
+        footer {
+            column-span: all;
+            margin-top: 12pt;
+            padding-top: 8pt;
+            border-top: 1px solid #000;
+            font-size: 7pt;
+            color: #666;
+            text-align: center;
+        }
+
+        @media print {
+            body { margin: 0; padding: 15mm; }
+            .header-banner { margin: -15mm -15mm 12pt -15mm; }
+            h2, h3, h4 { break-after: avoid; }
+            table, pre, .ref-box, .callout { break-inside: avoid; }
+            a { text-decoration: none; color: #000; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-banner">
+        <h1>MCP Technical Cheat Sheet</h1>
+        <div class="subtitle">Building AI Agents with MCP — Instructor Quick Reference</div>
+        <div class="meta">O'Reilly MCP Bootcamp | github.com/EnkrateiaLucca/mcp-course</div>
+    </div>
+
+    <div class="two-column-container">
+
+        <h2>Core Concepts</h2>
+
+        <h3>What is MCP?</h3>
+        <p>
+            The Model Context Protocol (MCP) is an open protocol that standardizes how AI
+            assistants connect with external data sources and tools — a universal adapter
+            that lets AI models talk to any system in a consistent way.
+        </p>
+
+        <h3>Architecture Components</h3>
+        <dl>
+            <dt>MCP Hosts</dt>
+            <dd>Apps that want data through MCP (Claude Desktop, IDEs); maintain connections to multiple servers</dd>
+            <dt>MCP Clients</dt>
+            <dd>Protocol clients with 1:1 connections to servers; handle protocol communication</dd>
+            <dt>MCP Servers</dt>
+            <dd>Lightweight programs exposing tools, resources, prompts, and sampling as separate processes</dd>
+            <dt>Transport Layer</dt>
+            <dd><code>stdio</code> for parent-child processes, <code>streamable-http</code> for remote/networked servers</dd>
+        </dl>
+
+        <h2>JSON-RPC Message Format</h2>
+        <p>MCP uses JSON-RPC 2.0 for all communication.</p>
+
+        <h3>Request</h3>
+<pre><code>{
+  "jsonrpc": "2.0", "id": "req-1",
+  "method": "tools/call",
+  "params": {
+    "name": "get_weather",
+    "arguments": {"city": "New York"}
+  }
+}</code></pre>
+
+        <h3>Response / Error</h3>
+<pre><code>{
+  "jsonrpc": "2.0", "id": "req-1",
+  "result": {"content": [
+    {"type": "text", "text": "72F, Sunny"}
+  ]}
+}
+// or: "error": {"code": -32601,
+//   "message": "Method not found"}</code></pre>
+
+        <h2>Lifecycle</h2>
+        <ol>
+            <li><strong>Initialize</strong> — client sends <code>initialize</code> with capabilities + clientInfo; server responds with its own capabilities + serverInfo</li>
+            <li><strong>Initialized</strong> — client sends <code>notifications/initialized</code></li>
+            <li><strong>Operation</strong> — tool calls, resource/prompt requests, sampling, subscriptions</li>
+            <li><strong>Shutdown</strong> — client sends <code>notifications/closed</code></li>
+        </ol>
+
+        <h2>The Four Capabilities</h2>
+
+        <h3>Tools (model-controlled)</h3>
+<pre><code>@mcp.tool()
+async def calculate(expression: str) -> str:
+    """Evaluate a math expression"""
+    return str(eval(expression))</code></pre>
+
+        <h3>Resources (application-controlled)</h3>
+<pre><code>@server.list_resources()
+async def list_resources():
+    return [Resource(uri="file:///data.json",
+                      name="Data File")]</code></pre>
+
+        <h3>Prompts (user-controlled)</h3>
+<pre><code>@server.list_prompts()
+async def list_prompts():
+    return [Prompt(name="debug_code",
+        description="Help debug code")]</code></pre>
+
+        <h3>Sampling (server-initiated)</h3>
+<pre><code>result = await session.create_message(
+    messages=[{"role": "user",
+               "content": "Analyze this"}],
+    max_tokens=100)</code></pre>
+
+        <h2>Elicitation</h2>
+        <p>
+            Lets servers request more info from users mid-operation — confirming dangerous
+            actions, filling missing params, clarifying ambiguous requests.
+        </p>
+<pre><code>response = await context.request_elicitation(
+    f"Delete {len(files)} files matching "
+    f"{file_pattern}?", options=["yes", "no"])
+if response.choice == "yes":
+    for f in files: os.remove(f)</code></pre>
+
+        <h2>Authorization</h2>
+        <p>MCP supports OAuth 2.0 for secure authentication. Clients handle token acquisition
+        and refresh; servers validate tokens on each request (headers or params).</p>
+<pre><code>@server.get_auth_requirements()
+async def get_auth_requirements():
+    return {"type": "oauth2",
+        "authorization_url": "https://.../authorize",
+        "token_url": "https://.../token",
+        "scopes": ["read", "write"]}</code></pre>
+
+        <h2>Security Best Practices</h2>
+
+        <h3>Input Validation</h3>
+<pre><code>@mcp.tool()
+async def read_file(filename: str) -> str:
+    if ".." in filename or filename.startswith("/"):
+        raise ValueError("Invalid filename")
+    safe_path = os.path.join(ALLOWED_DIR, filename)
+    if not safe_path.startswith(ALLOWED_DIR):
+        raise ValueError("Access denied")
+    return open(safe_path).read()</code></pre>
+
+        <h3>Other Practices</h3>
+        <div class="ref-box">
+            <div class="ref-box-title">Checklist</div>
+            <ul>
+                <li>Rate-limit tool calls per window</li>
+                <li>Least privilege — expose only what's needed</li>
+                <li>HTTPS + certificate validation for transport</li>
+                <li>Audit-log sensitive tool invocations</li>
+            </ul>
+        </div>
+
+        <h2>Under the Hood: @mcp.tool()</h2>
+        <p>FastMCP registers the function, extracts a JSON Schema from its signature/docstring,
+        routes <code>tools/call</code> to it, validates + marshals arguments, and formats the
+        response as <code>{"content": [...]}</code>.</p>
+
+        <h2>Common Gotchas</h2>
+        <dl>
+            <dt>Async/Await</dt>
+            <dd>All MCP operations are async — don't forget <code>await</code>; use <code>asyncio.run()</code> for tests</dd>
+            <dt>Path Issues</dt>
+            <dd>Relative paths break when the server runs from a different cwd — use absolute paths</dd>
+            <dt>Resource URIs</dt>
+            <dd>Must be valid URIs (<code>file:///path</code>), not bare paths</dd>
+            <dt>Error Handling</dt>
+            <dd>Catch specific errors and return a friendly message; log unexpected ones</dd>
+        </dl>
+
+        <h2>Testing &amp; Debugging</h2>
+
+        <h3>MCP Inspector</h3>
+<pre><code>mcp dev ./my_server.py
+# opens browser: tool tester, resource
+# browser, message inspector, live logs</code></pre>
+
+        <h3>Common Errors</h3>
+        <table>
+            <thead><tr><th>Error</th><th>Meaning</th></tr></thead>
+            <tbody>
+                <tr><td>Method not found</td><td>Server lacks that capability</td></tr>
+                <tr><td>Invalid params</td><td>Check the JSON schema</td></tr>
+                <tr><td>Transport error</td><td>Server crashed / network issue</td></tr>
+            </tbody>
+        </table>
+
+        <div class="callout">
+            <div class="callout-title">Tip</div>
+            Enable verbose logging with <code>logging.basicConfig(level=logging.DEBUG)</code>
+            and check Claude Desktop logs at <code>~/.config/Claude/logs/</code> (macOS/Linux).
+        </div>
+
+        <h2>Course Demo Progression</h2>
+        <div class="ref-box">
+            <div class="ref-box-title">demos/</div>
+            <dl>
+                <dt>00 — Intro to agents</dt>
+                <dd>Hand-rolled agent loop, no MCP yet — web search + filesystem tools</dd>
+                <dt>01 — Introduction to MCP</dt>
+                <dd>Same tools behind a FastMCP server; host/client/server split</dd>
+                <dt>02 — Research agent on the SDK</dt>
+                <dd>Claude Agent SDK as the MCP host — loop collapses to ~15 lines</dd>
+                <dt>03 — Query tabular data</dt>
+                <dd>CSV/pandas MCP server driven by the Agent SDK</dd>
+                <dt>04 — Production research agent</dt>
+                <dd>Intent-grouped tools, HTTP transport, bearer auth, hooks + evals</dd>
+                <dt>05 — Link health checker</dt>
+                <dd>Agent SDK + dedicated link-checking MCP server</dd>
+                <dt>06 — Data analysis agent</dt>
+                <dd>FastAPI + SSE, in-process MCP server, deployed to Vercel</dd>
+                <dt>07 — Hacks, tips, tools</dt>
+                <dd>Ecosystem tools + the <code>mcp-builder-skill</code></dd>
+                <dt>08 — MCP security lab</dt>
+                <dd>Tool poisoning: attack and defense</dd>
+                <dt>09 — Multi-server + subagents</dt>
+                <dd>Composes servers the agent didn't write; delegates to a subagent</dd>
+                <dt>10 — Sessions</dt>
+                <dd>Resume a session or fork it to explore an alternative</dd>
+            </dl>
+        </div>
+
+        <h2>Common Student Questions</h2>
+        <dl>
+            <dt>Why not just use function calling?</dt>
+            <dd>MCP is standardized across providers, adds resource management, prompts, and consistent auth/security</dd>
+            <dt>Can MCP servers talk to each other?</dt>
+            <dd>No — servers are independent; the host/client orchestrates between them</dd>
+            <dt>Is MCP only for Claude?</dt>
+            <dd>No, it's an open protocol any AI system can implement</dd>
+            <dt>How is this different from LangChain?</dt>
+            <dd>MCP is a protocol, not a framework — it defines communication, not what you build</dd>
+        </dl>
+
+        <h2>Teaching Tips</h2>
+        <ul>
+            <li>Start with the "universal adapter" analogy</li>
+            <li>Show before/after: AI without MCP vs. with MCP</li>
+            <li>Use real examples — weather, files, databases</li>
+            <li>Build incrementally, one capability at a time</li>
+        </ul>
+
+        <h2>Further Reading</h2>
+        <ul>
+            <li><code>modelcontextprotocol.io/specification</code></li>
+            <li><code>modelcontextprotocol.io/docs/learn/architecture</code></li>
+            <li><code>github.com/modelcontextprotocol/servers</code></li>
+        </ul>
+
+    </div>
+
+    <footer>
+        <p>MCP Technical Cheat Sheet — source: demos/assets-resources/MCP_TECHNICAL_CHEATSHEET.md</p>
+    </footer>
+</body>
+</html>

@@ -17,7 +17,7 @@ env-setup: conda-create
 
 repo-setup:
 	mkdir -p requirements
-	echo "ipykernel" > requirements/requirements.in
+	[ -f requirements/requirements.in ] || echo "ipykernel" > requirements/requirements.in
 
 notebook-setup:
 	$(CONDA_ACTIVATE) $(ENV_NAME) && \

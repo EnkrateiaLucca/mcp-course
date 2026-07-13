@@ -94,7 +94,7 @@ JUDGE_PROMPT_TEMPLATE = (
 async def judge_brief(brief_path: Path, topic: str) -> dict[str, Any]:
     """Use the SDK as a judge, restricted to read-only filesystem access."""
     opts = ClaudeAgentOptions(
-        model="claude-sonnet-4-6",
+        model="claude-sonnet-5",
         allowed_tools=["Read"],
     )
     prompt = JUDGE_PROMPT_TEMPLATE.format(path=str(brief_path), topic=topic)

@@ -5,6 +5,13 @@ openai-agents
 anthropic
 python-dotenv
 pandas
+matplotlib
 claude-agent-sdk
 arxiv
 ddgs
+
+# Jupyter runtime — needed to open and run the .ipynb demos
+jupyterlab
+notebook
+nbconvert
+nbformat
