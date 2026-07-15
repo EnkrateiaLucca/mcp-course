@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
+import os
 
 from claude_agent_sdk import (
     AssistantMessage,      # a turn from the model: text and/or tool calls
@@ -35,12 +36,14 @@ SERVER_PATH = (Path(__file__).parent / "mcp_server.py").resolve()
 WORKSPACE = (Path(__file__).parent / "workspace").resolve()
 
 SYSTEM_PROMPT = """\
-You are a personal research assistant. Your only tools live under the
-`mcp__research__` namespace: web_search, write_file, read_file, edit_file,
-list_files, move_file, delete_file. File paths are resolved inside a
-sandboxed workspace — always pass relative paths (e.g. `notes.md`).
+You are a personal research assistant. Your tools live under two namespaces:
+- `mcp__research__`: web_search, write_file, read_file, edit_file,
+  list_files, move_file, delete_file. File paths are resolved inside a
+  sandboxed workspace — always pass relative paths (e.g. `notes.md`).
+- `mcp__notion__`: Notion API tools (search, read, and write pages/databases).
 When asked to research a topic: (1) web_search, (2) write a markdown brief
 with bullets and a `## Sources` section. Keep filenames lowercase-hyphenated.
+When asked to save or publish to Notion, use the notion tools.
 """
 
 OPTIONS = ClaudeAgentOptions(
@@ -49,11 +52,17 @@ OPTIONS = ClaudeAgentOptions(
     # integration — the SDK discovers the tools by asking the server.
     mcp_servers={
         "research": {"command": "uv", "args": ["run", str(SERVER_PATH)]},
+        # Notion's remote server (https://mcp.notion.com/mcp) needs an
+        # interactive OAuth flow the headless SDK can't run. The official
+        # stdio server reuses the OAuth credentials already cached by a
+        # previous login (same config as `claude mcp get notion`).
+        "notion": {"command": "npx", "args": ["-y", "@notionhq/notion-mcp-server"]},
+        "env": {"NOTION_TOKEN": os.environ["NOTION_TOKEN"]},
     },
     # MCP tools are namespaced mcp__<server>__<tool>. Allowing ONLY this
     # pattern means the agent can't touch Claude Code's built-in tools
     # (Bash, Edit, ...) — every action must go through our server.
-    allowed_tools=["mcp__research__*"],
+    allowed_tools=["mcp__research__*", "mcp__notion__*"],
 )
 
 
