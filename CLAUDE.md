@@ -47,7 +47,9 @@ Seven modules grow ONE use case — a personal research assistant — a layer at
 # ///
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("server-name")            # module 05 adds: stateless_http=True, json_response=True
+mcp = FastMCP("server-name")            # module 05 adds: stateless_http=True, json_response=True,
+                                        # and transport_security=TransportSecuritySettings(
+                                        #   enable_dns_rebinding_protection=False)  # else 421 behind tunnel/Vercel
 
 @mcp.tool()
 def tool_function(param: str) -> dict:
@@ -111,6 +113,7 @@ Claude Desktop config: macOS `~/Library/Application Support/Claude/claude_deskto
 ## Troubleshooting
 - Module 04 401 → `MCP_AUTH_TOKEN` in BOTH terminals; port 8765 free.
 - Module 05 → server binds 8000; Claude custom connectors need a public URL (cloudflared tunnel or Vercel) and support OAuth-or-no-auth only (no bearer header field).
+- Module 05 `421 Misdirected Request` via tunnel/Vercel (localhost works) → the mcp SDK auto-enables DNS-rebinding protection when binding 127.0.0.1 and rejects non-localhost `Host` headers at the origin. `server.py` opts out via `transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False)` — keep that when editing, and pre-flight with `uv run test_client.py <public-url>/mcp` (the localhost pre-flight can't catch this).
 - DDGS empty results → throttling; tools degrade gracefully, retry.
 - `mcp` not found → `pip install "mcp[cli]>=1.12,<2"`.
 

@@ -27,6 +27,9 @@ This demo also ships an **MCP App** — the first official MCP extension
 - `server.py` — FastMCP server, `stateless_http=True` + `json_response=True`
   (serverless-friendly; also where the 2026-07-28 spec is headed: a stateless
   protocol core). Declares the MCP App via `meta={"ui": {"resourceUri": ...}}`.
+  Also disables FastMCP's DNS-rebinding protection (`transport_security=...`) —
+  without this, recent SDK versions reject any non-localhost `Host` header with
+  `421 Misdirected Request`, which breaks tunnels and Vercel (see below).
 - `app.html` — the MCP App view. Implements the postMessage handshake
   (`ui/initialize` → `initialized` → `tool-result`) in ~50 lines of vanilla
   JS so you can see the protocol with no SDK.
@@ -52,10 +55,18 @@ uv run test_client.py
 claude mcp add research-explorer --transport http http://127.0.0.1:8000/mcp
 ```
 
-**Claude web/desktop** needs a public URL. Tunnel first:
+**Claude web/desktop** needs a public URL. Tunnel first — cloudflared is
+Cloudflare's tunnel client: it gives your localhost server a temporary public
+HTTPS URL (no account needed). Install with `brew install cloudflared`
+(macOS) or grab a binary from https://github.com/cloudflare/cloudflared/releases —
+or skip installing and use `npx cloudflared` as below:
 
 ```bash
 npx cloudflared tunnel --url http://localhost:8000
+
+# pre-flight THROUGH the tunnel before touching Claude — this is the check
+# that catches Host-header/421 problems the localhost pre-flight can't see:
+uv run test_client.py https://<random>.trycloudflare.com/mcp
 ```
 
 Then Claude → Settings → Connectors → **Add custom connector** → paste
@@ -75,6 +86,26 @@ uv run test_client.py https://<your-app>.vercel.app/mcp
 
 Add the production URL as a custom connector the same way. Same server,
 now permanent.
+
+## Troubleshooting: 421 Misdirected Request through a tunnel/Vercel
+
+If remote requests fail with `421` / "Invalid Host header" while localhost
+works fine: recent versions of the `mcp` SDK auto-enable DNS-rebinding
+protection when the server binds to `127.0.0.1`, allowing only localhost
+`Host` headers. A tunnel or Vercel hostname then gets rejected **by the
+origin** (it looks like a Cloudflare error, but isn't). This server already
+opts out in `server.py`:
+
+```python
+from mcp.server.transport_security import TransportSecuritySettings
+
+mcp = FastMCP(..., transport_security=TransportSecuritySettings(
+    enable_dns_rebinding_protection=False))
+```
+
+That's the right call here because this server exists to be reached through
+public hostnames (and is open by default anyway — see the auth note). For a
+localhost-only server, keep the protection on.
 
 ## Auth note (important, and intentional)
 

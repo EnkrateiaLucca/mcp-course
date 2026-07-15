@@ -1,5 +1,7 @@
 # MCP Technical Cheat Sheet for Instructors
 
+> **Status (July 2026):** teaches against stable spec **2025-11-25**; the 2026-07-28 revision (stateless core, extensions framework, MCP Apps + Tasks as official extensions) lands July 28. MCP is governed by the Linux Foundation's Agentic AI Foundation (since Dec 2025). Python SDK pinned `mcp>=1.12,<2` — v2 renames `FastMCP` → `MCPServer`.
+
 ## Core Concepts Overview
 
 ### What is MCP?
@@ -19,7 +21,7 @@ The Model Context Protocol (MCP) is an open protocol that standardizes how AI as
 
 3. **MCP Servers**
    - Lightweight programs exposing specific capabilities
-   - Can provide tools, resources, prompts, and sampling
+   - Can provide tools, resources, and prompts (sampling is being deprecated)
    - Run as separate processes from the host
 
 4. **Transport Layer**
@@ -158,8 +160,8 @@ async def list_prompts():
     ]
 ```
 
-### 4. Sampling (Server-Initiated)
-Server requests LLM completions:
+### 4. Sampling (Server-Initiated) — ⚠️ DEPRECATED
+**Deprecated in the 2026-07-28 spec revision (12-month sunset), along with roots and logging. Teach it as history, not practice.** Server requests LLM completions:
 ```python
 result = await session.create_message(
     messages=[{"role": "user", "content": "Analyze this"}],
@@ -167,7 +169,7 @@ result = await session.create_message(
 )
 ```
 
-## Elicitation (New Feature)
+## Elicitation (spec 2025-06-18+; URL mode added 2025-11-25)
 
 Elicitation allows servers to request additional information from users during execution. This is crucial for:
 - Confirming dangerous operations
@@ -458,19 +460,17 @@ logging.basicConfig(level=logging.DEBUG)
    - "Invalid params" → Check your JSON schema
    - "Transport error" → Server crashed or network issue
 
-## Quick Reference: Course Demo Progression
+## Quick Reference: Course Module Progression (July 2026 redesign)
 
-1. **Demo 00**: Hand-rolled agent loop — web search + filesystem tools, no MCP yet
-2. **Demo 01**: Same tools behind a FastMCP server (`mcp_server.py` + client + host)
-3. **Demo 02**: Claude Agent SDK as the MCP host — loop collapses to ~15 lines
-4. **Demo 03**: Query tabular data — CSV/pandas MCP server + Agent SDK
-5. **Demo 04**: Production-shaped research agent — intent-grouped tools, HTTP transport, bearer auth, hooks + evals
-6. **Demo 05**: Link health checker agent — Agent SDK + dedicated link-checking MCP server
-7. **Demo 06**: Data analysis agent — FastAPI + SSE, in-process MCP server, deployed to Vercel
-8. **Demo 07**: Hacks, tips, tools & workflows — plus the `mcp-builder-skill` for scaffolding servers
-9. **Demo 08**: MCP security lab — tool poisoning attack and defense
-10. **Demo 09**: Multi-server composition + subagent delegation (Playwright, Git)
-11. **Demo 10**: Sessions — resume and fork
+1. **Module 00 — Agents are loops**: hand-rolled loop, web search + filesystem tools, no MCP yet
+2. **Module 01 — Intro to MCP**: same tools behind FastMCP; thin standalone client; connect Claude Code + Claude Desktop
+3. **Module 02 — Agent SDK as host**: loop collapses to ~15 lines; `in_process_agent.py` shows `create_sdk_mcp_server`
+4. **Module 03 — Skills vs MCP**: access vs know-how framing; `mcp-builder` skill scaffolds a server live
+5. **Module 04 — Production shape**: intent-grouped tools (7→3), streamable-http, bearer-auth seam (→ OAuth 2.1/CIMD ladder), hooks, evals, structured outputs
+6. **Module 05 — Deploy + MCP Apps**: stateless remote server on Vercel; MCP App (`ui://` resource + `_meta`) rendered in-chat; `test_client.py` pre-flight
+7. **Module 06 — Defend & scale**: tool-poisoning attack/defense; multi-server composition, subagents (`Agent` tool), sessions resume/fork
+
+Take-home: `demos/exercises/link-checker/`. Retired demos: `demos/archive/`.
 
 ## Teaching Tips
 

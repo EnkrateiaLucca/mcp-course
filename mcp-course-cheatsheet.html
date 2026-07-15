@@ -390,8 +390,8 @@
     <!-- Page Header -->
     <div class="page-header">
         <h1>Building AI Agents with MCP</h1>
-        <div class="subtitle">The HTTP Moment of AI — O'Reilly Live Training Cheatsheet</div>
-        <div class="meta">Model Context Protocol · Claude Agent SDK · FastMCP · Deployment | 2025</div>
+        <div class="subtitle">From Agent Loop to Production Servers — O'Reilly Live Training Cheatsheet</div>
+        <div class="meta">Model Context Protocol · Claude Agent SDK · FastMCP · Deployment · MCP Apps | July 2026</div>
     </div>
 
     <!-- Section 1: What is MCP -->
@@ -431,17 +431,17 @@
         </div>
         <div class="definition-card">
             <div class="term">Transport Layer</div>
-            <div class="definition"><strong>stdio</strong> — subprocess pipe for local servers.<br><strong>HTTP/SSE</strong> — network transport for remote/deployed servers.</div>
+            <div class="definition"><strong>stdio</strong> — subprocess pipe for local servers.<br><strong>Streamable HTTP</strong> — remote/deployed servers (stateless-capable). <em>HTTP+SSE is deprecated since 2025-03.</em></div>
         </div>
     </div>
 
     <div class="info-box mb-small">
         <div class="info-box-title">The Analogy</div>
-        <p>MCP is the <strong>"USB-C port for AI"</strong> — one universal standard that lets any AI model plug into any tool, database, or service. Like HTTP standardized the web, MCP standardizes how AI connects to the world.</p>
+        <p>MCP is the <strong>"USB-C port for AI"</strong> — one universal standard that lets any AI model plug into any tool, database, or service. The "HTTP moment" happened: MCP joined the <strong>Linux Foundation</strong> (Agentic AI Foundation, Dec 2025) with Anthropic, OpenAI, Google, Microsoft and AWS on board. Current stable spec: <strong>2025-11-25</strong>; the largest-ever revision lands <strong>2026-07-28</strong> (stateless core, extensions).</p>
     </div>
 
-    <!-- Section 2: The 4 MCP Capabilities -->
-    <div class="section-title">2. The 4 MCP Capabilities</div>
+    <!-- Section 2: The MCP Primitives -->
+    <div class="section-title">2. The MCP Primitives (+ the Apps extension)</div>
 
     <div class="grid-2">
         <div class="card">
@@ -462,16 +462,21 @@
             <div class="card-title">Prompts — User-controlled</div>
             <div class="card-content">
                 Reusable prompt templates users invoke. Slash commands in Claude Desktop.<br>
-                <code>@server.list_prompts()</code>
+                <code>@mcp.prompt()</code>
             </div>
         </div>
         <div class="card">
-            <div class="card-title">Sampling — Server-initiated</div>
+            <div class="card-title">MCP Apps — UI extension (2026)</div>
             <div class="card-content">
-                Server requests LLM completions. Enables agentic behavior inside servers.<br>
-                <code>session.create_message()</code>
+                Tool + <code>ui://</code> resource linked via <code>_meta</code> → interactive HTML rendered in-chat (sandboxed iframe).<br>
+                <code>meta={"ui": {"resourceUri": "ui://…"}}</code>
             </div>
         </div>
+    </div>
+
+    <div class="info-box mb-small">
+        <div class="info-box-title">Deprecation watch (2026-07-28 spec)</div>
+        <p><strong>Sampling, Roots, and Logging</strong> enter deprecation (12-month sunset) — don't build new work on them. Long-running work moves to the <strong>Tasks</strong> extension.</p>
     </div>
 
     <!-- Section 3: MCP Lifecycle -->
@@ -491,7 +496,7 @@
         <div class="step">
             <div class="step-number">3</div>
             <div class="step-title">Operate</div>
-            <div class="step-content">Tool calls, resource reads, prompt requests, sampling — all via JSON-RPC 2.0.</div>
+            <div class="step-content">Tool calls, resource reads, prompt requests — all via JSON-RPC 2.0. (2026-07-28 makes the core stateless: no handshake needed.)</div>
         </div>
         <div class="step">
             <div class="step-number">4</div>
@@ -508,9 +513,9 @@
             <div class="code-card-header">FastMCP Server Pattern</div>
             <pre><code>#!/usr/bin/env -S uv run --script
 # /// script
-# requires-python = ">=3.9"
-# dependencies = ["mcp[cli]>=1.0.0"]
-# ///
+# requires-python = ">=3.10"
+# dependencies = ["mcp[cli]>=1.12,<2"]
+# ///  # pin v1! v2 renames FastMCP -> MCPServer
 
 from mcp.server.fastmcp import FastMCP
 
@@ -531,32 +536,35 @@ if __name__ == "__main__":
         </div>
         <div class="code-card">
             <div class="code-card-header">Claude Agent SDK Pattern</div>
-            <pre><code>import asyncio
-from claude_agent_sdk import (
-    Agent, tool, create_sdk_mcp_server
+            <pre><code>from claude_agent_sdk import (
+    ClaudeAgentOptions, query,
+    create_sdk_mcp_server, tool,
 )
 
-# Custom tool with decorator
-@tool
-def my_tool(input: str) -> str:
-    """Tool available to the agent"""
-    return process(input)
+# In-process tool (no subprocess)
+@tool("analyze", "Analyze data.", {"data": str})
+async def analyze(args):
+    return {"content": [
+        {"type": "text", "text": run(args["data"])}
+    ]}
 
-# In-process MCP server (no subprocess)
-server = create_sdk_mcp_server("analysis")
+server = create_sdk_mcp_server(
+    name="analysis", tools=[analyze])
 
-@server.tool()
-def analyze(data: str) -> str:
-    return run_analysis(data)
-
-# Run the agent
-agent = Agent(
-    name="helper",
-    instructions="System instructions",
-    tools=[my_tool],
-    model="claude-sonnet-4-5"
+options = ClaudeAgentOptions(
+    system_prompt="You are an analyst.",
+    mcp_servers={
+        "analysis": server,                 # in-process
+        "research": {"command": "uv",       # external stdio
+                     "args": ["run", "mcp_server.py"]},
+        "prod": {"type": "http",            # remote
+                 "url": "https://…/mcp"},
+    },
+    allowed_tools=["mcp__analysis__*",
+                   "mcp__research__*"],
 )
-asyncio.run(agent.run("Task"))</code></pre>
+async for msg in query(prompt="Task", options=options):
+    ...</code></pre>
         </div>
     </div>
 
@@ -586,38 +594,39 @@ asyncio.run(agent.run("Task"))</code></pre>
         </div>
         <div class="code-card">
             <div class="code-card-header">Security: PreToolUse Hook</div>
-            <pre><code">from claude_agent_sdk import PreToolUse
+            <pre><code>from claude_agent_sdk import HookMatcher
 
-def block_dangerous(tool_use):
-    """Block rm -rf and similar commands"""
-    if tool_use.tool_name == "Bash":
-        cmd = tool_use.input.get("command","")
-        dangerous = ["rm -rf", "sudo rm",
-                     "format", "> /dev/"]
-        for d in dangerous:
-            if d in cmd:
-                return {"type": "block",
-                        "reason": "Blocked"}
-    return {"type": "allow"}
+async def validate(input_data, tool_use_id, ctx):
+    """Deny bad inputs BEFORE the tool runs."""
+    path = input_data.get("tool_input", {}) \
+                     .get("path", "")
+    if ".." in path or path.startswith("/"):
+        return {"hookSpecificOutput": {
+            "hookEventName": "PreToolUse",
+            "permissionDecision": "deny",
+            "permissionDecisionReason":
+                "Path must be relative"}}
+    return {}
 
-# Attach to agent
-agent = Agent(
-    hooks=[PreToolUse(block_dangerous)],
+options = ClaudeAgentOptions(
+    hooks={"PreToolUse": [HookMatcher(
+        matcher="mcp__research__*",
+        hooks=[validate])]},
     ...
 )</code></pre>
         </div>
     </div>
 
-    <!-- Section 5: Course Demo Progression -->
-    <div class="section-title">5. Course Demo Progression</div>
+    <!-- Section 5: Course Module Progression -->
+    <div class="section-title">5. Course Module Progression</div>
 
     <div class="table-card mb-medium">
-        <div class="table-card-header">8 Hands-On Demos</div>
+        <div class="table-card-header">7 Modules, One Use Case (a research assistant)</div>
         <table>
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>Demo</th>
+                    <th>Module</th>
                     <th>What You Build</th>
                     <th>Key Concept</th>
                 </tr>
@@ -625,51 +634,45 @@ agent = Agent(
             <tbody>
                 <tr>
                     <td><strong>00</strong></td>
-                    <td>Intro to Agents</td>
-                    <td>Agent loop fundamentals</td>
-                    <td>When agents vs simple LLM calls</td>
+                    <td>Agents Are Loops</td>
+                    <td>Hand-rolled agent loop</td>
+                    <td>What every framework does inside</td>
                 </tr>
                 <tr>
                     <td><strong>01</strong></td>
                     <td>Intro to MCP</td>
-                    <td>First FastMCP server + client</td>
-                    <td>stdio transport, MCP Inspector</td>
+                    <td>First FastMCP server + thin client</td>
+                    <td>stdio, Inspector, M×N payoff (2 hosts)</td>
                 </tr>
                 <tr>
                     <td><strong>02</strong></td>
-                    <td>Chat App (Claude API)</td>
-                    <td>Full chat app with tool use</td>
-                    <td>Tools + Resources + Prompts</td>
+                    <td>Agent SDK Host</td>
+                    <td>Same server, ~15-line agent</td>
+                    <td>SDK as MCP host; in-process servers</td>
                 </tr>
                 <tr>
                     <td><strong>03</strong></td>
-                    <td>Filesystem Agent</td>
-                    <td>File reader with SDK + MCP</td>
-                    <td>In-process server, hooks, permissions</td>
+                    <td>Skills vs MCP</td>
+                    <td>Agent scaffolds an MCP server</td>
+                    <td>MCP = access, skills = know-how</td>
                 </tr>
                 <tr>
                     <td><strong>04</strong></td>
-                    <td>Tabular Data Query</td>
-                    <td>CSV querying via MCP tools</td>
-                    <td>pandas ops as MCP tools</td>
+                    <td>Production Shape</td>
+                    <td>HTTP server + authed, hooked agent</td>
+                    <td>Intent-grouped tools, auth seam, evals</td>
                 </tr>
                 <tr>
                     <td><strong>05</strong></td>
-                    <td>Link Checker Agent</td>
-                    <td>Markdown link health auditor</td>
-                    <td>Automation: 4-tool MCP server</td>
+                    <td>Deploy + MCP Apps</td>
+                    <td>Remote server on Vercel + in-chat UI</td>
+                    <td>Stateless HTTP; one server, many hosts</td>
                 </tr>
                 <tr>
                     <td><strong>06</strong></td>
-                    <td>Deploy to Vercel</td>
-                    <td>Data analysis app + chat UI</td>
-                    <td>FastAPI + SSE streaming + Vercel</td>
-                </tr>
-                <tr>
-                    <td><strong>07</strong></td>
-                    <td>Hacks &amp; Tips</td>
-                    <td>MCP builder skill workflow</td>
-                    <td>AI-assisted MCP server creation</td>
+                    <td>Defend &amp; Scale</td>
+                    <td>Poisoning lab; multi-server team</td>
+                    <td>Tool poisoning; subagents; sessions</td>
                 </tr>
             </tbody>
         </table>
@@ -702,7 +705,10 @@ agent = Agent(
                     <li>Resource URIs must be valid: <code>file:///path</code> not <code>/path</code></li>
                     <li>"Method not found" → server doesn't implement that capability</li>
                     <li>"Invalid params" → check your JSON schema / type hints</li>
-                    <li>Vercel hobby plan: 10s timeout — upgrade to Pro for Agent SDK cold starts</li>
+                    <li>MCP tools are <strong>not</strong> auto-approved by permission modes — allow-list them: <code>allowed_tools=["mcp__x__*"]</code></li>
+                    <li>SDK skills need <code>setting_sources=["user","project"]</code> or they load nothing</li>
+                    <li>Sessions are cwd-sensitive: <code>resume</code> silently starts fresh if the directory changed</li>
+                    <li>Serverless MCP: use <code>stateless_http=True, json_response=True</code></li>
                 </ul>
             </div>
         </div>
@@ -721,16 +727,20 @@ uv run demos/01-introduction-to-mcp/mcp_server.py
 mcp dev demos/01-introduction-to-mcp/mcp_server.py
 # Opens browser: tool test + message inspector
 
-# Enable debug logging in any server
-import logging
-logging.basicConfig(level=logging.DEBUG)
+# Connect a server to Claude Code
+claude mcp add research -- \
+  uv run /abs/path/mcp_server.py
+claude mcp add prod --transport http \
+  https://your-app.vercel.app/mcp
 
-# Check Claude Desktop logs
-~/.config/Claude/logs/</code></pre>
+# Check Claude Desktop logs (macOS)
+~/Library/Logs/Claude/</code></pre>
         </div>
         <div class="code-card">
             <div class="code-card-header">Claude Desktop Config</div>
-            <pre><code>// ~/.config/Claude/claude_desktop_config.json
+            <pre><code>// macOS: ~/Library/Application Support/Claude/
+//        claude_desktop_config.json
+// Windows: %APPDATA%\Claude\claude_desktop_config.json
 {
   "mcpServers": {
     "my-server": {
@@ -809,8 +819,20 @@ logging.basicConfig(level=logging.DEBUG)
                     <td>modelcontextprotocol.io/specification/.../security_best_practices</td>
                 </tr>
                 <tr>
+                    <td>MCP Apps Extension</td>
+                    <td>modelcontextprotocol.io/extensions/apps</td>
+                </tr>
+                <tr>
+                    <td>Official MCP Registry</td>
+                    <td>registry.modelcontextprotocol.io</td>
+                </tr>
+                <tr>
+                    <td>Agent Skills Standard</td>
+                    <td>agentskills.io</td>
+                </tr>
+                <tr>
                     <td>Course Repository</td>
-                    <td>github.com/automata-learning-lab/mcp-course</td>
+                    <td>github.com/EnkrateiaLucca/mcp-course</td>
                 </tr>
             </tbody>
         </table>
@@ -820,19 +842,19 @@ logging.basicConfig(level=logging.DEBUG)
     <div class="key-points">
         <div class="key-points-title">Key Takeaways</div>
         <ul>
-            <li><strong>MCP = USB-C for AI:</strong> One protocol connects any AI model to any tool, database, or service</li>
-            <li><strong>4 Capabilities:</strong> Tools (model runs), Resources (app exposes), Prompts (user invokes), Sampling (server asks LLM)</li>
-            <li><strong>FastMCP:</strong> Use <code>@mcp.tool()</code> decorators — Python type hints auto-generate the JSON schema</li>
-            <li><strong>In-process servers:</strong> <code>create_sdk_mcp_server()</code> runs MCP tools in the same Python process — no subprocess overhead</li>
-            <li><strong>Security first:</strong> Always validate paths, use PreToolUse hooks, grant least privilege, log everything</li>
-            <li><strong>Deploy anywhere:</strong> FastAPI + Claude Agent SDK + SSE streaming = production-ready agent in &lt;200 lines</li>
-            <li><strong>UV handles deps:</strong> Inline <code># /// script</code> headers mean zero setup — <code>uv run server.py</code> just works</li>
+            <li><strong>MCP = USB-C for AI:</strong> One protocol, every host — the server from module 01 runs unmodified in Claude Desktop, Claude Code, the Agent SDK, and Cursor</li>
+            <li><strong>Primitives:</strong> Tools (model runs), Resources (app exposes), Prompts (user invokes) — plus MCP Apps for in-chat UIs; sampling/roots/logging are being deprecated</li>
+            <li><strong>Skills vs MCP:</strong> MCP = access, skills = procedural know-how, plugins bundle both</li>
+            <li><strong>Design tools around intent:</strong> few well-named tools beat an API mirror — even with tool search on by default</li>
+            <li><strong>Security first:</strong> validate paths, PreToolUse hooks, least-privilege <code>allowed_tools</code>, treat tool descriptions as untrusted input</li>
+            <li><strong>Deploy the server, not a wrapper:</strong> <code>stateless_http=True</code> + <code>mcp.streamable_http_app()</code> runs anywhere — no FastAPI plumbing</li>
+            <li><strong>UV handles deps:</strong> Inline <code># /// script</code> headers mean zero setup — <code>uv run server.py</code> just works; pin <code>mcp&lt;2</code></li>
         </ul>
     </div>
 
     <!-- Footer -->
     <footer>
-        <p>© 2025 Automata Learning Lab | "Building AI Agents with MCP: The HTTP Moment of AI?" | O'Reilly Live Training</p>
+        <p>© 2026 Automata Learning Lab | "Building AI Agents with MCP: From Agent Loop to Production Servers" | O'Reilly Live Training</p>
     </footer>
 
 </body>

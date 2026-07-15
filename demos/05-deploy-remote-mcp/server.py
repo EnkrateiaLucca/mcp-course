@@ -46,6 +46,7 @@ from pathlib import Path
 
 from ddgs import DDGS
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 
 mcp = FastMCP(
     "research-explorer",
@@ -53,6 +54,12 @@ mcp = FastMCP(
     json_response=True,    # no SSE stream; plain JSON responses
     host="127.0.0.1",
     port=8000,
+    # FastMCP auto-enables DNS-rebinding protection when host is localhost,
+    # which rejects any non-localhost Host header with 421 — including the
+    # cloudflared tunnel and Vercel hostnames this server exists to serve.
+    # This server is meant to be reached through a public hostname, so turn
+    # the localhost-only Host check off.
+    transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
 )
 
 # ---------------------------------------------------------------------------

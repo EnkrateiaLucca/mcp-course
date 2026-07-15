@@ -1,0 +1,4 @@
+# Generated at runtime by the demos — not source.
+.runtime/
+.tool_checksums.json
+__pycache__/

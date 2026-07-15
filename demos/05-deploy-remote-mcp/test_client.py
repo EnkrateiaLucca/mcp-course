@@ -25,15 +25,14 @@ import json
 import sys
 
 from mcp import ClientSession
-from mcp.client.streamable_http import streamablehttp_client
+from mcp.client.streamable_http import streamable_http_client
 from pydantic import AnyUrl
 
 URL = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8000/mcp"
 
-
 async def main() -> None:
     print(f"→ connecting to {URL}")
-    async with streamablehttp_client(URL) as (read, write, _):
+    async with streamable_http_client(URL) as (read, write, _):
         async with ClientSession(read, write) as session:
             await session.initialize()
 
