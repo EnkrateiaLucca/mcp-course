@@ -1,0 +1,44 @@
+<evaluation>
+  <!-- Ground truth computed directly from data/sales_data.csv (seeded, stable).
+       All questions are read-only and answerable via query_sales / sales_dashboard. -->
+  <qa_pair>
+    <question>Which single product has generated the most total revenue across the entire dataset?</question>
+    <answer>Horizon Smartwatch</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Which sales rep generated the most revenue in Europe during Q4 2025 (October 1 through December 31, 2025)?</question>
+    <answer>Sofia Lindqvist</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>In which calendar month did Voltaic Gear record its highest monthly revenue? Answer in YYYY-MM format.</question>
+    <answer>2025-12</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>During Black Friday week (2025-11-24 through 2025-11-30), which product sold the most units?</question>
+    <answer>MagGrip Phone Stand</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Which region had the lowest total revenue in the first half of 2026 (January 1 through June 30, 2026)?</question>
+    <answer>Latin America</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Which sales channel accounts for the largest share of total revenue?</question>
+    <answer>Distributor</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>How many order lines (rows) are in the full sales dataset?</question>
+    <answer>5867</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Which product category ranks second by total revenue across the whole dataset?</question>
+    <answer>Wearables</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Within the Accessories category, which product has the highest total revenue?</question>
+    <answer>VoltCharge 65W GaN Charger</answer>
+  </qa_pair>
+  <qa_pair>
+    <question>Which sales rep moved the most total units in the APAC region across the whole dataset?</question>
+    <answer>Kenji Watanabe</answer>
+  </qa_pair>
+</evaluation>

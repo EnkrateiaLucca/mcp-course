@@ -1,0 +1,9 @@
+# Marp config for the marp-slides skill.
+# HTML-first: raw <div>/<style> allowed (the brand layouts need it),
+# custom themes registered so decks can use `theme: automata` (+ the 7 extra themes).
+# Paths are resolved relative to this file. The helper scripts also pass --theme-set
+# with absolute paths, so manual `marp --config .marprc.yml deck.md` works too.
+html: true
+allowLocalFiles: true
+themeSet:
+  - ./assets/brand

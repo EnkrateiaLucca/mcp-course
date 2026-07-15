@@ -1,0 +1,500 @@
+- generic [active] [ref=f1e1]:
+  - banner [ref=f1e2]:
+    - generic:
+      - link "Skip to main content" [ref=f1e3] [cursor=pointer]:
+        - /url: "#main-content"
+      - link "Skip to footer" [ref=f1e4] [cursor=pointer]:
+        - /url: "#footer"
+    - generic [ref=f1e5]:
+      - link "Home" [ref=f1e6] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f1e9]:
+        - navigation [ref=f1e10]:
+          - list [ref=f1e11]:
+            - listitem [ref=f1e12] [cursor=pointer]:
+              - link "Research" [ref=f1e13]:
+                - /url: /research
+            - listitem [ref=f1e14] [cursor=pointer]:
+              - link "Policy" [ref=f1e15]:
+                - /url: /policy
+            - listitem [ref=f1e16] [cursor=pointer]:
+              - button "Commitments" [ref=f1e17]
+            - listitem [ref=f1e21] [cursor=pointer]:
+              - button "Learn" [ref=f1e22]
+            - listitem [ref=f1e26] [cursor=pointer]:
+              - link "News" [ref=f1e27]:
+                - /url: /news
+        - link "Try Claude" [ref=f1e29] [cursor=pointer]:
+          - /url: https://claude.ai/
+  - main [ref=f1e33]:
+    - region "Engineering Article Hero" [ref=f1e34]:
+      - link "Engineering at Anthropic" [ref=f1e35] [cursor=pointer]:
+        - /url: /engineering
+      - generic [ref=f1e36]:
+        - 'heading "Code execution with MCP: Building more efficient agents" [level=1] [ref=f1e39]'
+        - generic [ref=f1e40]:
+          - paragraph [ref=f1e41]: Published Nov 04, 2025
+          - paragraph [ref=f1e42]: Direct tool calls consume context for each definition and result. Agents scale better by writing code to call tools instead. Here's how it works with MCP.
+    - generic [ref=f1e43]:
+      - article [ref=f1e44]:
+        - generic [ref=f1e46]:
+          - paragraph [ref=f1e47]:
+            - link "The Model Context Protocol (MCP)" [ref=f1e48] [cursor=pointer]:
+              - /url: https://modelcontextprotocol.io/
+            - text: is an open standard for connecting AI agents to external systems. Connecting agents to tools and data traditionally requires a custom integration for each pairing, creating fragmentation and duplicated effort that makes it difficult to scale truly connected systems. MCP provides a universal protocol—developers implement MCP once in their agent and it unlocks an entire ecosystem of integrations.
+          - paragraph [ref=f1e49]:
+            - text: "Since launching MCP in November 2024, adoption has been rapid: the community has built thousands of"
+            - link "MCP servers" [ref=f1e50] [cursor=pointer]:
+              - /url: https://github.com/modelcontextprotocol/servers
+            - text: ","
+            - link "SDKs" [ref=f1e51] [cursor=pointer]:
+              - /url: https://modelcontextprotocol.io/docs/sdk
+            - text: are available for all major programming languages, and the industry has adopted MCP as the de-facto standard for connecting agents to tools and data.
+          - paragraph [ref=f1e52]: Today developers routinely build agents with access to hundreds or thousands of tools across dozens of MCP servers. However, as the number of connected tools grows, loading all tool definitions upfront and passing intermediate results through the context window slows down agents and increases costs.
+          - paragraph [ref=f1e53]: In this blog we'll explore how code execution can enable agents to interact with MCP servers more efficiently, handling more tools while using fewer tokens.
+          - heading [level=2] [ref=f1e54]:
+            - strong [ref=f1e55]: Excessive token consumption from tools makes agents less efficient
+          - paragraph [ref=f1e56]: "As MCP usage scales, there are two common patterns that can increase agent cost and latency:"
+          - list [ref=f1e57]:
+            - listitem [ref=f1e58]: Tool definitions overload the context window;
+            - listitem [ref=f1e59]: Intermediate tool results consume additional tokens.
+          - heading [level=3] [ref=f1e60]:
+            - strong [ref=f1e61]: 1. Tool definitions overload the context window
+          - paragraph [ref=f1e62]: "Most MCP clients load all tool definitions upfront directly into context, exposing them to the model using a direct tool-calling syntax. These tool definitions might look like:"
+          - generic [ref=f1e64]:
+            - code [ref=f1e66]: "gdrive.getDocument Description: Retrieves a document from Google Drive Parameters: documentId (required, string): The ID of the document to retrieve fields (optional, string): Specific fields to return Returns: Document object with title, body content, metadata, permissions, etc."
+            - button "Copy code" [ref=f1e68] [cursor=pointer]:
+              - generic [ref=f1e71]: Copy
+          - generic [ref=f1e73]:
+            - code [ref=f1e75]: "salesforce.updateRecord Description: Updates a record in Salesforce Parameters: objectType (required, string): Type of Salesforce object (Lead, Contact, Account, etc.) recordId (required, string): The ID of the record to update data (required, object): Fields to update with their new values Returns: Updated record object with confirmation"
+            - button "Copy code" [ref=f1e77] [cursor=pointer]:
+              - generic [ref=f1e80]: Copy
+          - paragraph [ref=f1e81]: Tool descriptions occupy more context window space, increasing response time and costs. In cases where agents are connected to thousands of tools, they’ll need to process hundreds of thousands of tokens before reading a request.
+          - heading [level=3] [ref=f1e82]:
+            - strong [ref=f1e83]: 2. Intermediate tool results consume additional tokens
+          - paragraph [ref=f1e84]: "Most MCP clients allow models to directly call MCP tools. For example, you might ask your agent: \"Download my meeting transcript from Google Drive and attach it to the Salesforce lead.\""
+          - paragraph [ref=f1e85]: "The model will make calls like:"
+          - generic [ref=f1e87]:
+            - code [ref=f1e89]: "TOOL CALL: gdrive.getDocument(documentId: \"abc123\") → returns \"Discussed Q4 goals...\\n[full transcript text]\" (loaded into model context) TOOL CALL: salesforce.updateRecord( objectType: \"SalesMeeting\", recordId: \"00Q5f000001abcXYZ\", data: { \"Notes\": \"Discussed Q4 goals...\\n[full transcript text written out]\" } ) (model needs to write entire transcript into context again)"
+            - button "Copy code" [ref=f1e91] [cursor=pointer]:
+              - generic [ref=f1e94]: Copy
+          - paragraph [ref=f1e95]: Every intermediate result must pass through the model. In this example, the full call transcript flows through twice. For a 2-hour sales meeting, that could mean processing an additional 50,000 tokens. Even larger documents may exceed context window limits, breaking the workflow.
+          - paragraph [ref=f1e96]: With large documents or complex data structures, models may be more likely to make mistakes when copying data between tool calls.
+          - figure "The MCP client loads tool definitions into the model's context window and orchestrates a message loop where each tool call and result passes through the model between operations." [ref=f1e98]:
+            - img "Image of how the MCP client works with the MCP server and LLM." [ref=f1e99]
+          - heading [level=2] [ref=f1e101]:
+            - strong [ref=f1e102]: Code execution with MCP improves context efficiency
+          - paragraph [ref=f1e103]: "With code execution environments becoming more common for agents, a solution is to present MCP servers as code APIs rather than direct tool calls. The agent can then write code to interact with MCP servers. This approach addresses both challenges: agents can load only the tools they need and process data in the execution environment before passing results back to the model."
+          - paragraph [ref=f1e104]: "There are a number of ways to do this. One approach is to generate a file tree of all available tools from connected MCP servers. Here's an implementation using TypeScript:"
+          - generic [ref=f1e106]:
+            - code [ref=f1e108]: servers ├── google-drive │ ├── getDocument.ts │ ├── ... (other tools) │ └── index.ts ├── salesforce │ ├── updateRecord.ts │ ├── ... (other tools) │ └── index.ts └── ... (other servers)
+            - button "Copy code" [ref=f1e110] [cursor=pointer]:
+              - generic [ref=f1e113]: Copy
+          - paragraph [ref=f1e114]: "Then each tool corresponds to a file, something like:"
+          - generic [ref=f1e116]:
+            - code [ref=f1e118]: "// ./servers/google-drive/getDocument.ts import { callMCPTool } from \"../../../client.js\"; interface GetDocumentInput { documentId: string; } interface GetDocumentResponse { content: string; } /* Read a document from Google Drive */ export async function getDocument(input: GetDocumentInput): Promise<GetDocumentResponse> { return callMCPTool<GetDocumentResponse>('google_drive__get_document', input); }"
+            - button "Copy code" [ref=f1e120] [cursor=pointer]:
+              - generic [ref=f1e123]: Copy
+          - paragraph [ref=f1e124]: "Our Google Drive to Salesforce example above becomes the code:"
+          - generic [ref=f1e126]:
+            - code [ref=f1e128]: "// Read transcript from Google Docs and add to Salesforce prospect import * as gdrive from './servers/google-drive'; import * as salesforce from './servers/salesforce'; const transcript = (await gdrive.getDocument({ documentId: 'abc123' })).content; await salesforce.updateRecord({ objectType: 'SalesMeeting', recordId: '00Q5f000001abcXYZ', data: { Notes: transcript } });"
+            - button "Copy code" [ref=f1e130] [cursor=pointer]:
+              - generic [ref=f1e133]: Copy
+          - paragraph [ref=f1e134]:
+            - text: "The agent discovers tools by exploring the filesystem: listing the"
+            - code [ref=f1e135]: ./servers/
+            - text: directory to find available servers (like
+            - code [ref=f1e136]: google-drive
+            - text: and
+            - code [ref=f1e137]: salesforce
+            - text: ), then reading the specific tool files it needs (like
+            - code [ref=f1e138]: getDocument.ts
+            - text: and
+            - code [ref=f1e139]: updateRecord.ts
+            - text: ) to understand each tool's interface. This lets the agent load only the definitions it needs for the current task. This reduces the token usage from 150,000 tokens to 2,000 tokens—a time and cost saving of 98.7%
+            - strong [ref=f1e140]: .
+          - paragraph [ref=f1e141]:
+            - text: Cloudflare
+            - link "published similar findings" [ref=f1e142] [cursor=pointer]:
+              - /url: https://blog.cloudflare.com/code-mode/
+            - text: ", referring to code execution with MCP as “Code Mode.\" The core insight is the same: LLMs are adept at writing code and developers should take advantage of this strength to build agents that interact with MCP servers more efficiently."
+          - heading [level=2] [ref=f1e143]:
+            - strong [ref=f1e144]: Benefits of code execution with MCP
+          - paragraph [ref=f1e145]: Code execution with MCP enables agents to use context more efficiently by loading tools on demand, filtering data before it reaches the model, and executing complex logic in a single step. There are also security and state management benefits to using this approach.
+          - heading "Progressive disclosure" [level=3] [ref=f1e146]
+          - paragraph [ref=f1e147]: Models are great at navigating filesystems. Presenting tools as code on a filesystem allows models to read tool definitions on-demand, rather than reading them all up-front.
+          - paragraph [ref=f1e148]:
+            - text: Alternatively, a
+            - code [ref=f1e149]: search_tools
+            - text: tool can be added to the server to find relevant definitions. For example, when working with the hypothetical Salesforce server used above, the agent searches for "salesforce" and loads only those tools that it needs for the current task. Including a detail level parameter in the
+            - code [ref=f1e150]: search_tools
+            - text: tool that allows the agent to select the level of detail required (such as name only, name and description, or the full definition with schemas) also helps the agent conserve context and find tools efficiently.
+          - heading "Context efficient tool results" [level=3] [ref=f1e151]
+          - paragraph [ref=f1e152]: "When working with large datasets, agents can filter and transform results in code before returning them. Consider fetching a 10,000-row spreadsheet:"
+          - generic [ref=f1e154]:
+            - code [ref=f1e156]: "// Without code execution - all rows flow through context TOOL CALL: gdrive.getSheet(sheetId: 'abc123') → returns 10,000 rows in context to filter manually // With code execution - filter in the execution environment const allRows = await gdrive.getSheet({ sheetId: 'abc123' }); const pendingOrders = allRows.filter(row => row[\"Status\"] === 'pending' ); console.log(`Found ${pendingOrders.length} pending orders`); console.log(pendingOrders.slice(0, 5)); // Only log first 5 for review"
+            - button "Copy code" [ref=f1e158] [cursor=pointer]:
+              - generic [ref=f1e161]: Copy
+          - paragraph [ref=f1e162]: The agent sees five rows instead of 10,000. Similar patterns work for aggregations, joins across multiple data sources, or extracting specific fields—all without bloating the context window.
+          - heading [level=4] [ref=f1e163]:
+            - strong [ref=f1e164]: More powerful and context-efficient control flow
+          - paragraph [ref=f1e165]: "Loops, conditionals, and error handling can be done with familiar code patterns rather than chaining individual tool calls. For example, if you need a deployment notification in Slack, the agent can write:"
+          - generic [ref=f1e167]:
+            - code [ref=f1e169]: "let found = false; while (!found) { const messages = await slack.getChannelHistory({ channel: 'C123456' }); found = messages.some(m => m.text.includes('deployment complete')); if (!found) await new Promise(r => setTimeout(r, 5000)); } console.log('Deployment notification received');"
+            - button "Copy code" [ref=f1e171] [cursor=pointer]:
+              - generic [ref=f1e174]: Copy
+          - paragraph [ref=f1e175]: This approach is more efficient than alternating between MCP tool calls and sleep commands through the agent loop.
+          - paragraph [ref=f1e176]: "Additionally, being able to write out a conditional tree that gets executed also saves on “time to first token” latency: rather than having to wait for a model to evaluate an if-statement, the agent can let the code execution environment do this."
+          - heading "Privacy-preserving operations" [level=3] [ref=f1e177]
+          - paragraph [ref=f1e178]: When agents use code execution with MCP, intermediate results stay in the execution environment by default. This way, the agent only sees what you explicitly log or return, meaning data you don’t wish to share with the model can flow through your workflow without ever entering the model's context.
+          - paragraph [ref=f1e179]: "For even more sensitive workloads, the agent harness can tokenize sensitive data automatically. For example, imagine you need to import customer contact details from a spreadsheet into Salesforce. The agent writes:"
+          - generic [ref=f1e181]:
+            - code [ref=f1e183]: "const sheet = await gdrive.getSheet({ sheetId: 'abc123' }); for (const row of sheet.rows) { await salesforce.updateRecord({ objectType: 'Lead', recordId: row.salesforceId, data: { Email: row.email, Phone: row.phone, Name: row.name } }); } console.log(`Updated ${sheet.rows.length} leads`);"
+            - button "Copy code" [ref=f1e185] [cursor=pointer]:
+              - generic [ref=f1e188]: Copy
+          - paragraph [ref=f1e189]: "The MCP client intercepts the data and tokenizes PII before it reaches the model:"
+          - generic [ref=f1e191]:
+            - code [ref=f1e193]: "// What the agent would see, if it logged the sheet.rows: [ { salesforceId: '00Q...', email: '[EMAIL_1]', phone: '[PHONE_1]', name: '[NAME_1]' }, { salesforceId: '00Q...', email: '[EMAIL_2]', phone: '[PHONE_2]', name: '[NAME_2]' }, ... ]"
+            - button "Copy code" [ref=f1e195] [cursor=pointer]:
+              - generic [ref=f1e198]: Copy
+          - paragraph [ref=f1e199]: Then, when the data is shared in another MCP tool call, it is untokenized via a lookup in the MCP client. The real email addresses, phone numbers, and names flow from Google Sheets to Salesforce, but never through the model. This prevents the agent from accidentally logging or processing sensitive data. You can also use this to define deterministic security rules, choosing where data can flow to and from.
+          - heading "State persistence and skills" [level=3] [ref=f1e200]
+          - paragraph [ref=f1e201]: "Code execution with filesystem access allows agents to maintain state across operations. Agents can write intermediate results to files, enabling them to resume work and track progress:"
+          - generic [ref=f1e203]:
+            - code [ref=f1e205]: "const leads = await salesforce.query({ query: 'SELECT Id, Email FROM Lead LIMIT 1000' }); const csvData = leads.map(l => `${l.Id},${l.Email}`).join('\\n'); await fs.writeFile('./workspace/leads.csv', csvData); // Later execution picks up where it left off const saved = await fs.readFile('./workspace/leads.csv', 'utf-8');"
+            - button "Copy code" [ref=f1e207] [cursor=pointer]:
+              - generic [ref=f1e210]: Copy
+          - paragraph [ref=f1e211]: "Agents can also persist their own code as reusable functions. Once an agent develops working code for a task, it can save that implementation for future use:"
+          - generic [ref=f1e213]:
+            - code [ref=f1e215]: "// In ./skills/save-sheet-as-csv.ts import * as gdrive from './servers/google-drive'; export async function saveSheetAsCsv(sheetId: string) { const data = await gdrive.getSheet({ sheetId }); const csv = data.map(row => row.join(',')).join('\\n'); await fs.writeFile(`./workspace/sheet-${sheetId}.csv`, csv); return `./workspace/sheet-${sheetId}.csv`; } // Later, in any agent execution: import { saveSheetAsCsv } from './skills/save-sheet-as-csv'; const csvPath = await saveSheetAsCsv('abc123');"
+            - button "Copy code" [ref=f1e217] [cursor=pointer]:
+              - generic [ref=f1e220]: Copy
+          - paragraph [ref=f1e221]:
+            - text: This ties in closely to the concept of
+            - link "Skills" [ref=f1e222] [cursor=pointer]:
+              - /url: https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview
+            - text: ", folders of reusable instructions, scripts, and resources for models to improve performance on specialized tasks. Adding a SKILL.md file to these saved functions creates a structured skill that models can reference and use. Over time, this allows your agent to build a toolbox of higher-level capabilities, evolving the scaffolding that it needs to work most effectively."
+          - paragraph [ref=f1e223]:
+            - text: Note that code execution introduces its own complexity. Running agent-generated code requires a secure execution environment with appropriate
+            - link "sandboxing" [ref=f1e224] [cursor=pointer]:
+              - /url: https://www.anthropic.com/engineering/claude-code-sandboxing
+            - text: ", resource limits, and monitoring. These infrastructure requirements add operational overhead and security considerations that direct tool calls avoid. The benefits of code execution—reduced token costs, lower latency, and improved tool composition—should be weighed against these implementation costs."
+          - heading [level=2] [ref=f1e225]:
+            - strong [ref=f1e226]: Summary
+          - paragraph [ref=f1e227]: MCP provides a foundational protocol for agents to connect to many tools and systems. However, once too many servers are connected, tool definitions and results can consume excessive tokens, reducing agent efficiency.
+          - paragraph [ref=f1e228]:
+            - text: Although many of the problems here feel novel—context management, tool composition, state persistence—they have known solutions from software engineering. Code execution applies these established patterns to agents, letting them use familiar programming constructs to interact with MCP servers more efficiently. If you implement this approach, we encourage you to share your findings with the
+            - link "MCP community" [ref=f1e229] [cursor=pointer]:
+              - /url: https://modelcontextprotocol.io/community/communication
+            - text: .
+          - heading "Acknowledgments" [level=3] [ref=f1e230]
+          - paragraph [ref=f1e231]:
+            - emphasis [ref=f1e232]: This article was written by Adam Jones and Conor Kelly. Thanks to Jeremy Fox, Jerome Swannack, Stuart Ritchie, Molly Vorwerck, Matt Samuels, and Maggie Vo for feedback on drafts of this post.
+      - generic [ref=f1e234]:
+        - generic [ref=f1e235]:
+          - heading "Get the developer newsletter" [level=2] [ref=f1e236]
+          - paragraph [ref=f1e238]: Product updates, how-tos, community spotlights, and more. Delivered monthly to your inbox.
+        - generic [ref=f1e240]:
+          - generic [ref=f1e241]:
+            - textbox "Email address" [ref=f1e242]:
+              - /placeholder: Enter your email
+            - button "Subscribe" [ref=f1e243] [cursor=pointer]
+          - paragraph [ref=f1e246]: Please provide your email address if you'd like to receive our monthly developer newsletter. You can unsubscribe at any time.
+  - contentinfo "Site footer" [ref=f1e247]:
+    - generic [ref=f1e248]:
+      - link "Return to homepage" [ref=f1e250] [cursor=pointer]:
+        - /url: /
+      - navigation "Footer navigation" [ref=f1e253]:
+        - generic [ref=f1e254]:
+          - generic [ref=f1e255]:
+            - heading "Products" [level=3] [ref=f1e256]
+            - list [ref=f1e257]:
+              - listitem [ref=f1e258]:
+                - link "Claude" [ref=f1e259] [cursor=pointer]:
+                  - /url: https://claude.com/product/overview
+              - listitem [ref=f1e260]:
+                - link "Claude Code" [ref=f1e261] [cursor=pointer]:
+                  - /url: https://claude.com/product/claude-code
+              - listitem [ref=f1e262]:
+                - link "Claude Code Enterprise" [ref=f1e263] [cursor=pointer]:
+                  - /url: https://claude.com/product/claude-code/enterprise
+              - listitem [ref=f1e264]:
+                - link "Claude Cowork" [ref=f1e265] [cursor=pointer]:
+                  - /url: https://claude.com/product/cowork
+              - listitem [ref=f1e266]:
+                - link "@Claude" [ref=f1e267] [cursor=pointer]:
+                  - /url: https://claude.com/product/tag
+              - listitem [ref=f1e268]:
+                - link "Claude Design" [ref=f1e269] [cursor=pointer]:
+                  - /url: https://claude.com/product/design
+              - listitem [ref=f1e270]:
+                - link "Claude Science" [ref=f1e271] [cursor=pointer]:
+                  - /url: https://claude.com/product/claude-science
+              - listitem [ref=f1e272]:
+                - link "Claude Security" [ref=f1e273] [cursor=pointer]:
+                  - /url: https://claude.com/product/claude-security
+              - listitem [ref=f1e274]:
+                - link "Claude for Chrome" [ref=f1e275] [cursor=pointer]:
+                  - /url: https://claude.com/chrome
+              - listitem [ref=f1e276]:
+                - link "Claude for Microsoft 365" [ref=f1e277] [cursor=pointer]:
+                  - /url: https://claude.com/claude-for-microsoft-365
+              - listitem [ref=f1e278]:
+                - link "Skills" [ref=f1e279] [cursor=pointer]:
+                  - /url: https://www.claude.com/skills
+              - listitem [ref=f1e280]:
+                - link "Download app" [ref=f1e281] [cursor=pointer]:
+                  - /url: https://claude.ai/download
+              - listitem [ref=f1e282]:
+                - link "Pricing" [ref=f1e283] [cursor=pointer]:
+                  - /url: https://claude.com/pricing
+              - listitem [ref=f1e284]:
+                - link "Log in to Claude" [ref=f1e285] [cursor=pointer]:
+                  - /url: https://claude.ai/
+          - generic [ref=f1e286]:
+            - heading "Models" [level=3] [ref=f1e287]
+            - list [ref=f1e288]:
+              - listitem [ref=f1e289]:
+                - link "Mythos" [ref=f1e290] [cursor=pointer]:
+                  - /url: https://www.anthropic.com/claude/mythos
+              - listitem [ref=f1e291]:
+                - link "Fable" [ref=f1e292] [cursor=pointer]:
+                  - /url: https://www.anthropic.com/claude/fable
+              - listitem [ref=f1e293]:
+                - link "Opus" [ref=f1e294] [cursor=pointer]:
+                  - /url: https://www.anthropic.com/claude/opus
+              - listitem [ref=f1e295]:
+                - link "Sonnet" [ref=f1e296] [cursor=pointer]:
+                  - /url: https://www.anthropic.com/claude/sonnet
+              - listitem [ref=f1e297]:
+                - link "Haiku" [ref=f1e298] [cursor=pointer]:
+                  - /url: https://www.anthropic.com/claude/haiku
+        - generic [ref=f1e299]:
+          - generic [ref=f1e300]:
+            - heading "Solutions" [level=3] [ref=f1e301]
+            - list [ref=f1e302]:
+              - listitem [ref=f1e303]:
+                - link "AI agents" [ref=f1e304] [cursor=pointer]:
+                  - /url: https://claude.com/solutions/agents
+              - listitem [ref=f1e305]:
+                - link "Code modernization" [ref=f1e306] [cursor=pointer]:
+                  - /url: https://claude.com/solutions/code-modernization
+              - listitem [ref=f1e307]:
+                - link "Coding" [ref=f1e308] [cursor=pointer]:
+                  - /url: https://claude.com/solutions/coding
+              - listitem [ref=f1e309]:
+                - link "Customer support" [ref=f1e310] [cursor=pointer]:
+                  - /url: https://claude.com/solutions/customer-support
+              - listitem [ref=f1e311]:
+                - link "Enterprise" [ref=f1e312] [cursor=pointer]:
+                  - /url: https://claude.com/solutions/enterprise
+              - listitem [ref=f1e313]:
+                - link "Financial services" [ref=f1e314] [cursor=pointer]:
+                  - /url: https://claude.com/solutions/financial-services
+              - listitem [ref=f1e315]:
+                - link "Government" [ref=f1e316] [cursor=pointer]:
+                  - /url: https://claude.com/solutions/government
+              - listitem [ref=f1e317]:
+                - link "Healthcare" [ref=f1e318] [cursor=pointer]:
+                  - /url: https://claude.com/solutions/healthcare
+              - listitem [ref=f1e319]:
+                - link "Higher education" [ref=f1e320] [cursor=pointer]:
+                  - /url: https://claude.com/solutions/education
+              - listitem [ref=f1e321]:
+                - link "K-12 teachers" [ref=f1e322] [cursor=pointer]:
+                  - /url: https://claude.com/solutions/teachers
+              - listitem [ref=f1e323]:
+                - link "Legal" [ref=f1e324] [cursor=pointer]:
+                  - /url: https://claude.com/solutions/legal
+              - listitem [ref=f1e325]:
+                - link "Life sciences" [ref=f1e326] [cursor=pointer]:
+                  - /url: https://claude.com/solutions/life-sciences
+              - listitem [ref=f1e327]:
+                - link "Nonprofits" [ref=f1e328] [cursor=pointer]:
+                  - /url: https://claude.com/solutions/nonprofits
+              - listitem [ref=f1e329]:
+                - link "Security" [ref=f1e330] [cursor=pointer]:
+                  - /url: https://claude.com/solutions/security
+              - listitem [ref=f1e331]:
+                - link "Small business" [ref=f1e332] [cursor=pointer]:
+                  - /url: https://claude.com/solutions/small-business
+          - generic [ref=f1e333]:
+            - heading "Claude Platform" [level=3] [ref=f1e334]
+            - list [ref=f1e335]:
+              - listitem [ref=f1e336]:
+                - link "Overview" [ref=f1e337] [cursor=pointer]:
+                  - /url: https://claude.com/platform/api
+              - listitem [ref=f1e338]:
+                - link "Developer docs" [ref=f1e339] [cursor=pointer]:
+                  - /url: https://platform.claude.com/docs
+              - listitem [ref=f1e340]:
+                - link "Pricing" [ref=f1e341] [cursor=pointer]:
+                  - /url: https://claude.com/pricing#api
+              - listitem [ref=f1e342]:
+                - link "Ecosystem" [ref=f1e343] [cursor=pointer]:
+                  - /url: https://claude.com/ecosystem
+              - listitem [ref=f1e344]:
+                - link "Marketplace" [ref=f1e345] [cursor=pointer]:
+                  - /url: https://claude.com/platform/marketplace
+              - listitem [ref=f1e346]:
+                - link "Regional compliance" [ref=f1e347] [cursor=pointer]:
+                  - /url: https://claude.com/regional-compliance
+              - listitem [ref=f1e348]:
+                - link "Claude on AWS" [ref=f1e349] [cursor=pointer]:
+                  - /url: https://claude.com/partners/claude-on-aws
+              - listitem [ref=f1e350]:
+                - link "Google Cloud" [ref=f1e351] [cursor=pointer]:
+                  - /url: https://claude.com/partners/google-cloud-vertex-ai
+              - listitem [ref=f1e352]:
+                - link "Microsoft Foundry" [ref=f1e353] [cursor=pointer]:
+                  - /url: https://claude.com/partners/microsoft-foundry
+              - listitem [ref=f1e354]:
+                - link "Console login" [ref=f1e355] [cursor=pointer]:
+                  - /url: https://platform.claude.com/
+        - generic [ref=f1e356]:
+          - generic [ref=f1e357]:
+            - heading "Resources" [level=3] [ref=f1e358]
+            - list [ref=f1e359]:
+              - listitem [ref=f1e360]:
+                - link "Blog" [ref=f1e361] [cursor=pointer]:
+                  - /url: https://claude.com/blog
+              - listitem [ref=f1e362]:
+                - link "Claude partner network" [ref=f1e363] [cursor=pointer]:
+                  - /url: https://claude.com/partners
+              - listitem [ref=f1e364]:
+                - link "Community" [ref=f1e365] [cursor=pointer]:
+                  - /url: https://claude.com/community
+              - listitem [ref=f1e366]:
+                - link "Connectors" [ref=f1e367] [cursor=pointer]:
+                  - /url: https://claude.com/connectors
+              - listitem [ref=f1e368]:
+                - link "Courses" [ref=f1e369] [cursor=pointer]:
+                  - /url: /learn
+              - listitem [ref=f1e370]:
+                - link "Customer stories" [ref=f1e371] [cursor=pointer]:
+                  - /url: https://claude.com/customers
+              - listitem [ref=f1e372]:
+                - link "Engineering at Anthropic" [ref=f1e373] [cursor=pointer]:
+                  - /url: /engineering
+              - listitem [ref=f1e374]:
+                - link "Events" [ref=f1e375] [cursor=pointer]:
+                  - /url: /events
+              - listitem [ref=f1e376]:
+                - link "Plugins" [ref=f1e377] [cursor=pointer]:
+                  - /url: https://claude.com/plugins
+              - listitem [ref=f1e378]:
+                - link "Powered by Claude" [ref=f1e379] [cursor=pointer]:
+                  - /url: https://claude.com/partners/powered-by-claude
+              - listitem [ref=f1e380]:
+                - link "Service partners" [ref=f1e381] [cursor=pointer]:
+                  - /url: https://claude.com/partners/services
+              - listitem [ref=f1e382]:
+                - link "Tutorials" [ref=f1e383] [cursor=pointer]:
+                  - /url: https://claude.com/resources/tutorials
+              - listitem [ref=f1e384]:
+                - link "Use cases" [ref=f1e385] [cursor=pointer]:
+                  - /url: https://claude.com/resources/use-cases
+          - generic [ref=f1e386]:
+            - heading "Programs" [level=3] [ref=f1e387]
+            - list [ref=f1e388]:
+              - listitem [ref=f1e389]:
+                - link "Startups" [ref=f1e390] [cursor=pointer]:
+                  - /url: https://claude.com/programs/startups
+              - listitem [ref=f1e391]:
+                - link "Research Labs" [ref=f1e392] [cursor=pointer]:
+                  - /url: https://claude.com/programs/claude-team-plan-for-research-labs
+          - generic [ref=f1e393]:
+            - heading "Help and security" [level=3] [ref=f1e394]
+            - list [ref=f1e395]:
+              - listitem [ref=f1e396]:
+                - link "Availability" [ref=f1e397] [cursor=pointer]:
+                  - /url: https://www.anthropic.com/supported-countries
+              - listitem [ref=f1e398]:
+                - link "Status" [ref=f1e399] [cursor=pointer]:
+                  - /url: https://status.anthropic.com/
+              - listitem [ref=f1e400]:
+                - link "Support center" [ref=f1e401] [cursor=pointer]:
+                  - /url: https://support.claude.com/en/
+        - generic [ref=f1e402]:
+          - generic [ref=f1e403]:
+            - heading "Company" [level=3] [ref=f1e404]
+            - list [ref=f1e405]:
+              - listitem [ref=f1e406]:
+                - link "Anthropic" [ref=f1e407] [cursor=pointer]:
+                  - /url: /company
+              - listitem [ref=f1e408]:
+                - link "Careers" [ref=f1e409] [cursor=pointer]:
+                  - /url: /careers
+              - listitem [ref=f1e410]:
+                - link "Policy" [ref=f1e411] [cursor=pointer]:
+                  - /url: /policy
+              - listitem [ref=f1e412]:
+                - link "Economic Futures" [ref=f1e413] [cursor=pointer]:
+                  - /url: /economic-futures
+              - listitem [ref=f1e414]:
+                - link "Research" [ref=f1e415] [cursor=pointer]:
+                  - /url: /research
+              - listitem [ref=f1e416]:
+                - link "News" [ref=f1e417] [cursor=pointer]:
+                  - /url: /news
+              - listitem [ref=f1e418]:
+                - link "Claude’s Constitution" [ref=f1e419] [cursor=pointer]:
+                  - /url: /constitution
+              - listitem [ref=f1e420]:
+                - link "Claude Corps" [ref=f1e421] [cursor=pointer]:
+                  - /url: /claude-corps
+              - listitem [ref=f1e422]:
+                - link "Keep thinking" [ref=f1e423] [cursor=pointer]:
+                  - /url: https://www.anthropic.com/path-to-hope
+              - listitem [ref=f1e424]:
+                - link "Policy on the AI Exponential" [ref=f1e425] [cursor=pointer]:
+                  - /url: /policy-on-the-ai-exponential
+              - listitem [ref=f1e426]:
+                - link "Responsible Scaling Policy" [ref=f1e427] [cursor=pointer]:
+                  - /url: https://www.anthropic.com/news/announcing-our-updated-responsible-scaling-policy
+              - listitem [ref=f1e428]:
+                - link "Security and compliance" [ref=f1e429] [cursor=pointer]:
+                  - /url: https://trust.anthropic.com/
+              - listitem [ref=f1e430]:
+                - link "Transparency" [ref=f1e431] [cursor=pointer]:
+                  - /url: /transparency
+          - generic [ref=f1e432]:
+            - heading "Terms and policies" [level=3] [ref=f1e433]
+            - list [ref=f1e434]:
+              - listitem [ref=f1e435]:
+                - link "Privacy policy" [ref=f1e436] [cursor=pointer]:
+                  - /url: https://www.anthropic.com/legal/privacy
+              - listitem [ref=f1e437]:
+                - link "Consumer health data privacy policy" [ref=f1e438] [cursor=pointer]:
+                  - /url: https://www.anthropic.com/legal/consumer-health-data-privacy-policy
+              - listitem [ref=f1e439]:
+                - link "Responsible disclosure policy" [ref=f1e440] [cursor=pointer]:
+                  - /url: https://www.anthropic.com/responsible-disclosure-policy
+              - listitem [ref=f1e441]:
+                - 'link "Terms of service: Commercial" [ref=f1e442] [cursor=pointer]':
+                  - /url: https://www.anthropic.com/legal/commercial-terms
+              - listitem [ref=f1e443]:
+                - 'link "Terms of service: Consumer" [ref=f1e444] [cursor=pointer]':
+                  - /url: https://www.anthropic.com/legal/consumer-terms
+              - listitem [ref=f1e445]:
+                - 'link "Terms of Service: US K-12" [ref=f1e446] [cursor=pointer]':
+                  - /url: https://anthropic.com/legal/k12-terms
+              - listitem [ref=f1e447]:
+                - 'link "Data Processing Agreement: US K-12" [ref=f1e448] [cursor=pointer]':
+                  - /url: https://anthropic.com/legal/k12-dpa
+              - listitem [ref=f1e449]:
+                - link "Usage policy" [ref=f1e450] [cursor=pointer]:
+                  - /url: https://www.anthropic.com/legal/aup
+      - generic [ref=f1e451]:
+        - contentinfo [ref=f1e452]: © 2026 Anthropic PBC
+        - navigation "Social media links" [ref=f1e453]:
+          - listitem [ref=f1e454]:
+            - link "Visit our LinkedIn page" [ref=f1e455] [cursor=pointer]:
+              - /url: https://www.linkedin.com/company/anthropicresearch
+          - listitem [ref=f1e458]:
+            - link "Visit our X (formerly Twitter) profile" [ref=f1e459] [cursor=pointer]:
+              - /url: https://x.com/AnthropicAI
+          - listitem [ref=f1e462]:
+            - link "Visit our YouTube channel" [ref=f1e463] [cursor=pointer]:
+              - /url: https://www.youtube.com/@anthropic-ai
+  - alert [ref=f1e466]

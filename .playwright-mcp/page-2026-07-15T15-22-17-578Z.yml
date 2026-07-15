@@ -1,0 +1,26 @@
+- generic [ref=f5e1]:
+  - banner:
+    - heading "Excalidraw" [level=1] [ref=f5e2]
+  - generic [ref=f5e3]: Drawing canvas
+  - dialog [ref=f5e237]:
+    - generic [ref=f5e242]:
+      - heading "Load from link" [level=3] [ref=f5e243]
+      - generic [ref=f5e244]:
+        - generic [ref=f5e249]:
+          - text: Loading external drawing will
+          - strong [ref=f5e250]: replace your existing content
+          - text: .You can back up your drawing first by using one of the options below.
+        - button "Replace my content" [ref=f5e251] [cursor=pointer]
+      - generic [ref=f5e253]:
+        - generic [ref=f5e254]:
+          - heading "Export as image" [level=4] [ref=f5e255]
+          - generic [ref=f5e256]: Export the scene data as an image from which you can import later.
+          - button "Export as image" [active] [ref=f5e257] [cursor=pointer]
+        - generic [ref=f5e259]:
+          - heading "Save to disk" [level=4] [ref=f5e260]
+          - generic [ref=f5e261]: Export the scene data to a file from which you can import later.
+          - button "Save to disk" [ref=f5e262] [cursor=pointer]
+        - generic [ref=f5e264]:
+          - heading "Excalidraw+" [level=4] [ref=f5e265]
+          - generic [ref=f5e266]: Save the scene to your Excalidraw+ workspace.
+          - button "Export to Excalidraw+" [ref=f5e267] [cursor=pointer]

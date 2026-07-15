@@ -1,0 +1,119 @@
+/* @theme automata */
+/*
+ * Automata Learning Lab — brand theme for Marp.
+ * Cream background, ink text, sparing dark-red accent. Fraunces (display) + Inter (body).
+ *
+ * Registered so decks stay clean: just `theme: automata` in front-matter, then use the
+ * helper classes below (.two-col, .stat-grid, .bento, .flow, .timeline, .chart) via <div>.
+ * Requires `html: true` (the skill's .marprc.yml / marp-live.sh enable it).
+ *
+ * Class modifiers (set per slide with `<!-- _class: ... -->`):
+ *   lead   — vertically centered (covers / closings)
+ *   dark   — near-black maroon background, light text
+ *   quote  — big centered pull-quote layout
+ */
+
+@import 'default';
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --cream: #F5EDE0;
+  --cream-card: #FBF6EC;
+  --ink: #1F1B16;
+  --ink-soft: #5A524A;
+  --accent: #9B2C2C;       /* dark red */
+  --accent-soft: #C9605F;
+  --dark: #221512;         /* near-black maroon for dark slides */
+  --border: #E4D8C4;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-display: 'Fraunces', Georgia, serif;
+}
+
+section {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 22px;
+  line-height: 1.6;
+  padding: 56px 64px;
+  box-sizing: border-box;
+}
+h1, h2, h3 { font-family: var(--font-display); color: var(--ink); margin: 0 0 16px; font-weight: 600; }
+h1 { font-size: 52px; line-height: 1.15; letter-spacing: -0.01em; }
+h2 { font-size: 34px; margin-bottom: 28px; }
+h3 { font-size: 24px; }
+em { font-style: italic; color: var(--accent); }
+strong { color: var(--accent); font-weight: 700; }
+a { color: var(--accent); }
+ul { padding-left: 26px; } li { margin-bottom: 10px; }
+section::after { color: var(--ink-soft); font-size: 14px; } /* page number */
+.kicker { font-family: var(--font-body); font-size: 14px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--accent); font-weight: 600; margin-bottom: 14px; }
+
+/* Dark variant */
+section.dark { background: var(--dark); color: #F0E6D8; }
+section.dark h1, section.dark h2, section.dark h3 { color: #FBF6EC; }
+section.dark .kicker { color: var(--accent-soft); }
+section.dark a { color: var(--accent-soft); }
+
+/* Lead / cover */
+section.lead { display: flex; flex-direction: column; justify-content: center; }
+
+/* Two-column */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+
+/* Stat grid */
+.stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 24px; }
+.stat .num { font-family: var(--font-display); font-size: 64px; color: var(--accent); line-height: 1; }
+.stat .label { font-size: 16px; color: var(--ink-soft); margin-top: 8px; }
+
+/* Feature bento */
+.bento { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: 150px; gap: 18px; margin-top: 20px; }
+.bento .cell { background: var(--cream-card); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+.bento .cell.wide { grid-column: span 2; }
+.bento .cell h3 { font-size: 20px; margin-bottom: 6px; }
+.bento .cell p { font-size: 15px; color: var(--ink-soft); margin: 0; }
+
+/* Comparison table */
+table { border-collapse: collapse; width: 100%; font-size: 18px; margin-top: 16px; }
+th, td { border: 1px solid var(--border); padding: 12px 16px; text-align: left; }
+th { background: var(--accent); color: #FBF6EC; font-weight: 600; }
+tr:nth-child(even) td { background: var(--cream-card); }
+
+/* Process flow */
+.flow { display: flex; align-items: center; gap: 14px; margin-top: 40px; }
+.flow .step { flex: 1; background: var(--cream-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px; text-align: center; }
+.flow .step h3 { font-size: 18px; margin: 0 0 4px; }
+.flow .step p { font-size: 14px; color: var(--ink-soft); margin: 0; }
+.flow .arrow { color: var(--accent); font-size: 28px; flex: 0 0 auto; }
+
+/* Timeline */
+.timeline { display: flex; justify-content: space-between; margin-top: 56px; position: relative; }
+.timeline::before { content: ''; position: absolute; top: 9px; left: 4%; right: 4%;
+  height: 2px; background: var(--border); }
+.timeline .pt { position: relative; text-align: center; width: 22%; }
+.timeline .pt .dot { width: 18px; height: 18px; border-radius: 50%; background: var(--accent);
+  margin: 0 auto 14px; position: relative; z-index: 1; }
+.timeline .pt .when { font-weight: 600; font-size: 16px; }
+.timeline .pt .what { font-size: 14px; color: var(--ink-soft); }
+
+/* Chart (CSS bars) */
+.chart { display: flex; align-items: flex-end; gap: 24px; height: 300px; margin-top: 24px; padding-left: 8px; }
+.chart .bar { flex: 1; background: var(--accent); border-radius: 8px 8px 0 0; position: relative; }
+.chart .bar span { position: absolute; bottom: -28px; left: 0; right: 0; text-align: center;
+  font-size: 14px; color: var(--ink-soft); }
+
+/* Code block */
+pre { border-radius: 12px; padding: 20px; font-size: 18px; }
+code { font-family: 'JetBrains Mono', 'Consolas', monospace; }
+section.dark pre { background: #160D0C; border: 1px solid #3a2522; }
+section.dark pre code { color: #F0E6D8; }
+
+/* Quote */
+section.quote { display: flex; flex-direction: column; justify-content: center; }
+section.quote blockquote { font-family: var(--font-display); font-size: 40px; line-height: 1.3;
+  border: none; margin: 0; max-width: 80%; }
+section.quote blockquote .mark { color: var(--accent); }
+section.quote .by { margin-top: 28px; font-size: 18px; color: var(--ink-soft); }

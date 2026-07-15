@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<!--
+  MCP App view for the `sales_dashboard` tool (csv-sales-explorer).
+
+  Served as a ui:// resource with mimeType "text/html;profile=mcp-app".
+  Hosts that support the MCP Apps extension (Claude web/desktop, Goose,
+  VS Code, ...) render it in a SANDBOXED IFRAME inside the conversation and
+  talk to it over postMessage using JSON-RPC:
+
+    View  -> Host   ui/initialize                (request; handshake)
+    View  -> Host   ui/notifications/initialized (notification)
+    Host  -> View   ui/notifications/tool-result (the tool's result)
+    View  -> Host   tools/call                   (request; the filter bar)
+
+  Everything is vanilla JS + inline SVG/HTML — no CDNs (the sandbox blocks
+  external hosts). Same handshake as demo 05's research explorer.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Voltaic Gear — Sales Explorer</title>
+<style>
+  :root { color-scheme: light dark; }
+  .viz-root {
+    /* palette roles (light) */
+    --surface-1: #fcfcfb; --page: #f9f9f7;
+    --ink-1: #0b0b0b; --ink-2: #52514e; --ink-muted: #898781;
+    --grid: #e1e0d9; --baseline: #c3c2b7;
+    --border: rgba(11,11,11,.10);
+    --series-1: #2a78d6; --series-2: #1baf7a; --series-3: #eda100; --series-4: #4a3aa7;
+    --seq: #2a78d6;
+  }
+  @media (prefers-color-scheme: dark) {
+    .viz-root {
+      --surface-1: #1a1a19; --page: #0d0d0d;
+      --ink-1: #ffffff; --ink-2: #c3c2b7; --ink-muted: #898781;
+      --grid: #2c2c2a; --baseline: #383835;
+      --border: rgba(255,255,255,.10);
+      --series-1: #3987e5; --series-2: #199e70; --series-3: #c98500; --series-4: #9085e9;
+      --seq: #3987e5;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .viz-root { background: var(--page); color: var(--ink-1); padding: 14px; min-height: 100vh; }
+  h2 { margin: 0; font-size: 17px; font-weight: 650; }
+  #status { font-size: 12px; color: var(--ink-muted); margin: 2px 0 12px; }
+
+  /* filter bar — one row above the charts */
+  #filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; align-items: center; }
+  #filters select {
+    padding: 6px 8px; font-size: 13px; color: var(--ink-1);
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
+  }
+  #apply {
+    padding: 6px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
+    color: #fff; background: var(--series-1); border: 0; border-radius: 8px;
+  }
+  #apply:disabled { opacity: .5; cursor: wait; }
+
+  .grid { display: grid; gap: 10px; }
+  .kpis { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); margin-bottom: 10px; }
+  .two-col { grid-template-columns: 1fr 1fr; margin-top: 10px; }
+  @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px;
+  }
+  .card h3 { margin: 0 0 10px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+
+  /* stat tiles */
+  .tile .label { font-size: 11.5px; color: var(--ink-muted); }
+  .tile .value { font-size: 24px; font-weight: 650; margin-top: 2px; }
+  .tile .sub { font-size: 11.5px; color: var(--ink-2); margin-top: 2px; }
+
+  /* horizontal bars (HTML, not SVG — crisper) */
+  .hbar-row { display: grid; grid-template-columns: 150px 1fr 64px; gap: 8px; align-items: center; margin: 5px 0; }
+  .hbar-row .name { font-size: 12px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hbar-track { height: 14px; position: relative; }
+  .hbar-fill {
+    position: absolute; inset: 0 auto 0 0; background: var(--seq);
+    border-radius: 0 4px 4px 0;            /* rounded data-end, flat baseline */
+    min-width: 2px;
+  }
+  .hbar-row .val { font-size: 12px; font-variant-numeric: tabular-nums; text-align: right; color: var(--ink-1); }
+
+  /* stacked bar (part-to-whole) */
+  .stack { display: flex; height: 26px; border-radius: 6px; overflow: hidden; }
+  .stack .seg { height: 100%; }
+  .stack .seg + .seg { margin-left: 2px; }   /* 2px surface gap between fills */
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 9px; }
+  .legend .item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-2); }
+  .legend .sw { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+  .legend b { color: var(--ink-1); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* line chart */
+  svg text { font-family: inherit; font-size: 11px; fill: var(--ink-muted); }
+  svg .tick { font-variant-numeric: tabular-nums; }
+
+  /* tooltip */
+  #tip {
+    position: fixed; z-index: 10; pointer-events: none; display: none;
+    background: var(--surface-1); color: var(--ink-1); border: 1px solid var(--border);
+    border-radius: 8px; padding: 7px 10px; font-size: 12px; line-height: 1.5;
+    box-shadow: 0 4px 14px rgba(0,0,0,.18); max-width: 240px;
+  }
+  #tip .t-label { color: var(--ink-muted); font-size: 11px; }
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <h2>⚡ Voltaic Gear — Sales Explorer</h2>
+  <div id="status">connecting to host…</div>
+
+  <div id="filters">
+    <select id="range"></select>
+    <select id="region"><option value="">All regions</option></select>
+    <select id="category"><option value="">All categories</option></select>
+    <button id="apply">Apply</button>
+  </div>
+
+  <div class="grid kpis" id="kpis"></div>
+
+  <div class="card">
+    <h3 id="monthly-title">MONTHLY REVENUE</h3>
+    <div id="line"></div>
+  </div>
+
+  <div class="grid two-col">
+    <div class="card"><h3>TOP PRODUCTS BY REVENUE</h3><div id="products"></div></div>
+    <div class="card"><h3>REVENUE BY REGION</h3><div id="regions"></div></div>
+  </div>
+
+  <div class="grid two-col">
+    <div class="card"><h3>REVENUE BY CATEGORY</h3><div id="cats"></div></div>
+    <div class="card"><h3>REVENUE BY CHANNEL</h3><div id="chans"></div></div>
+  </div>
+</div>
+<div id="tip"></div>
+
+<script type="module">
+// --- Helpers -----------------------------------------------------------------
+const $ = (id) => document.getElementById(id);
+const setStatus = (t) => { $("status").textContent = t; };
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g,
+  (c) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+const money = (v) => v >= 1e6 ? `$${(v/1e6).toFixed(2)}M`
+                   : v >= 1e3 ? `$${(v/1e3).toFixed(0)}K`
+                   : `$${Math.round(v)}`;
+const num = (v) => v.toLocaleString("en-US");
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const monthLabel = (ym) => `${MONTHS[+ym.slice(5) - 1]} ’${ym.slice(2, 4)}`;
+
+// tooltip
+const tip = $("tip");
+function showTip(html, x, y) {
+  tip.innerHTML = html;
+  tip.style.display = "block";
+  const r = tip.getBoundingClientRect();
+  tip.style.left = Math.min(x + 12, innerWidth - r.width - 8) + "px";
+  tip.style.top = Math.max(4, y - r.height - 10) + "px";
+}
+const hideTip = () => { tip.style.display = "none"; };
+
+// --- Minimal MCP Apps client (same handshake as demo 05) -------------------
+let nextId = 1;
+const pending = new Map();
+const post = (msg) => window.parent.postMessage(msg, "*");
+
+function request(method, params) {
+  return new Promise((resolve, reject) => {
+    const id = nextId++;
+    pending.set(id, { resolve, reject });
+    post({ jsonrpc: "2.0", id, method, params });
+  });
+}
+
+window.addEventListener("message", (ev) => {
+  const msg = ev.data;
+  if (!msg || msg.jsonrpc !== "2.0") return;
+  if (msg.id !== undefined && pending.has(msg.id)) {
+    const { resolve, reject } = pending.get(msg.id);
+    pending.delete(msg.id);
+    msg.error ? reject(msg.error) : resolve(msg.result);
+    return;
+  }
+  if (msg.method === "ui/notifications/tool-result") renderToolResult(msg.params);
+});
+
+const init = await request("ui/initialize", {
+  appInfo: { name: "csv-sales-explorer", version: "1.0.0" },
+  appCapabilities: { availableDisplayModes: ["inline"] },
+  protocolVersion: "2026-01-26",
+});
+post({ jsonrpc: "2.0", method: "ui/notifications/initialized" });
+setStatus(`connected to ${init?.hostInfo?.name || "host"} — waiting for data…`);
+
+// --- Filter bar ---------------------------------------------------------------
+const PRESETS = [
+  ["", "All time"],
+  ["2025-01-01|2025-12-31", "2025"],
+  ["2026-01-01|", "2026 YTD"],
+  ["2025-10-01|2025-12-31", "Q4 2025 (holidays)"],
+  ["2026-01-01|2026-06-30", "Last 6 months"],
+];
+$("range").innerHTML = PRESETS.map(([v, l]) => `<option value="${v}">${l}</option>`).join("");
+
+let dims = null, applying = false;
+function populateFilters(d, filters) {
+  if (dims || !d) return;   // populate once
+  dims = d;
+  for (const [id, values] of [["region", d.regions], ["category", d.categories]]) {
+    $(id).innerHTML += (values || []).map((v) => `<option>${esc(v)}</option>`).join("");
+  }
+  if (filters?.region) $("region").value = filters.region;
+  if (filters?.category) $("category").value = filters.category;
+}
+
+$("apply").addEventListener("click", async () => {
+  if (applying) return;
+  applying = true; $("apply").disabled = true;
+  setStatus("querying server…");
+  const [start, end] = ($("range").value || "|").split("|");
+  const args = {};
+  if (start) args.start_date = start;
+  if (end) args.end_date = end;
+  if ($("region").value) args.region = $("region").value;
+  if ($("category").value) args.category = $("category").value;
+  try {
+    const result = await request("tools/call", { name: "sales_dashboard", arguments: args });
+    renderToolResult(result);
+  } catch (err) {
+    setStatus(`error: ${err?.message || err}`);
+  } finally {
+    applying = false; $("apply").disabled = false;
+  }
+});
+
+// --- Rendering ------------------------------------------------------------------
+let lastData = null;
+
+function renderToolResult(result) {
+  let data = result?.structuredContent;
+  if (!data) {
+    const text = (result?.content || []).find((c) => c.type === "text")?.text;
+    try { data = JSON.parse(text); } catch { data = null; }
+  }
+  // FastMCP wraps plain-dict returns as {"result": {...}} in structuredContent
+  if (data && data.result && !data.kpis) data = data.result;
+  if (!data || !data.ok) { setStatus(data?.error || "no data"); return; }
+
+  lastData = data;
+  populateFilters(data.dimensions, data.filters);
+  const f = data.filters || {};
+  const scope = [f.region, f.category].filter(Boolean).join(" · ") || "all regions & categories";
+  setStatus(`${f.start_date} → ${f.end_date} · ${scope} · ${num(data.kpis.order_count)} orders`);
+
+  renderKpis(data.kpis);
+  renderLine(data.monthly);
+  renderBars($("products"), data.top_products, "product");
+  renderBars($("regions"), data.by_region, "region");
+  renderStack($("cats"), data.by_category, "category");
+  renderStack($("chans"), data.by_channel, "channel");
+}
+
+function renderKpis(k) {
+  const tiles = [
+    ["Total revenue", money(k.total_revenue), `${num(k.total_units)} units`],
+    ["Units sold", num(k.total_units), ""],
+    ["Orders", num(k.order_count), ""],
+    ["Avg order value", `$${Math.round(k.avg_order_value)}`, ""],
+  ];
+  $("kpis").innerHTML = tiles.map(([l, v, s]) => `
+    <div class="card tile"><div class="label">${l}</div>
+    <div class="value">${v}</div>${s ? `<div class="sub">${s}</div>` : ""}</div>`).join("");
+}
+
+// single-series line + area, crosshair tooltip
+function renderLine(monthly) {
+  const el = $("line");
+  if (!monthly?.length) { el.innerHTML = `<div class="tile sub">no data in range</div>`; return; }
+  const W = Math.max(el.clientWidth || 600, 320), H = 210;
+  const padL = 46, padR = 10, padT = 12, padB = 26;
+  const iw = W - padL - padR, ih = H - padT - padB;
+  const max = Math.max(...monthly.map((m) => m.revenue)) * 1.08;
+  const x = (i) => padL + (monthly.length === 1 ? iw / 2 : (i / (monthly.length - 1)) * iw);
+  const y = (v) => padT + ih - (v / max) * ih;
+
+  const pts = monthly.map((m, i) => `${x(i).toFixed(1)},${y(m.revenue).toFixed(1)}`);
+  const gridN = 4;
+  let g = "";
+  for (let i = 1; i <= gridN; i++) {
+    const gy = padT + ih - (i / gridN) * ih;
+    g += `<line x1="${padL}" y1="${gy}" x2="${W - padR}" y2="${gy}" stroke="var(--grid)" stroke-width="1"/>` +
+         `<text class="tick" x="${padL - 6}" y="${gy + 3.5}" text-anchor="end">${money(max * i / gridN)}</text>`;
+  }
+  const step = Math.ceil(monthly.length / 9);
+  const xlabels = monthly.map((m, i) => i % step ? "" :
+    `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${monthLabel(m.month)}</text>`).join("");
+
+  el.innerHTML = `
+    <svg id="linesvg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+      ${g}
+      <line x1="${padL}" y1="${padT + ih}" x2="${W - padR}" y2="${padT + ih}" stroke="var(--baseline)" stroke-width="1"/>
+      <path d="M${pts.join(" L")} L${x(monthly.length - 1)},${padT + ih} L${x(0)},${padT + ih} Z"
+            fill="var(--series-1)" opacity="0.12"/>
+      <path d="M${pts.join(" L")}" fill="none" stroke="var(--series-1)" stroke-width="2"
+            stroke-linejoin="round" stroke-linecap="round"/>
+      <line id="xhair" y1="${padT}" y2="${padT + ih}" stroke="var(--baseline)" stroke-width="1" visibility="hidden"/>
+      <circle id="dot" r="4" fill="var(--series-1)" stroke="var(--surface-1)" stroke-width="2" visibility="hidden"/>
+      ${xlabels}
+    </svg>`;
+
+  const svg = $("linesvg"), xh = $("xhair"), dot = $("dot");
+  svg.addEventListener("mousemove", (ev) => {
+    const r = svg.getBoundingClientRect();
+    const px = ev.clientX - r.left;
+    let best = 0, bd = Infinity;
+    monthly.forEach((_, i) => { const d = Math.abs(x(i) - px); if (d < bd) { bd = d; best = i; } });
+    const m = monthly[best];
+    xh.setAttribute("x1", x(best)); xh.setAttribute("x2", x(best));
+    xh.setAttribute("visibility", "visible");
+    dot.setAttribute("cx", x(best)); dot.setAttribute("cy", y(m.revenue));
+    dot.setAttribute("visibility", "visible");
+    showTip(`<span class="t-label">${monthLabel(m.month)}</span><br><b>${money(m.revenue)}</b> revenue<br>` +
+            `${num(m.units)} units · ${num(m.orders)} orders`, ev.clientX, ev.clientY);
+  });
+  svg.addEventListener("mouseleave", () => {
+    xh.setAttribute("visibility", "hidden"); dot.setAttribute("visibility", "hidden"); hideTip();
+  });
+}
+
+// horizontal magnitude bars — one hue, length carries the value
+function renderBars(el, items, key) {
+  if (!items?.length) { el.innerHTML = `<div class="tile sub">no data</div>`; return; }
+  const max = Math.max(...items.map((d) => d.revenue));
+  el.innerHTML = items.map((d, i) => `
+    <div class="hbar-row" data-i="${i}">
+      <span class="name" title="${esc(d[key])}">${esc(d[key])}</span>
+      <span class="hbar-track"><span class="hbar-fill" style="width:${(d.revenue / max * 100).toFixed(1)}%"></span></span>
+      <span class="val">${money(d.revenue)}</span>
+    </div>`).join("");
+  el.querySelectorAll(".hbar-row").forEach((row) => {
+    const d = items[+row.dataset.i];
+    row.addEventListener("mousemove", (ev) => showTip(
+      `<span class="t-label">${esc(d[key])}</span><br><b>${money(d.revenue)}</b> revenue<br>` +
+      `${num(d.units)} units · ${num(d.orders)} orders`, ev.clientX, ev.clientY));
+    row.addEventListener("mouseleave", hideTip);
+  });
+}
+
+// part-to-whole stacked bar + legend with values (the "relief" labels)
+function renderStack(el, items, key) {
+  if (!items?.length) { el.innerHTML = `<div class="tile sub">no data</div>`; return; }
+  const total = items.reduce((s, d) => s + d.revenue, 0) || 1;
+  const colors = ["var(--series-1)", "var(--series-2)", "var(--series-3)", "var(--series-4)"];
+  // fixed color per entity: sort alphabetically for slot assignment, display by size
+  const slot = new Map([...items].map((d) => d[key]).sort().map((k, i) => [k, colors[i % 4]]));
+  const sorted = [...items].sort((a, b) => b.revenue - a.revenue);
+  el.innerHTML = `
+    <div class="stack">${sorted.map((d) => `
+      <span class="seg" data-k="${esc(d[key])}" style="flex:${d.revenue};background:${slot.get(d[key])}"></span>`).join("")}
+    </div>
+    <div class="legend">${sorted.map((d) => `
+      <span class="item"><span class="sw" style="background:${slot.get(d[key])}"></span>
+      ${esc(d[key])}&nbsp;<b>${money(d.revenue)}</b>&nbsp;(${(d.revenue / total * 100).toFixed(0)}%)</span>`).join("")}
+    </div>`;
+  el.querySelectorAll(".seg").forEach((seg) => {
+    const d = sorted.find((x) => x[key] === seg.dataset.k);
+    seg.addEventListener("mousemove", (ev) => showTip(
+      `<span class="t-label">${esc(d[key])}</span><br><b>${money(d.revenue)}</b> · ` +
+      `${(d.revenue / total * 100).toFixed(1)}%<br>${num(d.units)} units · ${num(d.orders)} orders`,
+      ev.clientX, ev.clientY));
+    seg.addEventListener("mouseleave", hideTip);
+  });
+}
+
+// re-render the line chart on resize (it measures container width)
+let rsz;
+window.addEventListener("resize", () => {
+  clearTimeout(rsz);
+  rsz = setTimeout(() => { if (lastData) renderLine(lastData.monthly); }, 150);
+});
+</script>
+</body>
+</html>

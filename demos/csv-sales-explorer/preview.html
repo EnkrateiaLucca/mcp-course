@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<!--
+  Local MOCK HOST for developing app.html without a real MCP Apps host.
+
+  Serves the same postMessage protocol Claude would:
+    - answers ui/initialize
+    - pushes ui/notifications/tool-result with data from sample_dashboard.json
+    - answers tools/call by re-serving the sample (filters are a no-op here;
+      a real host routes tools/call to the MCP server)
+
+  Run from this folder (fetch needs http, not file://):
+      python3 -m http.server 8020
+      open http://127.0.0.1:8020/preview.html
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>MCP App preview — mock host</title>
+<style>
+  body { margin: 0; font-family: system-ui, sans-serif; }
+  #bar { padding: 8px 14px; font-size: 12.5px; background: #222; color: #eee; }
+  iframe { display: block; width: 100%; height: calc(100vh - 34px); border: 0; }
+</style>
+</head>
+<body>
+<div id="bar">mock MCP Apps host — tools/call is stubbed with sample_dashboard.json (run the real server + a real host for live filtering)</div>
+<iframe id="app" src="app.html" sandbox="allow-scripts allow-same-origin"></iframe>
+<script>
+const frame = document.getElementById("app");
+let sample = null;
+
+async function toolResult() {
+  if (!sample) sample = await (await fetch("sample_dashboard.json")).json();
+  return { content: [{ type: "text", text: JSON.stringify(sample) }],
+           structuredContent: sample, isError: false };
+}
+
+window.addEventListener("message", async (ev) => {
+  const msg = ev.data;
+  if (!msg || msg.jsonrpc !== "2.0") return;
+  const reply = (result) =>
+    frame.contentWindow.postMessage({ jsonrpc: "2.0", id: msg.id, result }, "*");
+
+  if (msg.method === "ui/initialize") {
+    reply({ protocolVersion: "2026-01-26",
+            hostInfo: { name: "mock-host", version: "0.0.1" } });
+  } else if (msg.method === "ui/notifications/initialized") {
+    frame.contentWindow.postMessage(
+      { jsonrpc: "2.0", method: "ui/notifications/tool-result",
+        params: await toolResult() }, "*");
+  } else if (msg.method === "tools/call") {
+    reply(await toolResult());
+  }
+});
+</script>
+</body>
+</html>
