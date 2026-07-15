@@ -1,0 +1,3 @@
+# Used by Vercel's Python builder (local runs use the uv inline metadata).
+mcp[cli]>=1.12,<2
+ddgs

@@ -2,7 +2,7 @@
 # /// script
 # requires-python = ">=3.10"
 # dependencies = [
-#     "mcp[cli]>=1.9.3",
+#     "mcp[cli]>=1.12,<2",
 #     "anthropic",
 #     "python-dotenv",
 #     "ddgs",

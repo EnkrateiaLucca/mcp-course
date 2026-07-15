@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["mcp[cli]>=1.9.3", "ddgs"]
+# dependencies = ["mcp[cli]>=1.12,<2", "ddgs"]
 # ///
 """Research-assistant MCP server.
 

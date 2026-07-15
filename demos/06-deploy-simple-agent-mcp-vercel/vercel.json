@@ -1,9 +1,0 @@
-{
-  "functions": {
-    "api/agent.py": {
-      "runtime": "@vercel/python@6.36.0",
-      "maxDuration": 300,
-      "memory": 1024
-    }
-  }
-}

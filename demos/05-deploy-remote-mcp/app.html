@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<!--
+  MCP App view for the `research_explorer` tool (demo 05).
+
+  This page is served by the MCP server as a ui:// resource with mimeType
+  "text/html;profile=mcp-app". Hosts that support the MCP Apps extension
+  (Claude web/desktop, Goose, VS Code, ...) render it in a SANDBOXED IFRAME
+  inside the conversation and talk to it over postMessage using JSON-RPC.
+
+  We implement the protocol by hand in ~50 lines of vanilla JS so students
+  can see there is no magic:
+
+    View  -> Host   ui/initialize                (request; handshake)
+    View  -> Host   ui/notifications/initialized (notification)
+    Host  -> View   ui/notifications/tool-input  (the tool's arguments)
+    Host  -> View   ui/notifications/tool-result (the tool's result)
+    View  -> Host   tools/call                   (request; re-search button)
+
+  In production you'd use the `App` class from @modelcontextprotocol/ext-apps
+  instead — same messages, nicer API.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Research Explorer</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 16px; }
+  h2 { margin: 0 0 4px; font-size: 18px; }
+  #status { font-size: 12px; opacity: .65; margin-bottom: 12px; }
+  #controls { display: flex; gap: 8px; margin-bottom: 14px; }
+  #query { flex: 1; padding: 8px 10px; border: 1px solid #8884; border-radius: 8px; font-size: 14px; background: transparent; color: inherit; }
+  button { padding: 8px 14px; border: 0; border-radius: 8px; background: #6b5ce7; color: #fff; font-size: 14px; cursor: pointer; }
+  button:disabled { opacity: .5; cursor: wait; }
+  #cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+  .card { border: 1px solid #8883; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+  .card a { font-weight: 600; font-size: 14px; color: #6b5ce7; text-decoration: none; word-break: break-word; }
+  .card .snippet { font-size: 12.5px; line-height: 1.45; opacity: .85; }
+  .card .host { font-size: 11px; opacity: .55; }
+</style>
+</head>
+<body>
+  <h2>🔎 Research Explorer</h2>
+  <div id="status">connecting to host…</div>
+  <div id="controls">
+    <input id="query" placeholder="Refine the search…" />
+    <button id="go">Search</button>
+  </div>
+  <div id="cards"></div>
+
+<script type="module">
+// --- Minimal MCP Apps client (vanilla JS, no dependencies) -----------------
+let nextId = 1;
+const pending = new Map();
+
+function post(msg) { window.parent.postMessage(msg, "*"); }
+
+function request(method, params) {
+  return new Promise((resolve, reject) => {
+    const id = nextId++;
+    pending.set(id, { resolve, reject });
+    post({ jsonrpc: "2.0", id, method, params });
+  });
+}
+
+window.addEventListener("message", (ev) => {
+  const msg = ev.data;
+  if (!msg || msg.jsonrpc !== "2.0") return;
+
+  // Responses to our requests
+  if (msg.id !== undefined && pending.has(msg.id)) {
+    const { resolve, reject } = pending.get(msg.id);
+    pending.delete(msg.id);
+    msg.error ? reject(msg.error) : resolve(msg.result);
+    return;
+  }
+
+  // Notifications pushed by the host
+  if (msg.method === "ui/notifications/tool-input") {
+    const args = msg.params?.arguments || {};
+    if (args.topic) document.getElementById("query").value = args.topic;
+  }
+  if (msg.method === "ui/notifications/tool-result") {
+    renderToolResult(msg.params);
+  }
+});
+
+// --- Handshake --------------------------------------------------------------
+const init = await request("ui/initialize", {
+  appInfo: { name: "research-explorer", version: "1.0.0" },
+  appCapabilities: { availableDisplayModes: ["inline"] },
+  protocolVersion: "2026-01-26",
+});
+post({ jsonrpc: "2.0", method: "ui/notifications/initialized" });
+setStatus(`connected to ${init?.hostInfo?.name || "host"} — waiting for results…`);
+
+// --- Rendering ---------------------------------------------------------------
+function setStatus(text) { document.getElementById("status").textContent = text; }
+
+function renderToolResult(result) {
+  // result is a standard MCP CallToolResult; our tool returns structured
+  // JSON, which FastMCP mirrors into content[0].text as a JSON string.
+  let data = result?.structuredContent;
+  if (!data) {
+    const text = (result?.content || []).find((c) => c.type === "text")?.text;
+    try { data = JSON.parse(text); } catch { data = null; }
+  }
+  if (!data || !data.sources) { setStatus("no results"); return; }
+
+  setStatus(`${data.count} sources for “${data.topic}”`);
+  const cards = document.getElementById("cards");
+  cards.innerHTML = "";
+  for (const s of data.sources) {
+    const el = document.createElement("div");
+    el.className = "card";
+    let host = "";
+    try { host = new URL(s.url).hostname; } catch {}
+    el.innerHTML = `
+      <a href="${s.url}" target="_blank" rel="noopener">${escapeHtml(s.title)}</a>
+      <span class="host">${host}</span>
+      <span class="snippet">${escapeHtml(s.snippet).slice(0, 220)}</span>`;
+    cards.appendChild(el);
+  }
+}
+
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
+  ));
+}
+
+// --- Interactivity: the app can call tools on the server through the host ---
+const go = document.getElementById("go");
+go.addEventListener("click", async () => {
+  const topic = document.getElementById("query").value.trim();
+  if (!topic) return;
+  go.disabled = true;
+  setStatus("searching…");
+  try {
+    const result = await request("tools/call", {
+      name: "research_explorer",
+      arguments: { topic },
+    });
+    renderToolResult(result);
+  } catch (err) {
+    setStatus(`error: ${err?.message || err}`);
+  } finally {
+    go.disabled = false;
+  }
+});
+document.getElementById("query").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") go.click();
+});
+</script>
+</body>
+</html>

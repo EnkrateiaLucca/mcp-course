@@ -7,7 +7,7 @@ This is the use case we carry through demos `01` (MCP server) and `02` (Claude A
 ## Files
 
 - `intro-agents-cld.ipynb` — the teaching notebook (start here).
-- `research_agent.py` — standalone version of the final agent, runnable from the CLI.
+- `basic_personal_agent.py` — standalone version of the final agent, runnable from the CLI.
 
 ## Run
 
@@ -18,7 +18,7 @@ export ANTHROPIC_API_KEY=sk-...
 jupyter lab intro-agents-cld.ipynb
 
 # Or the .py companion
-uv run research_agent.py "Research the Model Context Protocol and save a brief."
+uv run basic_personal_agent.py "Research the Model Context Protocol and save a brief."
 ```
 
-Tools the agent has: `web_search` (DuckDuckGo, no key), `read_file`, `write_file`, `edit_file`, `move_file`, `delete_file`, `list_files`. Every file the agent touches lives under `./workspace/`.
+Tools the agent has: `web_search` (DuckDuckGo, no key), `read`, `write`, `edit`, and `bash` (runs with `cwd=./workspace/`). Every file the agent touches lives under `./workspace/`.

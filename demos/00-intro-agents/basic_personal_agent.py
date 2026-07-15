@@ -3,17 +3,18 @@
 # requires-python = ">=3.10"
 # dependencies = ["anthropic", "ddgs", "python-dotenv"]
 # ///
-"""Standalone research-assistant agent — the .py companion to the notebook.
+"""Standalone personal agent — the .py companion to the notebook.
 
-Same tools, same agent loop, runnable end-to-end:
+Same tools (web_search + read/write/edit/bash), same agent loop, runnable end-to-end:
 
-    uv run research_agent.py "Research the Model Context Protocol and save a brief."
+    uv run basic_personal_agent.py "Research the Model Context Protocol and save a brief."
 """
 
 from __future__ import annotations
 
 import json
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -63,21 +64,18 @@ def edit_file(path: str, old: str, new: str) -> str:
     return f"Edited {path}"
 
 
-def move_file(src: str, dst: str) -> str:
-    s, d = _safe(src), _safe(dst)
-    d.parent.mkdir(parents=True, exist_ok=True)
-    s.rename(d)
-    return f"Moved {src} -> {dst}"
-
-
-def delete_file(path: str) -> str:
-    _safe(path).unlink()
-    return f"Deleted {path}"
-
-
-def list_files(directory: str = ".") -> str:
-    base = _safe(directory)
-    return "\n".join(sorted(str(p.relative_to(WORKSPACE)) for p in base.rglob("*"))) or "(empty)"
+def run_bash(command: str) -> str:
+    """Run a shell command inside the workspace sandbox and return its output."""
+    result = subprocess.run(
+        command,
+        shell=True,
+        cwd=WORKSPACE,
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    output = (result.stdout + result.stderr).strip()
+    return output or f"(exit code {result.returncode}, no output)"
 
 
 TOOLS = [
@@ -94,7 +92,7 @@ TOOLS = [
         },
     },
     {
-        "name": "read_file",
+        "name": "read",
         "description": "Read a text file from the workspace.",
         "input_schema": {
             "type": "object",
@@ -103,7 +101,7 @@ TOOLS = [
         },
     },
     {
-        "name": "write_file",
+        "name": "write",
         "description": "Create or overwrite a file in the workspace.",
         "input_schema": {
             "type": "object",
@@ -112,7 +110,7 @@ TOOLS = [
         },
     },
     {
-        "name": "edit_file",
+        "name": "edit",
         "description": "Replace a substring in an existing file.",
         "input_schema": {
             "type": "object",
@@ -125,49 +123,33 @@ TOOLS = [
         },
     },
     {
-        "name": "move_file",
-        "description": "Move or rename a file inside the workspace.",
+        "name": "bash",
+        "description": (
+            "Run a shell command inside the workspace directory and return its output. "
+            "Use it to list, move, delete, or inspect files (ls, mv, rm, mkdir, wc, grep, cat...)."
+        ),
         "input_schema": {
             "type": "object",
-            "properties": {"src": {"type": "string"}, "dst": {"type": "string"}},
-            "required": ["src", "dst"],
-        },
-    },
-    {
-        "name": "delete_file",
-        "description": "Delete a file from the workspace.",
-        "input_schema": {
-            "type": "object",
-            "properties": {"path": {"type": "string"}},
-            "required": ["path"],
-        },
-    },
-    {
-        "name": "list_files",
-        "description": "List files under a directory in the workspace.",
-        "input_schema": {
-            "type": "object",
-            "properties": {"directory": {"type": "string", "default": "."}},
-            "required": [],
+            "properties": {"command": {"type": "string", "description": "The shell command to run"}},
+            "required": ["command"],
         },
     },
 ]
 
 FUNCTIONS = {
     "web_search": web_search,
-    "read_file": read_file,
-    "write_file": write_file,
-    "edit_file": edit_file,
-    "move_file": move_file,
-    "delete_file": delete_file,
-    "list_files": list_files,
+    "read": read_file,
+    "write": write_file,
+    "edit": edit_file,
+    "bash": run_bash,
 }
 
 SYSTEM = (
     "You are a personal research assistant. You can search the web and organize "
-    "findings as files in the user's workspace. When asked to 'research X', search "
-    "the web and save a short markdown brief with sources. Keep filenames "
-    "lowercase-hyphenated."
+    "findings as files in the user's workspace, using read/write/edit for file "
+    "content and bash for everything else (ls, mv, rm, grep, wc...). When asked "
+    "to 'research X', search the web and save a short markdown brief with sources. "
+    "Keep filenames lowercase-hyphenated."
 )
 
 

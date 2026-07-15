@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.12"
-# dependencies = ["mcp[cli]>=1.0.0"]
+# dependencies = ["mcp[cli]>=1.12,<2"]
 # ///
 
 """

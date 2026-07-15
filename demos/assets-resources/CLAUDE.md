@@ -2,28 +2,27 @@
 
 This folder contains reference materials, diagrams, and cheatsheets for the O'Reilly MCP course.
 
-## Course Structure
+## Course Structure (July 2026 redesign — 7 modules)
 
 ```
 demos/
-├── 00-intro-agents/                              # AI agent fundamentals
-├── 01-introduction-to-mcp/                       # FastMCP basics, first MCP server
-├── 02-study-case-anthropic-tools-resources-prompts-chat-app/  # Chat app with Claude tool use
-├── 03-claude-agents-sdk-filesystem-agent/        # Claude Agent SDK + filesystem MCP
-├── 04-query-tabular-data/                        # CSV querying with Claude Agent SDK
-├── 05-automations-agent/                         # Link health checker (Claude SDK + MCP)
-├── 06-deploy-simple-agent-mcp-vercel/            # Data analysis agent + Vercel deployment
-├── 07-hacks-tips-tools-workflows/                # Tips, tools, MCP builder skill
-└── assets-resources/                             # This folder — reference materials
+├── 00-intro-agents/                # Agents are loops — hand-rolled, bare Claude API
+├── 01-introduction-to-mcp/         # First MCP server + thin client + real hosts
+├── 02-research-agent-sdk/          # Claude Agent SDK as MCP host (+ in-process servers)
+├── 03-skills-and-mcp/              # Skills vs MCP + mcp-builder skill
+├── 04-production-research-agent/   # HTTP transport, auth seam, hooks, evals
+├── 05-deploy-remote-mcp/           # Deploy remote server (Vercel) + MCP Apps
+├── 06-security-and-composition/    # Tool-poisoning lab; multi-server, subagents, sessions
+├── exercises/                      # Take-home exercises (link checker)
+├── archive/                        # Retired demos, kept for reference
+└── assets-resources/               # This folder — reference materials
 ```
 
 ## Key Dependencies
 
 - **claude-agent-sdk** — Claude Agent SDK (all agent demos)
-- **mcp[cli]** — Core MCP SDK
-- **fastmcp / mcp.server.fastmcp** — MCP server implementation
-- **fastapi / uvicorn** — HTTP layer for deployment demo
-- **ANTHROPIC_API_KEY** — Required for all agent demos
+- **mcp[cli]>=1.12,<2** — official MCP Python SDK, pinned to v1 (v2 renames FastMCP → MCPServer)
+- **ANTHROPIC_API_KEY** — required for all agent demos
 
 ## Running Any Demo
 
