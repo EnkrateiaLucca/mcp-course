@@ -18,6 +18,7 @@ venv/
 Plans/
 research/
 walkthrough.md
+MEMORY/
 
 # Deployment tooling state (left behind by `vercel link` / `vercel deploy`)
 .vercel/
