@@ -51,7 +51,7 @@ async def run(user_prompt: str) -> None:
     ) as server:
         agent = Agent(
             name="Research Assistant",
-            model="gpt-5.4-mini",
+            model="gpt-5.6-luna",
             instructions=SYSTEM_PROMPT,
             mcp_servers=[server],
         )

@@ -1,6 +1,6 @@
 ipykernel
 httpx
-mcp[cli]
+mcp[cli]>=1.12,<2
 openai-agents
 anthropic
 python-dotenv

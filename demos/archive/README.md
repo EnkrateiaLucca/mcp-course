@@ -17,3 +17,6 @@ when archived.
   demo 02, but still the best read for understanding what a host does.
 - `openai_research_agent_alternative.py` — the demo 02 agent on the OpenAI
   Agents SDK, for cross-vendor comparison.
+- `openai_mcp_csv_demo.ipynb` — the same cross-vendor point as a notebook: the
+  OpenAI Agents SDK driving `03-query-tabular-data/csv_query_mcp_server.py`
+  over stdio. Concrete evidence that MCP servers are host-agnostic.

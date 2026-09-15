@@ -40,7 +40,7 @@ freeze:
 test:
 	MCP_AUTH_TOKEN=test-token uv run \
 		--with pytest \
-		--with mcp \
+		--with 'mcp>=1.12,<2' \
 		--with ddgs \
 		--with starlette \
 		--with httpx \
