@@ -1,6 +1,6 @@
 # MCP Technical Cheat Sheet for Instructors
 
-> **Status (July 2026):** teaches against stable spec **2025-11-25**; the 2026-07-28 revision (stateless core, extensions framework, MCP Apps + Tasks as official extensions) lands July 28. MCP is governed by the Linux Foundation's Agentic AI Foundation (since Dec 2025). Python SDK pinned `mcp>=1.12,<2` — v2 renames `FastMCP` → `MCPServer`.
+> **Status:** current spec revision is **2026-07-28** (stateless core, extensions framework, MCP Apps + Tasks as official extensions), now shipped; this course's pinned SDK (`mcp>=1.12,<2`) speaks **2025-11-25**. MCP is governed by the Linux Foundation's Agentic AI Foundation (since Dec 2025). v2 renames `FastMCP` → `MCPServer`.
 
 ## Core Concepts Overview
 
