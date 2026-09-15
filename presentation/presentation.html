@@ -180,8 +180,8 @@
     | 2024-11-05 | Launch |
     | 2025-03-26 | Streamable HTTP, OAuth 2.1 base |
     | 2025-06-18 | Structured output, elicitation, resource servers |
-    | **2025-11-25** | **← we teach against this** — OIDC, CIMD, tasks (exp.), icons |
-    | 2026-07-28 | *Lands in two weeks — preview at the end of day 2* |
+    | **2025-11-25** | **← we teach against this** — it's what our pinned SDK speaks. OIDC, CIMD, tasks (exp.), icons |
+    | **2026-07-28** | **Shipped.** Stateless core, extensions, MRTR — SDK v2 tracks it; we pin v1 *(day 2)* |
 
     ---
     class: center, middle
@@ -198,7 +198,7 @@
     ---
     class: center, middle
 
-    ## ⚠️ One naming heads-up (July 2026)
+    ## ⚠️ One naming heads-up
 
     ### We pin `mcp>=1.12,<2` — the official SDK's v1 `FastMCP` class
 
@@ -407,7 +407,7 @@
 
     --
 
-    ## No FastAPI, no SSE plumbing. And the 2026-07-28 spec makes the *protocol core* stateless too.
+    ## No FastAPI, no SSE plumbing. And the 2026-07-28 spec **made** the *protocol core* stateless too.
 
     ---
     class: center, middle
@@ -500,7 +500,7 @@
     ---
     class: center, middle
 
-    # What lands July 28, 2026
+    # What shipped on July 28, 2026
 
     ## The largest spec revision since launch
 
@@ -518,7 +518,9 @@
 
     --
 
-    ### SDK v2 tracks this (FastMCP → `MCPServer`). Pin v1 until you migrate deliberately.
+    ### SDK **v2 is GA** — `pip install mcp` now gives you 2.x, where `FastMCP` became `MCPServer`.
+
+    ### **v1 stays supported** in maintenance (1.30.0, Sept 2026). We pin `mcp>=1.12,<2` on purpose — not neglect.
 
     ---
 
