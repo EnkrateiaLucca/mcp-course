@@ -118,7 +118,8 @@ Claude Desktop config: macOS `~/Library/Application Support/Claude/claude_deskto
 - `mcp` not found → `pip install "mcp[cli]>=1.12,<2"`.
 
 ## Additional Resources
-- Spec 2025-11-25: https://modelcontextprotocol.io/specification/2025-11-25 (course teaches against this; 2026-07-28 revision covered in slides)
+- Spec 2026-07-28 (**current revision**, shipped final): https://modelcontextprotocol.io/specification/2026-07-28 — stateless core, extensions framework, MRTR; covered in slides (deck positions 24, 68–70)
+- Spec 2025-11-25: https://modelcontextprotocol.io/specification/2025-11-25 — what the pinned v1 SDK implements, so what the demos actually speak
 - Claude Agent SDK: https://code.claude.com/docs/en/agent-sdk/overview
 - MCP Apps extension: https://modelcontextprotocol.io/extensions/apps
 - Production post (basis for modules 04–05): https://claude.com/blog/building-agents-that-reach-production-systems-with-mcp

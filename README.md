@@ -66,7 +66,7 @@ ANTHROPIC_API_KEY=sk-...       # all agent demos (console: platform.claude.com)
 MCP_AUTH_TOKEN=demo-secret     # module 04 (and optionally 05)
 ```
 
-**Version pins that matter (July 2026):**
+**Version pins that matter:**
 - `mcp>=1.12,<2` — the official Python SDK, pinned to v1. **v2 (tracking
   the 2026-07-28 spec) renames `FastMCP` → `MCPServer`**; the standalone
   "FastMCP 3" is a separate Prefect-backed project. Concepts identical.
@@ -188,8 +188,9 @@ paths, restart after editing.
 ## 📖 Resources
 
 **Official:** [MCP docs](https://modelcontextprotocol.io/docs/getting-started/intro) ·
-[Spec (2025-11-25)](https://modelcontextprotocol.io/specification/2025-11-25) ·
-[2026-07-28 release candidate](https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/) ·
+[Spec (2026-07-28 — current)](https://modelcontextprotocol.io/specification/2026-07-28) ·
+[Spec (2025-11-25 — what our pinned SDK speaks)](https://modelcontextprotocol.io/specification/2025-11-25) ·
+[2026-07-28 release post](https://blog.modelcontextprotocol.io/posts/2026-07-28/) ·
 [Python SDK](https://github.com/modelcontextprotocol/python-sdk) ·
 [Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk/overview) ·
 [MCP Apps](https://modelcontextprotocol.io/extensions/apps) ·
@@ -210,6 +211,15 @@ paths, restart after editing.
 **Course materials:** `presentation/presentation.html` ·
 `presentation/code-execution-with-mcp.html` ·
 `demos/assets-resources/MCP_TECHNICAL_CHEATSHEET.md`
+
+**Two handouts, different audiences:**
+- **Students** — [`mcp-course-cheatsheet.html`](mcp-course-cheatsheet.html)
+  (printable: [`mcp-course-cheatsheet-print.pdf`](mcp-course-cheatsheet-print.pdf)).
+  The quick-reference card to keep after the session.
+- **Instructor** — [`assets/mcp-instructor-cheatsheet.html`](assets/mcp-instructor-cheatsheet.html)
+  ([PDF](assets/mcp-instructor-cheatsheet.pdf)), generated from
+  `demos/assets-resources/MCP_TECHNICAL_CHEATSHEET.md`. Deeper reference for
+  answering questions live.
 
 ## 🎓 Instructor
 
