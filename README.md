@@ -56,7 +56,24 @@ uv run demos/01-introduction-to-mcp/mcp_server.py
 mcp dev demos/01-introduction-to-mcp/mcp_server.py
 ```
 
-Traditional setup: `python -m venv venv && source venv/bin/activate && pip install -r requirements/requirements.txt`
+### Notebook setup (Jupyter kernel)
+
+The scripts need nothing beyond `uv`. The notebook
+(`demos/00-intro-agents/intro-agents-cld.ipynb`) additionally needs a kernel
+named **`mcp-course`** on **Python 3.12+** — `requirements.txt` pins
+`contourpy==1.4.0`, which refuses to install below 3.12. Build it once:
+
+```bash
+uv venv --python 3.12 && source .venv/bin/activate
+uv pip install -r requirements/requirements.txt
+
+# register the kernel the notebook declares — skip this and Jupyter
+# opens the notebook with "kernel not found"
+python -m ipykernel install --user --name mcp-course --display-name "mcp-course"
+```
+
+Plain `pip` works too — `python -m venv venv && pip install -r requirements/requirements.txt` —
+as long as the active Python is 3.12+ and you still run the `ipykernel install` line.
 
 ### Environment
 
