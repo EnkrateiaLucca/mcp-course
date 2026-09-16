@@ -198,11 +198,16 @@
     ---
     class: center, middle
 
-    ## ⚠️ One naming heads-up
+    ## ⚠️ Two projects share the name `FastMCP`
 
-    ### We pin `mcp>=1.12,<2` — the official SDK's v1 `FastMCP` class
+    | `pip install` | You import | This course |
+    |---|---|---|
+    | **`mcp`** — official SDK | `mcp.server.fastmcp` | ✅ **we use this** |
+    | **`fastmcp`** — Prefect's, v3 | `fastmcp` | ❌ different project |
 
-    ### SDK **v2** renames it `MCPServer` · "**FastMCP 3**" is a separate Prefect project
+    ### We pin `mcp>=1.12,<2` — the v1 API
+
+    ### SDK **v2** renames `FastMCP` → `MCPServer`
 
     ### Same concepts everywhere. Only names move.
 
@@ -506,21 +511,21 @@
 
     ---
 
-    # 2026-07-28 in four bullets
+    # The four changes that matter
 
-    - **Stateless core** — no `initialize` handshake, no session header; plain load balancers *(module 05 already lives this way)*
+    - **Stateless core** — no `initialize`, no session header
 
-    - **Extensions framework** — MCP Apps and Tasks become official opt-in extensions
+    - **Extensions** — MCP Apps and Tasks become official
 
-    - **Multi round-trip requests** — tools can ask for input mid-call
+    - **Multi round-trip** — tools ask for input mid-call
 
-    - **Deprecations** — roots, sampling, logging *(12-month sunset — don't build new work on them)*
+    - **Deprecations** — roots, sampling, logging *(12-month sunset)*
 
     --
 
-    ### SDK **v2 is GA** — `pip install mcp` now gives you 2.x, where `FastMCP` became `MCPServer`.
+    ### Module 05 already lives this way.
 
-    ### **v1 stays supported** in maintenance (1.30.0, Sept 2026). We pin `mcp>=1.12,<2` on purpose — not neglect.
+    ### SDK **v2 is GA** — we stay on v1, deliberately.
 
     ---
 
