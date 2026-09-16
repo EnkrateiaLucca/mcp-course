@@ -548,6 +548,108 @@
     </script>
     <script>
       var slideshow = remark.create();
+
+      // Remark renders every `--` reveal as a separate slide carrying all the text
+      // accumulated so far. On a `middle` slide that whole block is centred
+      // vertically, so each reveal used to shove the lines already on screen
+      // upwards — the same sentence moving between clicks. Instead, reserve the
+      // group's final height on each of its earlier steps: a line lands in its
+      // final position on the click that introduces it, and never moves again.
+      (function reserveSpaceForReveals() {
+        var SPACER_CLASS = 'remark-reveal-spacer';
+
+        // Where the real content starts and how tall it is, ignoring the
+        // absolutely-positioned slide number and our own spacer.
+        function contentBox(content) {
+          var top = null, bottom = null;
+          Array.prototype.forEach.call(content.children, function (el) {
+            if (el.className === SPACER_CLASS) return;
+            if (window.getComputedStyle(el).position === 'absolute') return;
+            var elTop = el.offsetTop;
+            var elBottom = elTop + el.offsetHeight;
+            if (top === null || elTop < top) top = elTop;
+            if (bottom === null || elBottom > bottom) bottom = elBottom;
+          });
+          return { top: top || 0, span: top === null ? 0 : bottom - top };
+        }
+
+        // Hidden slides are `display: none`, so they measure 0 — reveal them
+        // behind `visibility: hidden` just long enough to read the layout.
+        function measure(container) {
+          var content = container.querySelector('.remark-slide-content');
+          if (!content) return { top: 0, span: 0 };
+          var hidden = !container.classList.contains('remark-visible');
+          if (hidden) {
+            container.style.visibility = 'hidden';
+            container.style.display = 'block';
+          }
+          var box = contentBox(content);
+          if (hidden) {
+            container.style.display = '';
+            container.style.visibility = '';
+          }
+          return box;
+        }
+
+        function apply() {
+          var slides = slideshow.getSlides();
+          var containers = document.querySelectorAll(
+            '.remark-slides-area > .remark-slide-container'
+          );
+          if (containers.length !== slides.length) return;
+
+          // querySelectorAll, not getElementsByClassName: the latter is a live
+          // collection and removing from it mid-loop skips half the spacers.
+          Array.prototype.forEach.call(
+            document.querySelectorAll('.' + SPACER_CLASS),
+            function (el) { el.parentNode.removeChild(el); }
+          );
+
+          // A `---` slide and the `--` steps that follow it form one group.
+          var groups = [], current = null;
+          slides.forEach(function (slide, index) {
+            var continued = slide.properties && slide.properties.continued === 'true';
+            if (current && continued) current.push(index);
+            else groups.push((current = [index]));
+          });
+
+          groups.forEach(function (group) {
+            if (group.length < 2) return;
+            var steps = group.slice(0, -1);          // the last step sets the target
+            var last = group[group.length - 1];
+            var spans = group.map(function (index) { return measure(containers[index]).span; });
+            var tallest = Math.max.apply(null, spans);
+
+            steps.forEach(function (index, step) {
+              var spacer = document.createElement('div');
+              spacer.className = SPACER_CLASS;
+              spacer.setAttribute('aria-hidden', 'true');
+              spacer.style.height = Math.max(0, tallest - spans[step]) + 'px';
+              containers[index]
+                .querySelector('.remark-slide-content')
+                .appendChild(spacer);
+            });
+
+            // The pass above equalises the text height; the block's outer
+            // margins and half-pixel rounding can still leave a pixel or two.
+            // Correct against the measured result: growing a vertically centred
+            // block by X lifts its top by X/2, so a drift of d costs 2d.
+            var target = measure(containers[last]).top;
+            steps.forEach(function (index) {
+              var spacer = containers[index].querySelector('.' + SPACER_CLASS);
+              var drift = measure(containers[index]).top - target;
+              if (!drift) return;
+              var height = parseFloat(spacer.style.height) || 0;
+              spacer.style.height = Math.max(0, height + 2 * drift) + 'px';
+            });
+          });
+        }
+
+        apply();
+        // Re-measure once the webfonts and images settle; apply() is idempotent.
+        if (document.fonts && document.fonts.ready) document.fonts.ready.then(apply);
+        window.addEventListener('load', apply);
+      })();
     </script>
   </body>
 </html>
