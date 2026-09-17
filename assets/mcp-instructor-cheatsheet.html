@@ -232,7 +232,7 @@
             <dt>MCP Clients</dt>
             <dd>Protocol clients with 1:1 connections to servers; handle protocol communication</dd>
             <dt>MCP Servers</dt>
-            <dd>Lightweight programs exposing tools, resources, prompts, and sampling as separate processes</dd>
+            <dd>Lightweight programs exposing tools, resources, and prompts as separate processes</dd>
             <dt>Transport Layer</dt>
             <dd><code>stdio</code> for parent-child processes, <code>streamable-http</code> for remote/networked servers</dd>
         </dl>
@@ -261,14 +261,43 @@
 //   "message": "Method not found"}</code></pre>
 
         <h2>Lifecycle</h2>
+        <div class="callout">
+            <div class="callout-title">Protocol versions are dates, never semver</div>
+            There has never been a <code>"1.0.0"</code>. Our pinned SDK
+            (<code>mcp&gt;=1.12,&lt;2</code>) speaks <strong>2025-11-25</strong>;
+            the current revision is <strong>2026-07-28</strong>.
+        </div>
+
+        <h3>A. The handshake — 2025-11-25 (what our demos do)</h3>
         <ol>
             <li><strong>Initialize</strong> — client sends <code>initialize</code> with capabilities + clientInfo; server responds with its own capabilities + serverInfo</li>
             <li><strong>Initialized</strong> — client sends <code>notifications/initialized</code></li>
-            <li><strong>Operation</strong> — tool calls, resource/prompt requests, sampling, subscriptions</li>
+            <li><strong>Operation</strong> — tool calls, resource/prompt requests, subscriptions</li>
             <li><strong>Shutdown</strong> — client sends <code>notifications/closed</code></li>
         </ol>
 
-        <h2>The Four Capabilities</h2>
+        <h3>B. The stateless core — 2026-07-28 (where the protocol went)</h3>
+        <p>
+            The handshake, <code>notifications/closed</code>, and the
+            <code>Mcp-Session-Id</code> header are <strong>all gone</strong>. Every
+            request carries its own context in <code>_meta</code>:
+        </p>
+<pre><code>{"method": "tools/call", "params": {
+  "name": "get_weather",
+  "arguments": {"city": "Lisbon"},
+  "_meta": {
+    "protocolVersion": "2026-07-28",
+    "capabilities": {"tools": {}}
+  }}}</code></pre>
+        <p>
+            Any replica serves any request — no shared session store. Module 05
+            already builds this way with <code>stateless_http=True</code>.
+            <strong>Don't fight the mismatch, name it:</strong> the SDK we pin speaks
+            the handshake, the spec moved past it, and module 05 already builds the
+            way the spec wants.
+        </p>
+
+        <h2>The Three Primitives (plus one deprecated)</h2>
 
         <h3>Tools (model-controlled)</h3>
 <pre><code>@mcp.tool()
@@ -288,7 +317,11 @@ async def list_prompts():
     return [Prompt(name="debug_code",
         description="Help debug code")]</code></pre>
 
-        <h3>Sampling (server-initiated)</h3>
+        <h3>Sampling (server-initiated) — ⚠️ DEPRECATED</h3>
+        <p>
+            <strong>Deprecated in 2026-07-28 (12-month sunset), along with roots and
+            logging. Teach it as history, not practice.</strong>
+        </p>
 <pre><code>result = await session.create_message(
     messages=[{"role": "user",
                "content": "Analyze this"}],

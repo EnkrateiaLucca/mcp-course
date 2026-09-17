@@ -1,5 +1,5 @@
 ENV_NAME ?= mcp-course
-PYTHON_VERSION ?= 3.11
+PYTHON_VERSION ?= 3.12
 CONDA_ACTIVATE = source $$(conda info --base)/etc/profile.d/conda.sh ; conda activate ; conda activate
 
 .PHONY: all conda-create env-setup pip-tools-setup repo-setup notebook-setup env-update clean test
@@ -40,7 +40,7 @@ freeze:
 test:
 	MCP_AUTH_TOKEN=test-token uv run \
 		--with pytest \
-		--with mcp \
+		--with 'mcp>=1.12,<2' \
 		--with ddgs \
 		--with starlette \
 		--with httpx \

@@ -1,6 +1,6 @@
 # MCP Technical Cheat Sheet for Instructors
 
-> **Status (July 2026):** teaches against stable spec **2025-11-25**; the 2026-07-28 revision (stateless core, extensions framework, MCP Apps + Tasks as official extensions) lands July 28. MCP is governed by the Linux Foundation's Agentic AI Foundation (since Dec 2025). Python SDK pinned `mcp>=1.12,<2` — v2 renames `FastMCP` → `MCPServer`.
+> **Status:** current spec revision is **2026-07-28** (stateless core, extensions framework, MCP Apps + Tasks as official extensions), now shipped; this course's pinned SDK (`mcp>=1.12,<2`) speaks **2025-11-25**. MCP is governed by the Linux Foundation's Agentic AI Foundation (since Dec 2025). v2 renames `FastMCP` → `MCPServer`.
 
 ## Core Concepts Overview
 
@@ -72,13 +72,24 @@ MCP uses JSON-RPC 2.0 for all communication. Every message follows this structur
 
 ## MCP Lifecycle
 
-### 1. Initialization Phase
+> **Protocol versions are dates, never semver.** There has never been a
+> `"1.0.0"`. The pinned SDK in this course (`mcp>=1.12,<2`) speaks
+> **`2025-11-25`**; the current revision is **`2026-07-28`**.
+
+There are two lifecycles to know, because the course demos and the current spec
+differ here. **This is the single most likely student question of day 2.**
+
+### A. The handshake — `2025-11-25`, what our demos actually do
+
+This is what students will see in MCP Inspector, because it is what the pinned
+v1 SDK speaks.
+
 ```
 Client → Server: initialize request
 {
   "method": "initialize",
   "params": {
-    "protocolVersion": "1.0.0",
+    "protocolVersion": "2025-11-25",
     "capabilities": {
       "tools": {},
       "resources": {"subscribe": true}
@@ -93,12 +104,11 @@ Client → Server: initialize request
 Server → Client: initialize response
 {
   "result": {
-    "protocolVersion": "1.0.0",
+    "protocolVersion": "2025-11-25",
     "capabilities": {
       "tools": {},
       "resources": {},
-      "prompts": {},
-      "sampling": {}
+      "prompts": {}
     },
     "serverInfo": {
       "name": "weather-server",
@@ -113,23 +123,44 @@ Client → Server: initialized notification
 }
 ```
 
-### 2. Operation Phase
-The server is now ready to handle:
-- Tool calls
-- Resource requests
-- Prompt requests
-- Sampling requests
-- Subscriptions
+Then the **operation phase**: tool calls, resource reads, prompt requests,
+subscriptions. Shutdown is a `notifications/closed` notification, or simply
+closing the transport.
 
-### 3. Shutdown Phase
+### B. The stateless core — `2026-07-28`, where the protocol went
+
+The `initialize` request, the `notifications/initialized` notification, the
+`notifications/closed` shutdown, and the `Mcp-Session-Id` header are **all
+gone**. There is no protocol-level session at all.
+
+Instead, **every request carries its own context in `_meta`** — the protocol
+version and the client's capabilities ride along on each call:
+
 ```
-Client → Server: close notification
+Client → Server: any request, no handshake first
 {
-  "method": "notifications/closed"
+  "method": "tools/call",
+  "params": {
+    "name": "get_weather",
+    "arguments": {"city": "Lisbon"},
+    "_meta": {
+      "protocolVersion": "2026-07-28",
+      "capabilities": {"tools": {}}
+    }
+  }
 }
 ```
 
-## The Four MCP Capabilities
+**Why it matters:** any replica can serve any request, so servers deploy behind
+ordinary load balancers with no shared session store. That is exactly what
+module 05 already does with `stateless_http=True` — the demo and the spec now
+agree.
+
+**Teaching note:** don't fight the mismatch, name it. "The SDK we pin speaks the
+handshake; the spec moved past it; module 05 already builds the way the spec
+wants." Deck positions 24 and 68–70 carry the same framing.
+
+## The Three MCP Primitives (plus one deprecated)
 
 ### 1. Tools (Model-Controlled)
 Functions the AI can execute:

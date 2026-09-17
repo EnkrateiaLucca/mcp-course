@@ -18,6 +18,10 @@ venv/
 Plans/
 research/
 walkthrough.md
+MEMORY/
+
+# Deployment tooling state (left behind by `vercel link` / `vercel deploy`)
+.vercel/
 
 # Notebook runtime artifacts (generated when running the demos)
 __pycache__/
