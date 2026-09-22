@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modules 04–05 Presenter Guide</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg:#fcfbf9; --surface:#f4f2ee; --surface-2:#eae7e0; --border:#e2ded6;
+  --text:#20201e; --muted:#6f6c64; --accent:#a45a12; --accent-2:#2f6f5f;
+  --accent-tint:#f6ecdf; --ok:#2f6f5f; --no:#b42318; --warn:#8a5a00; --warn-bg:#f8f0dd;
+  --font-body:"Iowan Old Style", Charter, "Sitka Text", Cambria, Georgia, serif;
+  --font-display:ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, monospace;
+  --font-ui:ui-sans-serif, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --shadow:0 1px 2px rgba(30,25,15,.05), 0 10px 26px -14px rgba(30,25,15,.2);
+  --col:66ch; --radius:8px;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#17150f; --surface:#201d15; --surface-2:#29251b; --border:#332e22;
+    --text:#eae5d8; --muted:#a49c88; --accent:#e0a24d; --accent-2:#67b8a4;
+    --accent-tint:#2a2213; --warn:#e0b34d; --warn-bg:#241d0f; --ok:#67b8a4; --no:#f0776b;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.6); }
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-body);font-size:1.0625rem;line-height:1.62;-webkit-font-smoothing:antialiased;padding-inline:16px}
+main{max-width:var(--col);margin-inline:auto;padding-block:2.5rem 4rem}
+h1,h2,h3{font-family:var(--font-display);line-height:1.15;text-wrap:balance;font-weight:700}
+h1{font-size:2.1rem;letter-spacing:-.02em;margin:.4rem 0 .6rem}
+h2{font-size:1.5rem;margin:3.2rem 0 .7rem;padding-top:.8rem;border-top:1px solid var(--border)}
+h2 .n{color:var(--accent);margin-right:.5rem}
+h3{font-size:1.15rem;margin:1.8rem 0 .5rem}
+p{margin:0 0 1.2em;text-wrap:pretty}
+ul,ol{margin:0 0 1.2em;padding-left:1.3em}
+li{margin-bottom:.35em}
+a{color:var(--accent);text-underline-offset:2px}
+.eyebrow{font-family:var(--font-ui);font-size:.8rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--accent)}
+.meta{font-family:var(--font-ui);font-size:.85rem;color:var(--muted);margin-bottom:2rem}
+.tldr{background:var(--accent-tint);border-radius:12px;box-shadow:var(--shadow);padding:1.1rem 1.4rem;margin:0 0 2rem}
+.tldr h2{border:0;margin:0 0 .4rem;padding:0;font-size:1rem}
+.tldr ul{margin:0}
+.toc{font-family:var(--font-ui);font-size:.92rem;border:1px solid var(--border);border-radius:var(--radius);padding:.9rem 1.2rem;margin-bottom:2.5rem}
+.toc ol{margin:.3rem 0 0;padding-left:1.2em}
+.toc a{text-decoration:none}
+.toc a:hover{text-decoration:underline}
+code,pre,kbd{font-family:var(--font-display);font-size:.88em}
+code{background:var(--surface);padding:.08em .3em;border-radius:4px}
+pre{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:.9rem 1.1rem;overflow-x:auto;line-height:1.5;margin:0 0 1.2em}
+pre code{background:none;padding:0}
+pre.out{background:var(--surface-2);border-left:3px solid var(--accent-2)}
+pre .c{color:var(--muted)}
+.wide{max-width:min(92ch,100%);margin-inline:auto}
+table{border-collapse:collapse;width:100%;font-size:.93rem;font-family:var(--font-ui);font-variant-numeric:tabular-nums;margin:0 0 1.4em}
+th,td{border:1px solid var(--border);padding:.45rem .65rem;text-align:left;vertical-align:top}
+th{background:var(--surface);font-weight:700}
+.scroll{overflow-x:auto;max-width:100%}
+.callout{background:var(--surface);border-left:3px solid var(--accent);border-radius:var(--radius);padding:.85rem 1.1rem;margin:1.3rem 0}
+.callout.warn{background:var(--warn-bg);border-left-color:var(--warn)}
+.callout.say{border-left-color:var(--accent-2)}
+.callout>:last-child{margin-bottom:0}
+.say-label{font-family:var(--font-ui);font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent-2)}
+details.recall{border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:var(--radius);margin:1.4rem 0;background:var(--surface)}
+details.recall>summary{cursor:pointer;padding:.8rem 1.1rem;font-weight:600;font-family:var(--font-ui);list-style:none}
+details.recall>summary::before{content:"?  ";color:var(--accent);font-family:var(--font-display)}
+details.recall>summary::-webkit-details-marker{display:none}
+details.recall>div{padding:0 1.1rem .9rem}
+details.recall>div>:last-child{margin-bottom:0}
+.check{list-style:none;padding-left:0}
+.check li{padding-left:1.8em;position:relative}
+.check li::before{content:"☐";position:absolute;left:.2em;color:var(--accent)}
+.ok{color:var(--ok);font-weight:700}
+.no{color:var(--no);font-weight:700}
+#bar{position:fixed;top:0;left:0;height:3px;width:0;background:var(--accent);z-index:10}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div id="bar" aria-hidden="true"></div>
+<main>
+
+<div class="eyebrow">MCP course · Day 2 · Modules 04 &amp; 05</div>
+<h1>Production shape &amp; deploy: the presenter's one-pager</h1>
+<div class="meta">Built from <code>presentation.html</code> and <code>demos/04</code>, <code>demos/05</code>. Every command marked <span class="ok">verified</span> was run on this Mac on 2026-09-22.</div>
+
+<div class="tldr">
+<h2>Read this if nothing else</h2>
+<ul>
+<li><strong>Production = the same research server plus four moves:</strong> intent-grouped tools, HTTP transport, an auth seam, and hooks/permissions/evals. Nothing about the use case changes.</li>
+<li><strong>Deploy = ship the MCP server, not the agent.</strong> <code>app = mcp.streamable_http_app()</code> is the whole web app. Uvicorn runs it on your laptop; Vercel imports the same object.</li>
+<li><strong>Two servers, two ports.</strong> Demo 04 on <code>:8765</code>, bearer token required. Demo 05 on <code>:8000</code>, open by default, stateless + plain JSON so it survives serverless.</li>
+<li><strong>Hosts differ in reach.</strong> Claude Code and the SDK can hit localhost and send headers. Claude web/desktop needs a public URL and speaks OAuth-or-nothing. That constraint decides the whole demo 05 flow.</li>
+<li><strong>Pre-flight three times:</strong> <code>test_client.py</code> against localhost, through the tunnel, and after Vercel. Quit Anki first: it owns port 8765 on this Mac. Present the agent from an empty <code>CLAUDE_CONFIG_DIR</code> so your global MCP servers stay out of the log.</li>
+</ul>
+</div>
+
+<nav id="toc" class="toc" aria-label="Contents"><strong>Contents</strong></nav>
+
+<h2 id="model"><span class="n">1</span>The mental model (for you first)</h2>
+
+<p>An MCP server over HTTP is a normal web server with one endpoint, <code>/mcp</code>. A client POSTs a JSON-RPC message, the server answers with a JSON-RPC message. Everything in modules 04 and 05 wraps that one fact.</p>
+
+<pre class="wide"><code>uvicorn (local)  or  Vercel function (cloud)   <span class="c">← something has to RUN the app</span>
+  └─ Starlette ASGI app = mcp.streamable_http_app()   <span class="c">← the app. FastMCP builds it for you</span>
+       └─ BearerAuthMiddleware                         <span class="c">← sees every request first (demo 04)</span>
+            └─ POST /mcp  (JSON-RPC)                   <span class="c">← initialize, tools/list, tools/call…</span>
+                 └─ your @mcp.tool() functions         <span class="c">← unchanged from module 01</span></code></pre>
+
+<h3>Terms you'll be asked about</h3>
+<div class="scroll"><table>
+<tr><th>Term</th><th>Plain meaning</th><th>Where it shows up</th></tr>
+<tr><td>ASGI</td><td>The Python contract between a web server and an async app. "Give me a request, I give you a response."</td><td><code>mcp.streamable_http_app()</code> returns one</td></tr>
+<tr><td>uvicorn</td><td>The process that listens on a port and feeds requests to the ASGI app.</td><td><code>uvicorn.run(app, port=8765)</code></td></tr>
+<tr><td>Middleware</td><td>Code that runs before the app on every request. Can reject early.</td><td><code>BearerAuthMiddleware</code> in 04, optional in 05</td></tr>
+<tr><td>streamable-http</td><td>The MCP transport for remote servers. Replaced HTTP+SSE in March 2025.</td><td>Both servers</td></tr>
+<tr><td>Bearer token</td><td>A shared secret in the <code>Authorization</code> header. Real wiring, fake credential.</td><td><code>MCP_AUTH_TOKEN</code></td></tr>
+<tr><td><code>stateless_http</code></td><td>Server keeps no per-session memory, so any copy of it can answer any request.</td><td>Demo 05 only</td></tr>
+<tr><td><code>json_response</code></td><td>Reply with one JSON body instead of an SSE stream. Serverless platforms prefer it.</td><td>Demo 05 only</td></tr>
+<tr><td>Tunnel</td><td>A temporary public HTTPS URL that forwards to your localhost port.</td><td><code>cloudflared tunnel</code></td></tr>
+<tr><td>Custom connector</td><td>Claude web/desktop's "add a remote MCP server by URL" screen.</td><td>Demo 05 step 6</td></tr>
+<tr><td>MCP App</td><td>A tool whose result renders as an HTML panel inside the chat. Tool + resource linked by <code>_meta</code>.</td><td><code>research_explorer</code> + <code>app.html</code></td></tr>
+</table></div>
+
+<details class="recall"><summary>What single object does uvicorn run locally and Vercel run in the cloud?</summary><div><p>The same Starlette ASGI app from <code>mcp.streamable_http_app()</code>. In demo 05 it is built at module level as <code>app = build_app()</code> so <code>api/index.py</code> can simply <code>from server import app</code>.</p></div></details>
+
+<h2 id="moves"><span class="n">2</span>Module 04: what changed from module 02</h2>
+
+<p>Same research assistant, same SDK. Four things moved. Point at each one in the code.</p>
+
+<div class="scroll"><table>
+<tr><th>Move</th><th>Module 02</th><th>Module 04</th><th>Code</th></tr>
+<tr><td>1. Tools</td><td>7 primitives: <code>web_search</code>, <code>read_file</code>, <code>write_file</code>, <code>edit_file</code>, <code>move_file</code>, <code>delete_file</code>, <code>list_files</code></td><td>3 intents: <code>research_topic</code> (search → fetch → format → save), <code>list_briefs</code>, <code>read_brief</code></td><td><code>research_server.py</code> "Tools" block</td></tr>
+<tr><td>2. Transport</td><td>stdio subprocess</td><td><code>http://127.0.0.1:8765/mcp</code></td><td><code>__main__</code> block</td></tr>
+<tr><td>3. Auth</td><td>none</td><td>Middleware compares <code>Authorization</code> to <code>MCP_AUTH_TOKEN</code>. Both sides refuse to start without it.</td><td><code>BearerAuthMiddleware</code>; agent <code>mcp_servers[...]["headers"]</code></td></tr>
+<tr><td>4. Control</td><td>none</td><td>Allow-list + <code>can_use_tool</code>, <code>PreToolUse</code> deny, <code>PostToolUse</code> log, <code>ExecutionTracker</code></td><td><code>research_agent.py</code></td></tr>
+</table></div>
+
+<h3>The auth seam, both halves</h3>
+<pre><code><span class="c"># server side (research_server.py)</span>
+app = mcp.streamable_http_app()          <span class="c"># the ASGI app</span>
+app.add_middleware(BearerAuthMiddleware) <span class="c"># the seam</span>
+uvicorn.run(app, host="127.0.0.1", port=8765)
+
+<span class="c"># agent side (research_agent.py)</span>
+mcp_servers={"research": {
+    "type": "http",
+    "url": SERVER_URL,
+    "headers": {"Authorization": f"Bearer {AUTH_TOKEN}"},
+}}</code></pre>
+
+<div class="callout say"><span class="say-label">Say it like this</span><p>The bouncer stands at the front door, not inside each room. Today the bouncer checks a password. Tomorrow it checks an OAuth badge. The rooms, meaning the tools, never change. That is the whole point of a seam.</p></div>
+
+<p><strong>The auth ladder</strong> has three rungs: nothing (demos), a static bearer token (this demo, rung 2), and OAuth 2.1 where your server is a resource server and clients register with Client ID Metadata Documents. Rung 3 is what "Add custom connector" in Claude speaks. Teaching it end to end is its own course. The lesson here is only that rung 2 → 3 touches one middleware and zero tools.</p>
+
+<h3>Control: four small pieces in <code>research_agent.py</code></h3>
+<ul>
+<li><strong>Allow-list</strong>: <code>allowed_tools</code> lists exactly the three <code>mcp__research__*</code> tools. MCP tools are never auto-approved by permission modes, so this is required, not optional.</li>
+<li><strong><code>can_use_tool</code></strong>: a callback that denies anything not in the allow-list. Defense in depth next to the allow-list.</li>
+<li><strong><code>PreToolUse</code> hook</strong>: denies a topic under 3 characters and any <code>brief_path</code> containing <code>..</code> or starting with <code>/</code>. Cheap validation before a network round-trip.</li>
+<li><strong><code>PostToolUse</code> hook</strong>: one log line per tool call, reading the tool's <code>ok</code> field.</li>
+</ul>
+
+<h3>Telemetry is not evals</h3>
+<p><code>ExecutionTracker</code> reads <code>ResultMessage</code> and prints status, duration, estimated cost, and tool counts. That tells you the agent <em>ran</em>. <code>evals.py</code> tells you it was <em>right</em>, in three layers:</p>
+<ol>
+<li><strong>Deterministic</strong> <code>grade_brief()</code>: file exists, has a Sources section, has links, mentions the topic, is over 300 chars. Free.</li>
+<li><strong>LLM-as-judge</strong> <code>judge_brief()</code>: the SDK itself, locked to the <code>Read</code> tool, scores faithfulness, coverage, usefulness from 1 to 5 and must answer in JSON.</li>
+<li><strong>Gate</strong> <code>run_evals()</code>: runs three topics end to end, passes only if layer 1 passes and the worst judge score is at least 3, exits 1 otherwise. That exit code is what CI would key on.</li>
+</ol>
+<p><code>structured_output_demo.py</code> closes the other end: <code>options.output_format = {"type": "json_schema", "schema": ResearchReport.model_json_schema()}</code> makes the agent's final answer a validated Pydantic object instead of prose. A structured verdict is gradeable; a paragraph is not.</p>
+
+<div class="callout"><p><strong>Tool search changed the why, not the what.</strong> Students who read older material will say "fewer tools saves context tokens." The SDK now defers tool definitions by default, so that argument is weaker. Intent-grouped tools still win because the agent makes fewer wrong-tool choices and fewer round-trips, and less intermediate data flows through context. You will see tool search live: the agent's first call in demo 04 is <code>ToolSearch</code>, loading the tool definition on demand.</p></div>
+
+<details class="recall"><summary>Where exactly would OAuth replace the bearer check, and what else would change?</summary><div><p>Only <code>BearerAuthMiddleware</code> on the server and the <code>headers</code> dict on the agent. The three tools, the hooks, and the evals are untouched.</p></div></details>
+<details class="recall"><summary>Why does the allow-list need a <code>can_use_tool</code> callback next to it?</summary><div><p>Defense in depth. The allow-list gates what the SDK offers; the callback is your code deciding at call time. If one is misconfigured the other still denies. The hook is a third layer that inspects the arguments.</p></div></details>
+<details class="recall"><summary>What is the difference between what <code>ExecutionTracker</code> reports and what <code>evals.py</code> reports?</summary><div><p>Tracker: status, duration, cost, tool counts, meaning "it ran". Evals: deterministic checks plus judge scores with an exit code, meaning "it was right".</p></div></details>
+
+<h2 id="run04"><span class="n">3</span>Demo 04 runbook</h2>
+
+<div class="callout warn"><p><strong>Before you start:</strong> quit Anki. AnkiConnect listens on <code>127.0.0.1:8765</code>, the exact port demo 04 hard-codes. Check with <code>lsof -nP -iTCP:8765 -sTCP:LISTEN</code>. Then set <code>MCP_AUTH_TOKEN=demo-secret</code> in <em>both</em> terminals. <code>ANTHROPIC_API_KEY</code> is in your shell today, not in the repo <code>.env</code>.</p></div>
+
+<h3>Step 1 · Start the server (terminal 1)</h3>
+<pre><code>cd demos/04-production-research-agent
+export MCP_AUTH_TOKEN=demo-secret
+uv run research_server.py</code></pre>
+<pre class="out"><code>INFO  research-assistant MCP server on http://127.0.0.1:8765/mcp
+INFO      auth: Bearer demo-secret  (override with MCP_AUTH_TOKEN)
+INFO: Uvicorn running on http://127.0.0.1:8765</code></pre>
+<div class="callout say"><span class="say-label">Say</span><p>Same research assistant as yesterday. Two differences you can see: it is a URL now, not a subprocess, and it refused to start until I gave it a token. Try unsetting the variable and watch it exit.</p></div>
+
+<h3>Step 2 · Show the seam with curl <span class="ok">verified</span></h3>
+<pre><code>curl -s -i -X POST http://127.0.0.1:8765/mcp \
+  -H 'Content-Type: application/json' -d '{}'</code></pre>
+<pre class="out"><code>HTTP/1.1 401 Unauthorized
+{"error":"unauthorized","detail":"missing or invalid bearer token"}
+
+<span class="c"># and in terminal 1:</span>
+WARNING  rejected request: bad/missing Authorization header</code></pre>
+<div class="callout say"><span class="say-label">Say</span><p>The request never reached MCP. The middleware answered. This line is where OAuth would go.</p></div>
+
+<h3>Step 3 · Run the agent (terminal 2) <span class="ok">verified</span></h3>
+<pre><code>export MCP_AUTH_TOKEN=demo-secret
+mkdir -p /tmp/clean-claude
+CLAUDE_CONFIG_DIR=/tmp/clean-claude uv run research_agent.py "Research how MCP authentication works"</code></pre>
+<pre class="out"><code>[INFO] session init — 31 tools available
+[INFO] MCP server 'research': connected      <span class="c"># or "pending": both fine. "failed" is not.</span>
+
+User: Research how MCP authentication works
+
+  → ToolSearch({'query': 'select:mcp__research__research_topic', 'max_results': 5})
+  → mcp__research__research_topic({'topic': 'How MCP (Model Context Protocol) authentication works', 'max_sources': 5})
+[INFO] tool mcp__research__research_topic -> ok
+Brief saved: `briefs/how-mcp-model-context-protocol-authentication-works.md` (5 sources).
+
+────────────────────────────────────────────────────────────
+status: success   duration: 15.37s   cost (est): $0.4901
+  ToolSearch: 1
+  mcp__research__research_topic: 1
+────────────────────────────────────────────────────────────</code></pre>
+<p>Point at four things:</p>
+<ol>
+<li><strong>The init lines.</strong> <code>'research': connected</code> proves the bearer header worked. <code>pending</code> only means the connect had not finished when init fired. A 401 shows up here as <code>failed</code>, not thirty seconds later.</li>
+<li><strong><code>ToolSearch</code> runs first.</strong> Tool search is on by default: the SDK deferred the tool definition and loaded it on demand. That is the "changed the why, not the what" slide, live. It is the SDK's own loader, not gated by your allow-list, and the tracker counts it.</li>
+<li><strong>One <code>research_topic</code> call</strong> does the whole job. In module 02 this was four to six calls. Sometimes the model adds a <code>read_brief</code> to quote the file back. Fine.</li>
+<li><strong>The summary block</strong> is telemetry: status, duration, estimated cost, tool counts. Budget 15 to 20 seconds and about fifty cents per run.</li>
+</ol>
+<p>The brief lands in <code>workspace/briefs/&lt;slug&gt;.md</code>. Open it: findings with quoted excerpts, then a Sources list.</p>
+<div class="callout warn"><p><strong>Why the empty <code>CLAUDE_CONFIG_DIR</code>:</strong> the SDK loads every MCP server in your global Claude config. Without it, this Mac shows "38 tools available" and seventeen lines of <code>MCP server '…': pending / failed / needs-auth</code> before the demo starts. Students on a clean install never see that. <span class="ok">Verified:</span> the empty config dir leaves only <code>'research'</code>.</p></div>
+
+<h3>Step 4 · Optional, if time: watch a deny</h3>
+<p>Ask the agent to <em>read the brief at ../../etc/passwd</em>. If it tries, the PreToolUse hook denies with <em>Path must be relative, under briefs/</em>. Ask it to <em>run ls with bash</em> and the permission callback denies because Bash is not in the allow-list. Both depend on the model choosing to try, so treat this as a bonus, not a beat.</p>
+
+<h3>Step 5 · Structured output</h3>
+<pre><code>uv run structured_output_demo.py</code></pre>
+<p>Prints <code>✅ validated ResearchReport:</code> followed by JSON with <code>topic</code>, <code>brief_path</code>, <code>source_count</code>, <code>key_findings</code>, <code>confidence</code>. Say: the same agent, same server, but the answer is data.</p>
+
+<h3>Step 6 · Evals: run before class, show live</h3>
+<pre><code>uv run evals.py; echo "exit=$?"</code></pre>
+<p>This runs three agent tasks and three judge calls. Budget three to four minutes and about two dollars (three runs at roughly fifty cents each, plus the judges), and DDGS may throttle mid-run. Run it before class, keep the JSON output in a terminal tab, and show the final <code>3/3 passed</code> plus the exit code. If you want it live, edit <code>CASES</code> down to one topic.</p>
+
+<p><strong>Fallback if DDGS dies:</strong> <code>uv run research_agent_builtin_tools.py "…"</code> uses the SDK's built-in WebSearch and WebFetch with no server. Shorter code, but you lose the seam, the hooks, and the evals. That trade is itself a teaching beat.</p>
+
+<details class="recall"><summary>A student's agent prints "MCP server 'research': failed". What are the two most likely causes?</summary><div><p>Token mismatch between the two terminals, or the server is not running on 8765 (on this Mac, usually because Anki has the port).</p></div></details>
+
+<h2 id="deploy"><span class="n">4</span>Module 05: what changes when you deploy</h2>
+
+<p>The reframe on the slide: not "wrap your agent in FastAPI", but "deploy the MCP server itself and let every host connect." One server serves Claude web, Claude Code, Cursor, and ChatGPT. That is module 01's M×N payoff over the public internet.</p>
+
+<div class="scroll"><table>
+<tr><th></th><th>Demo 04 server</th><th>Demo 05 server</th></tr>
+<tr><td>Port</td><td>8765</td><td>8000</td></tr>
+<tr><td>Auth</td><td>Required, fails fast</td><td>Off unless <code>MCP_AUTH_TOKEN</code> is set</td></tr>
+<tr><td>Sessions</td><td>Default (stateful, <code>Mcp-Session-Id</code>)</td><td><code>stateless_http=True</code></td></tr>
+<tr><td>Response</td><td>Default (SSE stream)</td><td><code>json_response=True</code></td></tr>
+<tr><td>Host header check</td><td>Default on (localhost only)</td><td>Off via <code>transport_security</code></td></tr>
+<tr><td>Tools</td><td><code>research_topic</code>, <code>list_briefs</code>, <code>read_brief</code></td><td><code>research_explorer</code> (MCP App), <code>quick_search</code></td></tr>
+<tr><td>App object</td><td>Built inside <code>__main__</code></td><td>Module-level <code>app = build_app()</code>, importable by Vercel</td></tr>
+</table></div>
+
+<h3>Why those three flags</h3>
+<pre><code>mcp = FastMCP("research-explorer",
+    stateless_http=True,   <span class="c"># any replica answers any request</span>
+    json_response=True,    <span class="c"># one JSON body, no SSE stream</span>
+    host="127.0.0.1", port=8000,
+    transport_security=TransportSecuritySettings(
+        enable_dns_rebinding_protection=False))  <span class="c"># else 421 behind tunnel/Vercel</span></code></pre>
+<ul>
+<li><strong>Stateless:</strong> a serverless function may be a fresh process on every request. With sessions, request two would land on a process that never saw request one. Stateless means every request carries what it needs. The 2026-07-28 spec makes the protocol core work this way.</li>
+<li><strong>JSON response:</strong> serverless platforms buffer or time out long-lived streams. A plain JSON reply is boring and works everywhere.</li>
+<li><strong>Host check off:</strong> the SDK auto-enables DNS-rebinding protection when you bind 127.0.0.1 and rejects any non-localhost <code>Host</code> header with <code>421 Misdirected Request</code>. A tunnel or Vercel hostname is exactly that. It looks like a Cloudflare error but it is your origin refusing. <span class="ok">Verified:</span> a request with <code>Host: abc.trycloudflare.com</code> gets 200 from this server.</li>
+</ul>
+
+<h3>The Vercel wrapper is three files</h3>
+<ul>
+<li><code>api/index.py</code>: adds the parent dir to <code>sys.path</code> and does <code>from server import app</code>. Vercel's Python runtime looks for a variable named <code>app</code> there.</li>
+<li><code>vercel.json</code>: rewrites every path to <code>/api/index</code>, so <code>/mcp</code> reaches the app.</li>
+<li><code>requirements.txt</code>: <code>mcp[cli]>=1.12,&lt;2</code> and <code>ddgs</code> for Vercel's builder. Local runs use the inline UV metadata instead.</li>
+</ul>
+
+<h3>The MCP App is a tool plus a resource</h3>
+<pre><code>@mcp.tool(meta={"ui": {"resourceUri": "ui://research-explorer/app.html"}})
+def research_explorer(topic: str, max_sources: int = 6) -> dict: ...
+
+@mcp.resource("ui://research-explorer/app.html",
+              mime_type="text/html;profile=mcp-app")
+def research_explorer_app() -> str:
+    return APP_HTML_PATH.read_text()</code></pre>
+<p>The host reads the resource, renders the HTML in a sandboxed iframe, and talks to it over postMessage. <code>app.html</code> does the handshake in about 50 lines of vanilla JS so students see there is no magic:</p>
+<div class="scroll"><table>
+<tr><th>Direction</th><th>Message</th><th>Meaning</th></tr>
+<tr><td>View → Host</td><td><code>ui/initialize</code> (protocolVersion <code>2026-01-26</code>)</td><td>Hello, here is what I can display</td></tr>
+<tr><td>View → Host</td><td><code>ui/notifications/initialized</code></td><td>Ready</td></tr>
+<tr><td>Host → View</td><td><code>ui/notifications/tool-input</code></td><td>The arguments the tool was called with</td></tr>
+<tr><td>Host → View</td><td><code>ui/notifications/tool-result</code></td><td>The tool result; the view renders cards</td></tr>
+<tr><td>View → Host</td><td><code>tools/call</code></td><td>The Search button re-runs the tool through the host</td></tr>
+</table></div>
+
+<h3>Which host can reach what</h3>
+<div class="scroll"><table>
+<tr><th>Host</th><th>Localhost URL?</th><th>Custom headers?</th><th>Renders MCP Apps?</th></tr>
+<tr><td>Claude Code / Agent SDK</td><td>Yes</td><td>Yes (bearer works)</td><td>No</td></tr>
+<tr><td>Claude web / desktop</td><td>No, public URL only</td><td>No, OAuth or none</td><td>Yes</td></tr>
+<tr><td>MCP Inspector / <code>test_client.py</code></td><td>Yes</td><td>Yes</td><td>No, but checks the wiring</td></tr>
+</table></div>
+<p>This table is why demo 05 goes local → tunnel → connector → Vercel, and why <code>MCP_AUTH_TOKEN</code> stays unset for it.</p>
+
+<details class="recall"><summary>Why does a tunnel produce a 421 on a default FastMCP server, and which line fixes it?</summary><div><p>Binding 127.0.0.1 turns on DNS-rebinding protection, which only accepts localhost <code>Host</code> headers. The tunnel forwards its own hostname. <code>transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False)</code> turns the check off.</p></div></details>
+<details class="recall"><summary>What two MCP primitives make an App, and what links them?</summary><div><p>A tool and a resource. The tool's <code>_meta.ui.resourceUri</code> points at the resource's <code>ui://</code> URI, which serves HTML with mime type <code>text/html;profile=mcp-app</code>.</p></div></details>
+<details class="recall"><summary>Why can you not add demo 04's server as a Claude custom connector?</summary><div><p>The connector UI has no field for a bearer header. It supports OAuth or no auth. Demo 04 requires a bearer token, so only Claude Code and the SDK can use it.</p></div></details>
+
+<h2 id="run05"><span class="n">5</span>Demo 05 runbook</h2>
+
+<h3>Step 1 · Start locally <span class="ok">verified</span></h3>
+<pre><code>cd demos/05-deploy-remote-mcp
+uv run server.py</code></pre>
+<pre class="out"><code>🚀 research-explorer MCP server on http://127.0.0.1:8000/mcp
+   stateless_http=True json_response=True — deployable anywhere
+   auth: OPEN (set MCP_AUTH_TOKEN to require a bearer token)</code></pre>
+
+<h3>Step 2 · Pre-flight <span class="ok">verified</span></h3>
+<pre><code>uv run test_client.py</code></pre>
+<pre class="out"><code>→ connecting to http://127.0.0.1:8000/mcp
+✅ tools/list: ['quick_search', 'research_explorer']
+✅ MCP Apps link: ui://research-explorer/app.html
+✅ ui resource: text/html;profile=mcp-app, 5936 chars of HTML
+✅ tools/call: ok=True count=3
+   • Model Context Protocol — https://en.wikipedia.org/wiki/Model_Context_Protocol
+   …
+Protocol checks passed. Safe to connect a host to this server. 🎉</code></pre>
+<div class="callout say"><span class="say-label">Say</span><p>These are the three calls every host makes: list the tools, read the UI resource, call a tool. If this passes, a host will connect. If search returns nothing, the protocol still passed; DDGS is throttling.</p></div>
+
+<h3>Step 3 · Show one raw request <span class="ok">verified</span></h3>
+<pre><code>curl -s -X POST http://127.0.0.1:8000/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"curl","version":"0"}}}'</code></pre>
+<pre class="out"><code>{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2025-11-25","capabilities":{…},
+ "serverInfo":{"name":"research-explorer","version":"1.28.1"}}}</code></pre>
+<p>One JSON body back. That is <code>json_response=True</code>. No stream, no session header to carry.</p>
+
+<h3>Step 4 · Claude Code on the local URL</h3>
+<pre><code>claude mcp add research-explorer --transport http http://127.0.0.1:8000/mcp
+claude mcp list</code></pre>
+<p>Your machine already has this entry; it showed as failed today only because the server was down. Start the server before opening Claude Code, then ask it to <em>quick_search for MCP Apps</em>.</p>
+
+<h3>Step 5 · Tunnel, then pre-flight through it</h3>
+<pre><code>cloudflared tunnel --url http://localhost:8000     <span class="c"># installed via brew on this Mac</span>
+<span class="c"># copy the https://&lt;random&gt;.trycloudflare.com line, then:</span>
+uv run test_client.py https://&lt;random&gt;.trycloudflare.com/mcp</code></pre>
+<p>This second pre-flight is the one that catches 421 problems. The localhost run cannot.</p>
+
+<h3>Step 6 · Claude web custom connector</h3>
+<p>Claude → Settings → Connectors → <strong>Add custom connector</strong> → paste <code>https://&lt;random&gt;.trycloudflare.com/mcp</code>. Then ask: <em>use research_explorer to research MCP Apps</em>. The card grid renders inside the conversation. Type a refinement in the panel and press Search: the app calls <code>tools/call</code> back through the host.</p>
+<div class="callout say"><span class="say-label">Say</span><p>Nothing on the server knows it is being rendered. It returned a dict and served an HTML file. The host did the sandboxing and the messaging.</p></div>
+
+<h3>Step 7 · Vercel</h3>
+<pre><code>npm i -g vercel &amp;&amp; vercel login    <span class="c"># CLI is NOT installed on this Mac yet</span>
+cd demos/05-deploy-remote-mcp
+vercel deploy --prod
+uv run test_client.py https://&lt;your-app&gt;.vercel.app/mcp</code></pre>
+<p>Deploy once before class and keep the URL. Live, show the pre-flight against it and add it as a second connector. Same server, now permanent. If <code>tools/call</code> returns <code>ok=False</code> from Vercel, DDGS is likely blocking datacenter IPs; the protocol checks still prove the deployment.</p>
+
+<details class="recall"><summary>In what order do you pre-flight, and what does each run prove?</summary><div><p>Localhost proves the server and app wiring. Through the tunnel proves the Host header and public reachability. After Vercel proves the serverless wrapper. Each catches a failure the previous one cannot.</p></div></details>
+
+<h2 id="breaks"><span class="n">6</span>When it breaks live</h2>
+<div class="scroll"><table>
+<tr><th>Symptom</th><th>Cause</th><th>Do</th><th>Say</th></tr>
+<tr><td>04 server exits at start</td><td><code>MCP_AUTH_TOKEN</code> unset</td><td>Export it</td><td>"Fail fast beats a silent default secret."</td></tr>
+<tr><td>Port 8765 in use</td><td>Anki (AnkiConnect) on this Mac</td><td>Quit Anki; <code>lsof -nP -iTCP:8765</code></td><td>Nothing, fix it before class</td></tr>
+<tr><td>Wall of <code>MCP server '…': pending / failed</code> at init</td><td>Your global Claude config's servers</td><td><code>CLAUDE_CONFIG_DIR=/tmp/clean-claude</code></td><td>"Those are my other servers." Better: avoid it.</td></tr>
+<tr><td>Agent: server 'research' failed / 401</td><td>Token mismatch across terminals</td><td>Same value in both</td><td>"The seam works. That is a rejected request."</td></tr>
+<tr><td><code>ok: False, error: search_unavailable</code></td><td>DDGS throttled</td><td>Retry; or <code>research_agent_builtin_tools.py</code></td><td>"Structured error, agent decides. No crash."</td></tr>
+<tr><td>421 through tunnel or Vercel</td><td>DNS-rebinding protection on</td><td>Keep the <code>transport_security</code> line</td><td>"Your origin refused the hostname, not Cloudflare."</td></tr>
+<tr><td>Cannot add 04 as connector</td><td>No bearer field in Claude</td><td>Use 05, leave its token unset</td><td>"OAuth or nothing. That is the ladder's rung 3."</td></tr>
+<tr><td>Claude Code shows server failed</td><td>Server not running</td><td>Start it, then <code>/mcp</code></td><td>Reconnect and move on</td></tr>
+<tr><td>Evals crawl</td><td>3 agent runs + 3 judges</td><td>Show pre-run output; or one CASE</td><td>"This is the CI gate. It is slow on purpose."</td></tr>
+<tr><td>App panel blank</td><td>Handshake not completed or host lacks Apps</td><td>Check <code>test_client</code> step 2; use Claude web</td><td>"The tool still returned data; the view is optional."</td></tr>
+</table></div>
+
+<h2 id="students"><span class="n">7</span>Explaining it to students</h2>
+
+<h3>One line each</h3>
+<ul>
+<li><strong>Intent-grouped tools:</strong> give the agent a "make me a brief" button, not a toolbox.</li>
+<li><strong>streamable-http:</strong> the server is a URL now, not a subprocess on your laptop.</li>
+<li><strong>Auth seam:</strong> the bouncer is at the door, not in every room. Swap the bouncer, keep the rooms.</li>
+<li><strong>Hooks and permissions:</strong> checkpoints around every tool call, plus a guest list.</li>
+<li><strong>Telemetry vs evals:</strong> telemetry says it ran and what it cost. Evals say it was right.</li>
+<li><strong>Stateless:</strong> every request carries everything it needs, so any copy of the server can answer.</li>
+<li><strong>Tunnel:</strong> a temporary public door into your laptop.</li>
+<li><strong>MCP App:</strong> a tool that ships its own small web page; the chat renders it in a sandbox.</li>
+</ul>
+
+<h3>Questions they will ask</h3>
+<details class="recall"><summary>Why not just wrap the agent in FastAPI like every tutorial?</summary><div><p>Then only your app can use those tools. Deploying the server lets every host connect: Claude, Claude Code, Cursor, ChatGPT. The archived demo did the FastAPI + SSE route in about ten times the code.</p></div></details>
+<details class="recall"><summary>Is a bearer token secure enough for production?</summary><div><p>Only over HTTPS, and it is one shared secret with no per-user identity or scopes. That is why it is rung 2. Production is OAuth 2.1 with the server as resource server. The wiring you saw is the same; the credential changes.</p></div></details>
+<details class="recall"><summary>Where does OAuth actually go?</summary><div><p>In place of <code>BearerAuthMiddleware</code>, typically an API gateway or an auth library that validates tokens. The tools do not change. Claude's connector flow expects it.</p></div></details>
+<details class="recall"><summary>Why does demo 05 have no auth if this is the "production" module?</summary><div><p>Claude's connector UI cannot send a bearer header, and the demo is about reachability and the App. Set <code>MCP_AUTH_TOKEN</code> and the optional middleware turns on for clients that can send headers. The real answer is OAuth, covered as the ladder.</p></div></details>
+<details class="recall"><summary>What does the 2026-07-28 spec change here?</summary><div><p>The protocol core becomes stateless: no initialize handshake, no <code>Mcp-Session-Id</code>. Demo 05 is already shaped that way with <code>stateless_http=True</code>. Do not bump to SDK v2 yet; it renames <code>FastMCP</code> to <code>MCPServer</code>.</p></div></details>
+<details class="recall"><summary>Does the MCP App run on my server?</summary><div><p>No. The server only serves the HTML as a resource. The host runs it in a sandboxed iframe and relays <code>tools/call</code> for it. The server never learns whether a UI was rendered.</p></div></details>
+
+<h2 id="checklist"><span class="n">8</span>Pre-class checklist</h2>
+<ul class="check">
+<li>Quit Anki, confirm port 8765 is free.</li>
+<li><code>ANTHROPIC_API_KEY</code> present in the shell you will present from.</li>
+<li><code>export MCP_AUTH_TOKEN=demo-secret</code> in both demo 04 terminals.</li>
+<li>Run demo 04 server + agent once with <code>CLAUDE_CONFIG_DIR=/tmp/clean-claude</code>; keep the brief it wrote.</li>
+<li>Run <code>evals.py</code> once; keep the JSON and the exit code in a tab.</li>
+<li>Run demo 05 server + <code>test_client.py</code> locally.</li>
+<li>Open a cloudflared tunnel; run <code>test_client.py</code> through it; add it as a custom connector and confirm the panel renders.</li>
+<li>Install the Vercel CLI, log in, deploy once, pre-flight the URL, keep it.</li>
+<li><code>claude mcp list</code> shows research-explorer; start the server before opening Claude Code.</li>
+<li>Remove stale custom connectors from old tunnel URLs in Claude settings.</li>
+<li><code>make test</code> at the repo root passes (offline tests for the hook, evals grading, server).</li>
+</ul>
+
+<h2 id="recap"><span class="n">9</span>Recap</h2>
+<p>Production shape is four moves on the same server: intent-grouped tools, HTTP, an auth seam, control and evals. Deployment is shipping that server as an ASGI app, made stateless and JSON so it survives serverless, then letting hosts connect: Claude Code on localhost, Claude web through a tunnel or Vercel. The App is a tool plus a resource. Pre-flight three times and quit Anki.</p>
+
+</main>
+<script>
+(function(){
+  var bar=document.getElementById('bar');
+  function u(){var h=document.documentElement,m=h.scrollHeight-h.clientHeight;bar.style.width=(m>0?h.scrollTop/m*100:0)+'%';}
+  addEventListener('scroll',u,{passive:true});addEventListener('resize',u);u();
+  var nav=document.getElementById('toc'),ol=document.createElement('ol');
+  document.querySelectorAll('main > h2').forEach(function(h){var li=document.createElement('li'),a=document.createElement('a');a.href='#'+h.id;a.textContent=h.textContent.replace(/^\d+/,'').trim();li.appendChild(a);ol.appendChild(li);});
+  nav.appendChild(ol);
+})();
+</script>
+</body>
+</html>
