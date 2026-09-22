@@ -1,11 +1,12 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["anthropic", "ddgs", "python-dotenv"]
+# dependencies = ["anthropic", "python-dotenv"]
 # ///
 """Standalone personal agent — the .py companion to the notebook.
 
-Same tools (web_search + read/write/edit/bash), same agent loop, runnable end-to-end:
+Same tools (read/write/edit/bash as local functions, web_search as Anthropic's
+server-side tool), same agent loop, runnable end-to-end:
 
     uv run basic_personal_agent.py "Research the Model Context Protocol and save a brief."
 """
@@ -19,7 +20,6 @@ import sys
 from pathlib import Path
 
 from anthropic import Anthropic
-from ddgs import DDGS
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -34,14 +34,6 @@ def _safe(path: str) -> Path:
     if WORKSPACE not in p.parents and p != WORKSPACE:
         raise ValueError(f"Path escapes workspace: {path}")
     return p
-
-
-def web_search(query: str, max_results: int = 5) -> str:
-    hits = DDGS().text(query, max_results=max_results)
-    return json.dumps(
-        [{"title": h.get("title"), "url": h.get("href"), "snippet": h.get("body")} for h in hits],
-        indent=2,
-    )
 
 
 def read_file(path: str) -> str:
@@ -79,18 +71,9 @@ def run_bash(command: str) -> str:
 
 
 TOOLS = [
-    {
-        "name": "web_search",
-        "description": "Search the web with DuckDuckGo. Returns JSON list of {title, url, snippet}.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "query": {"type": "string"},
-                "max_results": {"type": "integer", "default": 5},
-            },
-            "required": ["query"],
-        },
-    },
+    # Server-side tool: Anthropic runs the search and feeds results back to the
+    # model inside the same API call. No schema, no function on our side.
+    {"type": "web_search_20260209", "name": "web_search", "max_uses": 5},
     {
         "name": "read",
         "description": "Read a text file from the workspace.",
@@ -137,7 +120,6 @@ TOOLS = [
 ]
 
 FUNCTIONS = {
-    "web_search": web_search,
     "read": read_file,
     "write": write_file,
     "edit": edit_file,
@@ -166,6 +148,15 @@ def run_agent(user_query: str, max_iterations: int = 15) -> str:
             messages=messages,
             tools=TOOLS,
         )
+
+        for block in response.content:
+            if block.type == "server_tool_use":
+                print(f"  [{i + 1}] {block.name}({json.dumps(block.input)[:120]})  <- server-side")
+
+        if response.stop_reason == "pause_turn":
+            # Server-side search hit its iteration cap; re-send and the API resumes.
+            messages.append({"role": "assistant", "content": response.content})
+            continue
 
         if response.stop_reason != "tool_use":
             text = "".join(b.text for b in response.content if hasattr(b, "text"))
@@ -198,3 +189,4 @@ if __name__ == "__main__":
         "brief to research/mcp-brief.md with bullets and a sources section."
     )
     run_agent(query)
+ 
