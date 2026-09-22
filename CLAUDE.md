@@ -116,6 +116,7 @@ Claude Desktop config: macOS `~/Library/Application Support/Claude/claude_deskto
 - Module 05 `421 Misdirected Request` via tunnel/Vercel (localhost works) → the mcp SDK auto-enables DNS-rebinding protection when binding 127.0.0.1 and rejects non-localhost `Host` headers at the origin. `server.py` opts out via `transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False)` — keep that when editing, and pre-flight with `uv run test_client.py <public-url>/mcp` (the localhost pre-flight can't catch this).
 - DDGS empty results → throttling; tools degrade gracefully, retry.
 - `mcp` not found → `pip install "mcp[cli]>=1.12,<2"`.
+- `mcp dev` Inspector shows Failed / "Connection closed" → the Inspector spawns `uv run --with mcp mcp run <file>` in a clean env, so unpinned `mcp` resolves to v2 without the cli extra. Keep `FastMCP(..., dependencies=["mcp[cli]>=1.12,<2", "ddgs"])` on stdio servers (01/02) and keep the `ddgs` import lazy so `mcp dev` can import the module before installing deps.
 
 ## Additional Resources
 - Spec 2026-07-28 (**current revision**, shipped final): https://modelcontextprotocol.io/specification/2026-07-28 — stateless core, extensions framework, MRTR; covered in slides (deck positions 24, 68–70)

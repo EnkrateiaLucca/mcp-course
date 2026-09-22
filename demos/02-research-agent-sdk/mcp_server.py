@@ -20,10 +20,13 @@ import json
 import logging
 from pathlib import Path
 
-from ddgs import DDGS
 from mcp.server.fastmcp import FastMCP
 
-mcp = FastMCP("research-assistant")
+# `mcp dev` spawns the Inspector's server as `uv run --with mcp mcp run ...` in a
+# clean env: unpinned "mcp" resolves to the v2 SDK and lacks the cli extra, so
+# `mcp run` dies with "typer is required". dependencies= is merged into that
+# command as extra --with flags, which pins the SDK and adds ddgs.
+mcp = FastMCP("research-assistant", dependencies=["mcp[cli]>=1.12,<2", "ddgs"])
 
 WORKSPACE = (Path(__file__).parent / "workspace").resolve()
 WORKSPACE.mkdir(exist_ok=True)
@@ -40,6 +43,8 @@ def _safe(path: str) -> Path:
 @mcp.tool()
 def web_search(query: str, max_results: int = 5) -> str:
     """Search the web with DuckDuckGo. Returns JSON list of {title, url, snippet}."""
+    from ddgs import DDGS  # lazy: `mcp dev` imports this module before installing deps
+
     hits = DDGS().text(query, max_results=max_results)
     return json.dumps(
         [{"title": h.get("title"), "url": h.get("href"), "snippet": h.get("body")} for h in hits],
