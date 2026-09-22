@@ -52,7 +52,7 @@ def build_options() -> ClaudeAgentOptions:
         # REQUIRED: skills are discovered only through 'user' / 'project'
         # setting sources. Default is []; without this, skills="all" loads
         # nothing.
-        setting_sources=["user", "project"],
+        setting_sources=["project"],
         skills="all",
         allowed_tools=["Read", "Write", "Bash", "Skill"],
         permission_mode="bypassPermissions",
@@ -75,7 +75,8 @@ async def main() -> None:
                 skills = message.data.get("skills", []) or []
                 print(f"[skills discovered: {len(skills)}]")
                 for s in skills:
-                    print(f"  • {s.get('name', s)}")
+                    print(s)
+                    # print(f"  • {s.get('name', s)}")
             elif isinstance(message, AssistantMessage):
                 for block in message.content:
                     if isinstance(block, TextBlock):
