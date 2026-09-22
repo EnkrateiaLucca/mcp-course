@@ -27,6 +27,7 @@ Then run the agent:
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import os
 import sys
@@ -123,12 +124,33 @@ async def pre_tool_validate(input_data: dict, tool_use_id: str | None, context: 
     return {}
 
 
+def _tool_result_dict(response: Any) -> dict:
+    """Normalise a PostToolUse `tool_response` to the tool's structured dict.
+
+    MCP tools arrive as a list of content blocks — the dict our server
+    returned is JSON inside the first text block, not a top-level dict.
+    Anything unparseable becomes {} (treated as ok, nothing to report).
+    """
+    if isinstance(response, dict) and isinstance(response.get("content"), list):
+        response = response["content"]
+    if isinstance(response, dict):
+        return response
+    for block in response if isinstance(response, list) else []:
+        if isinstance(block, dict) and block.get("type") == "text":
+            try:
+                parsed = json.loads(block.get("text") or "")
+            except ValueError:
+                return {}
+            return parsed if isinstance(parsed, dict) else {}
+    return {}
+
+
 async def post_tool_log(input_data: dict, tool_use_id: str | None, context: HookContext) -> dict:
     """PostToolUse: observability. One log line per tool call."""
     name = input_data.get("tool_name", "?")
-    response = input_data.get("tool_response", {})
-    ok = isinstance(response, dict) and response.get("ok", True)
-    log.info("tool %s -> %s", name, "ok" if ok else f"error: {response!r}"[:200])
+    result = _tool_result_dict(input_data.get("tool_response"))
+    ok = result.get("ok", True)
+    log.info("tool %s -> %s", name, "ok" if ok else f"error: {result!r}"[:200])
     return {}
 
 
@@ -227,15 +249,16 @@ async def run(user_prompt: str) -> ExecutionTracker:
                 log.info("session init — %d tools available", len(tools))
                 # Surface MCP connection/auth failures immediately. The SDK
                 # emits a per-server `status` in the init payload — a 401 or
-                # unreachable server shows up here, not as "agent didn't use
-                # the tool" 30 seconds later.
+                # unreachable server shows up here as "failed", not as "agent
+                # didn't use the tool" 30 seconds later. "pending" just means
+                # the HTTP connect hadn't finished when init fired; tools work.
                 for srv in message.data.get("mcp_servers", []) or []:
                     status = srv.get("status", "unknown")
                     name = srv.get("name", "?")
-                    if status != "connected":
-                        log.error("MCP server %r: %s", name, status)
+                    if status in ("connected", "pending"):
+                        log.info("MCP server %r: %s", name, status)
                     else:
-                        log.info("MCP server %r: connected", name)
+                        log.error("MCP server %r: %s", name, status)
             elif isinstance(message, AssistantMessage):
                 for block in message.content:
                     if isinstance(block, TextBlock):
