@@ -50,6 +50,11 @@ uv run skill_loader_demo.py
 
 ## Also in this folder
 
+- `skills-over-mcp/` — the two layers meet: an MCP server that serves the
+  mcp-builder skill through the official Skills extension (SEP-2640,
+  `skills/list` + `skills/get` + `skill://` resources), verified with the
+  MCP Inspector CLI (`--method skills/list --verify`) and a tamper demo
+  that shows per-file digests revoking approval.
 - `hacks_tips.md` — ecosystem quick hits shown live (context7, gitingest,
   llms.txt, deepwiki).
 
