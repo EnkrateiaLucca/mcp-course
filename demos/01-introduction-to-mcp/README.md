@@ -24,7 +24,7 @@ the whole point: the server you write here is consumed, unmodified, by
 
 ## Files
 
-- `mcp_server.py` — FastMCP server: `web_search`, `read_file`, `write_file`,
+- `mcp_server.py` — `MCPServer` server: `web_search`, `read_file`, `write_file`,
   `edit_file`, `move_file`, `delete_file`, `list_files`, plus a
   `workspace://files` resource.
 - `mcp_client.py` — a thin protocol client, runnable standalone. ~60 lines
@@ -79,8 +79,8 @@ integrations collapses to M+N. In demo 02, a third host — the **Claude
 Agent SDK** — consumes this same file, and the "agent loop" you built in
 demo 00 disappears into one SDK call.
 
-> 🗓️ **2026 note.** This server uses the official Python SDK's v1 `FastMCP`
-> class (pinned `mcp>=1.12,<2`). SDK v2 — which tracks the July 28, 2026
-> spec revision — renames it to `MCPServer`; the standalone "FastMCP 3"
-> project (Prefect) is a separate, higher-level framework. Same concepts
-> everywhere; only names move.
+> 🗓️ **2026 note.** This server uses the official Python SDK v2's
+> `MCPServer` class (`mcp>=2.3,<3`), which tracks the July 28, 2026 spec
+> revision. Older tutorials show v1's `FastMCP` from `mcp.server.fastmcp`:
+> same SDK, old name. The standalone "FastMCP 3" project (Prefect) is a
+> separate, higher-level framework. Same concepts everywhere.

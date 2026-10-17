@@ -99,7 +99,7 @@ function setStatus(text) { document.getElementById("status").textContent = text;
 
 function renderToolResult(result) {
   // result is a standard MCP CallToolResult; our tool returns structured
-  // JSON, which FastMCP mirrors into content[0].text as a JSON string.
+  // JSON, which MCPServer mirrors into content[0].text as a JSON string.
   let data = result?.structuredContent;
   if (!data) {
     const text = (result?.content || []).find((c) => c.type === "text")?.text;

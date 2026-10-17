@@ -12,7 +12,7 @@ breakdowns — with working filter dropdowns that call back into the server.
 
 | File | Purpose |
 |---|---|
-| `server.py` | FastMCP server — 3 tools + the `ui://` app resource |
+| `server.py` | `MCPServer` server — 3 tools + the `ui://` app resource |
 | `app.html` | the MCP App page (vanilla JS + inline SVG, `ui/initialize` handshake) |
 | `data/sales_data.csv` | mock sales data (regenerate: `uv run generate_data.py`) |
 | `generate_data.py` | seeded data generator (stable numbers) |

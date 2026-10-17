@@ -105,13 +105,13 @@ Digests change if you edit the skill files. The PASS/FAIL pattern stays the same
 ## How the server works
 
 - `skill_entry()` hashes every file from disk on each request, so an edit shows up with a new digest right away.
-- The pinned v1 Python SDK only accepts spec-defined methods. `skills_server.py` widens its request parser by two methods (`ClientRequestWithSkills` and `SkillsSession`, about 10 lines). Delete them once the SDK ships native support.
+- `skills/list` and `skills/get` are registered with the v2 SDK's `Server.add_request_handler`, so no SDK workaround is needed.
 - Add a skill by dropping another folder with a `SKILL.md` into `skills/`. The folder name must equal the `name` in its frontmatter.
 
 ## Current status (October 2026)
 
-- **Spec:** Final since 2026-09-13, written against base protocol `2026-07-28`. Our pinned `mcp>=1.12,<2` speaks `2025-11-25`, so the server declares the extension in its `initialize` result (the newer revision uses `server/discover`). The server still sends the newer `resultType`, `ttlMs` and `cacheScope` fields.
-- **SDKs:** native support in the Python, TypeScript, Go and C# SDKs is still in open PRs (Python: [python-sdk#3485](https://github.com/modelcontextprotocol/python-sdk/pull/3485)). That gap is why the parser workaround exists.
+- **Spec:** Final since 2026-09-13, written against base protocol `2026-07-28`. The server runs on SDK v2 (`mcp>=2.3,<3`), which advertises extensions only in the `2026-07-28` `server/discover` result: a client using the older `initialize` handshake still gets the `skill://` resources, but not the extension capability. `verify_skills.py` connects with `discover()` for that reason. The server still sends the newer `resultType`, `ttlMs` and `cacheScope` fields.
+- **SDKs:** native Skills types in the Python, TypeScript, Go and C# SDKs are still in open PRs (Python: [python-sdk#3485](https://github.com/modelcontextprotocol/python-sdk/pull/3485)), so both sides send the two methods as plain JSON-RPC.
 - **Hosts:** the official [client matrix](https://modelcontextprotocol.io/extensions/client-matrix) lists Skills support for mcpc, plus partial support in ChatGPT, fast-agent and MCP Inspector. Claude Code is not listed, and Claude web and Desktop show no Skills support. Claude Code connected to this server sees the `skill://` files as plain resources.
 - **Digests are unsigned.** The same server supplies the content and the digests. A match proves the two agree. Digests catch drift and changes after approval. They cannot protect you from a malicious server or from a gateway that rewrites both.
 

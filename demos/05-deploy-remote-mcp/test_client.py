@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["mcp[cli]>=1.12,<2"]
+# dependencies = ["mcp[cli]>=2.3,<3"]
 # ///
 """Pre-flight check for the deployed server — run BEFORE class, and again
 after deploying to Vercel, to confirm everything a host needs is in place.
@@ -26,13 +26,12 @@ import sys
 
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
-from pydantic import AnyUrl
 
 URL = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8000/mcp"
 
 async def main() -> None:
     print(f"→ connecting to {URL}")
-    async with streamable_http_client(URL) as (read, write, _):
+    async with streamable_http_client(URL) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()
 
@@ -47,17 +46,17 @@ async def main() -> None:
             print(f"✅ MCP Apps link: {ui_uri}")
 
             # 2. the ui:// resource
-            res = await session.read_resource(AnyUrl(ui_uri))
+            res = await session.read_resource(ui_uri)
             content = res.contents[0]
-            assert "text/html" in (content.mimeType or ""), content.mimeType
+            assert "text/html" in (content.mime_type or ""), content.mime_type
             assert "ui/initialize" in content.text, "app HTML missing the handshake"
-            print(f"✅ ui resource: {content.mimeType}, {len(content.text)} chars of HTML")
+            print(f"✅ ui resource: {content.mime_type}, {len(content.text)} chars of HTML")
 
             # 3. call the tool
             result = await session.call_tool(
                 "research_explorer", {"topic": "model context protocol", "max_sources": 3}
             )
-            payload = result.structuredContent or json.loads(result.content[0].text)
+            payload = result.structured_content or json.loads(result.content[0].text)
             if payload.get("ok"):
                 print(f"✅ tools/call: ok=True count={payload.get('count')}")
                 for s in (payload.get("sources") or [])[:3]:

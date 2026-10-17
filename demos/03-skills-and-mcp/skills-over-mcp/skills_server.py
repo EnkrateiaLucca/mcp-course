@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["mcp[cli]>=1.12,<2", "pyyaml"]
+# dependencies = ["mcp[cli]>=2.3,<3", "pyyaml"]
 # ///
 """Serve Agent Skills over MCP with the Skills extension (SEP-2640).
 
@@ -19,17 +19,13 @@ from __future__ import annotations
 import hashlib
 import os
 from pathlib import Path
-from typing import Literal
 
 import anyio
 import yaml
 from mcp import types
 from mcp.server.lowlevel import Server
-from mcp.server.lowlevel import server as lowlevel_server
-from mcp.server.lowlevel.helper_types import ReadResourceContents
-from mcp.server.session import ServerSession
 from mcp.server.stdio import stdio_server
-from mcp.shared.exceptions import McpError
+from mcp.shared.exceptions import MCPError
 
 SKILLS_DIR = Path(os.environ.get("SKILLS_DIR", Path(__file__).parent / "skills")).resolve()
 EXTENSION = "io.modelcontextprotocol/skills"
@@ -80,89 +76,69 @@ def skill_entry(skill_dir: Path) -> dict:
 
 
 # ── Two new JSON-RPC methods (§Listing Skills, §Getting a Skill) ─────────────
+# The v2 SDK lets a low-level server register any extra method by name with
+# add_request_handler, so skills/list and skills/get need no SDK workaround.
 
-class ListSkillsRequest(types.PaginatedRequest[Literal["skills/list"]]):
-    method: Literal["skills/list"] = "skills/list"
+class ListSkillsParams(types.PaginatedRequestParams):
+    pass
 
 
 class GetSkillParams(types.RequestParams):
     uri: str
 
 
-class GetSkillRequest(types.Request[GetSkillParams, Literal["skills/get"]]):
-    method: Literal["skills/get"] = "skills/get"
-    params: GetSkillParams
-
-
-# The v1 SDK validates every incoming request against a closed union of
-# spec-defined methods, so "skills/list" would be rejected before reaching any
-# handler. Widen that union by our two methods. This is the whole SDK
-# workaround; native support is pending (python-sdk PR #3485).
-class ClientRequestWithSkills(types.ClientRequest):
-    root: types.ClientRequestType | ListSkillsRequest | GetSkillRequest
-
-
-class SkillsSession(ServerSession):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self._receive_request_type = ClientRequestWithSkills
-
-
-lowlevel_server.ServerSession = SkillsSession  # Server.run() builds its session from this name
-
-
-# ── The server ────────────────────────────────────────────────────────────────
-
-server = Server("skills-over-mcp")
 CACHE_HINT = {"ttlMs": 0, "cacheScope": "public"}  # CacheableResult: files are live on disk, so don't cache
 
 
-async def list_skills(req: ListSkillsRequest) -> types.Result:
+async def list_skills(ctx, params: ListSkillsParams) -> dict:
     # One page holds the whole catalog, so no nextCursor.
     skills = [skill_entry(d) for d in skill_dirs()]
-    return types.Result.model_validate({"resultType": "complete", "skills": skills, **CACHE_HINT})
+    return {"resultType": "complete", "skills": skills, **CACHE_HINT}
 
 
-async def get_skill(req: GetSkillRequest) -> types.Result:
+async def get_skill(ctx, params: GetSkillParams) -> dict:
     for d in skill_dirs():
-        if f"skill://{d.name}/SKILL.md" == req.params.uri:
-            return types.Result.model_validate({"resultType": "complete", "skill": skill_entry(d), **CACHE_HINT})
-    raise McpError(types.ErrorData(code=types.INVALID_PARAMS, message=f"No skill is served at {req.params.uri}"))
-
-
-server.request_handlers[ListSkillsRequest] = list_skills
-server.request_handlers[GetSkillRequest] = get_skill
+        if f"skill://{d.name}/SKILL.md" == params.uri:
+            return {"resultType": "complete", "skill": skill_entry(d), **CACHE_HINT}
+    raise MCPError(types.INVALID_PARAMS, f"No skill is served at {params.uri}")
 
 
 # Skill files are plain resources, read with the standard resources/read
 # (§Reading Skill Content). Reading SKILL.md this way does not "activate" it.
-@server.list_resources()
-async def list_resources() -> list[types.Resource]:
-    return [
+async def list_resources(ctx, params) -> types.ListResourcesResult:
+    return types.ListResourcesResult(resources=[
         types.Resource(uri=uri, name=p.relative_to(SKILLS_DIR).as_posix(),
-                       mimeType="text/markdown" if p.suffix == ".md" else "text/plain")
+                       mime_type="text/markdown" if p.suffix == ".md" else "text/plain")
         for uri, p in all_files().items()
-    ]
+    ])
 
 
-@server.read_resource()
-async def read_resource(uri) -> list[ReadResourceContents]:
-    path = all_files().get(str(uri))  # only URIs we enumerated: no path traversal
+async def read_resource(ctx, params: types.ReadResourceRequestParams) -> types.ReadResourceResult:
+    path = all_files().get(params.uri)  # only URIs we enumerated: no path traversal
     if path is None:
-        raise McpError(types.ErrorData(code=types.INVALID_PARAMS, message=f"Unknown resource {uri}"))
+        raise MCPError(types.INVALID_PARAMS, f"Unknown resource {params.uri}")
     # ponytail: text files only (instructor-style skills); serve bytes as a blob if you add images.
     mime = "text/markdown" if path.suffix == ".md" else "text/plain"
     # read_bytes().decode() keeps the bytes exact (read_text would rewrite \r\n).
-    return [ReadResourceContents(content=path.read_bytes().decode("utf-8"), mime_type=mime)]
+    text = path.read_bytes().decode("utf-8")
+    return types.ReadResourceResult(contents=[
+        types.TextResourceContents(uri=params.uri, mime_type=mime, text=text)
+    ])
+
+
+# ── The server ────────────────────────────────────────────────────────────────
+
+server = Server("skills-over-mcp", on_list_resources=list_resources, on_read_resource=read_resource)
+server.add_request_handler("skills/list", ListSkillsParams, list_skills)
+server.add_request_handler("skills/get", GetSkillParams, get_skill)
+# §Capability Negotiation: declare the extension next to `resources`.
+# `{}` = supported, no optional features (we skip directoryRead).
+server.extensions = {EXTENSION: {}}
 
 
 async def main() -> None:
-    options = server.create_initialization_options()
-    # §Capability Negotiation: declare the extension next to `resources`.
-    # `{}` = supported, no optional features (we skip directoryRead).
-    options.capabilities.extensions = {EXTENSION: {}}
     async with stdio_server() as (read, write):
-        await server.run(read, write, options)
+        await server.run(read, write, server.create_initialization_options())
 
 
 if __name__ == "__main__":

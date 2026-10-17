@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["mcp[cli]>=1.12,<2", "ddgs"]
+# dependencies = ["mcp[cli]>=2.3,<3", "ddgs"]
 # ///
 """Research-assistant MCP server.
 
@@ -20,13 +20,12 @@ import json
 import logging
 from pathlib import Path
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
-# `mcp dev` spawns the Inspector's server as `uv run --with mcp mcp run ...` in a
-# clean env: unpinned "mcp" resolves to the v2 SDK and lacks the cli extra, so
-# `mcp run` dies with "typer is required". dependencies= is merged into that
-# command as extra --with flags, which pins the SDK and adds ddgs.
-mcp = FastMCP("research-assistant", dependencies=["mcp[cli]>=1.12,<2", "ddgs"])
+# `mcp dev` spawns the Inspector's server in a clean env (`uv run --with ... mcp
+# run ...`). dependencies= is merged into that command as extra --with flags, so
+# the spawned env gets the cli extra and ddgs too.
+mcp = MCPServer("research-assistant", dependencies=["mcp[cli]>=2.3,<3", "ddgs"])
 
 WORKSPACE = (Path(__file__).parent / "workspace").resolve()
 WORKSPACE.mkdir(exist_ok=True)

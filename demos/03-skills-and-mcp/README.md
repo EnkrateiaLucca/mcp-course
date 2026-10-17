@@ -19,7 +19,7 @@ what we do next.
 ## The demo: an agent that builds MCP servers
 
 `mcp-builder-skill/` is a production-grade skill (tool design guidance,
-FastMCP/TypeScript references, an eval harness) that teaches an agent how
+MCPServer/TypeScript references, an eval harness) that teaches an agent how
 to scaffold high-quality MCP servers. This mirrors the *official* workflow:
 the MCP docs now recommend building servers with Anthropic's
 `mcp-server-dev` plugin skills ([Build with Agent Skills](https://modelcontextprotocol.io/docs/develop/build-with-agent-skills)).

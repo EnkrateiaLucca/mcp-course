@@ -84,9 +84,10 @@ MCP_AUTH_TOKEN=demo-secret     # module 04 (and optionally 05)
 ```
 
 **Version pins that matter:**
-- `mcp>=1.12,<2` — the official Python SDK, pinned to v1. **v2 (tracking
-  the 2026-07-28 spec) renames `FastMCP` → `MCPServer`**; the standalone
-  "FastMCP 3" is a separate Prefect-backed project. Concepts identical.
+- `mcp>=2.3,<3` — the official Python SDK v2 (`from mcp.server.mcpserver
+  import MCPServer`). It speaks the 2026-07-28 spec and still accepts
+  2025-11-25 clients. v1 called the class `FastMCP`; the standalone
+  "FastMCP 3" is a separate Prefect-backed project.
 - `claude-agent-sdk` 0.2.x — bundles the Claude Code CLI; Python ≥3.10.
 
 ---
@@ -105,7 +106,7 @@ uv run demos/00-intro-agents/basic_personal_agent.py "Research MCP and save a br
 ```
 
 ### 01 — Introduction to MCP
-**`demos/01-introduction-to-mcp/`** · Same tools behind a FastMCP server.
+**`demos/01-introduction-to-mcp/`** · Same tools behind an `MCPServer`.
 Inspect with MCP Inspector, watch the raw protocol via the thin client,
 then connect **Claude Code** and **Claude Desktop** to it — two hosts, one
 server, zero changes.
@@ -196,7 +197,7 @@ paths, restart after editing.
 ## 🐛 Troubleshooting
 
 - **`mcp` module not found** → `uv` reads each script's inline metadata;
-  for manual envs `pip install "mcp[cli]>=1.12,<2"`.
+  for manual envs `pip install "mcp[cli]>=2.3,<3"`.
 - **Claude Desktop doesn't see the server** → absolute paths, `which uv`,
   run the server standalone first, restart the app.
 - **Module 04 401s** → `MCP_AUTH_TOKEN` must be set in *both* terminals.
@@ -208,7 +209,7 @@ paths, restart after editing.
 
 **Official:** [MCP docs](https://modelcontextprotocol.io/docs/getting-started/intro) ·
 [Spec (2026-07-28 — current)](https://modelcontextprotocol.io/specification/2026-07-28) ·
-[Spec (2025-11-25 — what our pinned SDK speaks)](https://modelcontextprotocol.io/specification/2025-11-25) ·
+[Spec (2025-11-25 — previous revision)](https://modelcontextprotocol.io/specification/2025-11-25) ·
 [2026-07-28 release post](https://blog.modelcontextprotocol.io/posts/2026-07-28/) ·
 [Python SDK](https://github.com/modelcontextprotocol/python-sdk) ·
 [Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk/overview) ·

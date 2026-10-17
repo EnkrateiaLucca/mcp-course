@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.12"
-# dependencies = ["mcp[cli]>=1.12,<2"]
+# dependencies = ["mcp[cli]>=2.3,<3"]
 # ///
 
 """
@@ -12,14 +12,14 @@ and write audit reports. Uses only the Python standard library.
 Test independently with: mcp dev link_checker_mcp_server.py
 """
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 import os
 import re
 import urllib.request
 import urllib.error
 import time
 
-mcp = FastMCP("link-checker")
+mcp = MCPServer("link-checker", dependencies=["mcp[cli]>=2.3,<3"])
 
 REPORTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "reports")
 os.makedirs(REPORTS_DIR, exist_ok=True)

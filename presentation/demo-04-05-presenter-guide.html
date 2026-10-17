@@ -101,7 +101,7 @@ details.recall>div>:last-child{margin-bottom:0}
 <p>An MCP server over HTTP is a normal web server with one endpoint, <code>/mcp</code>. A client POSTs a JSON-RPC message, the server answers with a JSON-RPC message. Everything in modules 04 and 05 wraps that one fact.</p>
 
 <pre class="wide"><code>uvicorn (local)  or  Vercel function (cloud)   <span class="c">← something has to RUN the app</span>
-  └─ Starlette ASGI app = mcp.streamable_http_app()   <span class="c">← the app. FastMCP builds it for you</span>
+  └─ Starlette ASGI app = mcp.streamable_http_app()   <span class="c">← the app. MCPServer builds it for you</span>
        └─ BearerAuthMiddleware                         <span class="c">← sees every request first (demo 04)</span>
             └─ POST /mcp  (JSON-RPC)                   <span class="c">← initialize, tools/list, tools/call…</span>
                  └─ your @mcp.tool() functions         <span class="c">← unchanged from module 01</span></code></pre>
@@ -258,10 +258,10 @@ status: success   duration: 15.37s   cost (est): $0.4901
 </table></div>
 
 <h3>Why those three flags</h3>
-<pre><code>mcp = FastMCP("research-explorer",
+<pre><code>mcp = MCPServer("research-explorer")
+app = mcp.streamable_http_app(   <span class="c"># SDK v2: transport flags live here, not on the constructor</span>
     stateless_http=True,   <span class="c"># any replica answers any request</span>
     json_response=True,    <span class="c"># one JSON body, no SSE stream</span>
-    host="127.0.0.1", port=8000,
     transport_security=TransportSecuritySettings(
         enable_dns_rebinding_protection=False))  <span class="c"># else 421 behind tunnel/Vercel</span></code></pre>
 <ul>
@@ -274,7 +274,7 @@ status: success   duration: 15.37s   cost (est): $0.4901
 <ul>
 <li><code>api/index.py</code>: adds the parent dir to <code>sys.path</code> and does <code>from server import app</code>. Vercel's Python runtime looks for a variable named <code>app</code> there.</li>
 <li><code>vercel.json</code>: rewrites every path to <code>/api/index</code>, so <code>/mcp</code> reaches the app.</li>
-<li><code>requirements.txt</code>: <code>mcp[cli]>=1.12,&lt;2</code> and <code>ddgs</code> for Vercel's builder. Local runs use the inline UV metadata instead.</li>
+<li><code>requirements.txt</code>: <code>mcp[cli]>=2.3,&lt;3</code> and <code>ddgs</code> for Vercel's builder. Local runs use the inline UV metadata instead.</li>
 </ul>
 
 <h3>The MCP App is a tool plus a resource</h3>
@@ -304,7 +304,7 @@ def research_explorer_app() -> str:
 </table></div>
 <p>This table is why demo 05 goes local → tunnel → connector → Vercel, and why <code>MCP_AUTH_TOKEN</code> stays unset for it.</p>
 
-<details class="recall"><summary>Why does a tunnel produce a 421 on a default FastMCP server, and which line fixes it?</summary><div><p>Binding 127.0.0.1 turns on DNS-rebinding protection, which only accepts localhost <code>Host</code> headers. The tunnel forwards its own hostname. <code>transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False)</code> turns the check off.</p></div></details>
+<details class="recall"><summary>Why does a tunnel produce a 421 on a default MCPServer app, and which line fixes it?</summary><div><p>Binding 127.0.0.1 turns on DNS-rebinding protection, which only accepts localhost <code>Host</code> headers. The tunnel forwards its own hostname. <code>transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False)</code> turns the check off.</p></div></details>
 <details class="recall"><summary>What two MCP primitives make an App, and what links them?</summary><div><p>A tool and a resource. The tool's <code>_meta.ui.resourceUri</code> points at the resource's <code>ui://</code> URI, which serves HTML with mime type <code>text/html;profile=mcp-app</code>.</p></div></details>
 <details class="recall"><summary>Why can you not add demo 04's server as a Claude custom connector?</summary><div><p>The connector UI has no field for a bearer header. It supports OAuth or no auth. Demo 04 requires a bearer token, so only Claude Code and the SDK can use it.</p></div></details>
 
@@ -396,7 +396,7 @@ uv run test_client.py https://&lt;your-app&gt;.vercel.app/mcp</code></pre>
 <details class="recall"><summary>Is a bearer token secure enough for production?</summary><div><p>Only over HTTPS, and it is one shared secret with no per-user identity or scopes. That is why it is rung 2. Production is OAuth 2.1 with the server as resource server. The wiring you saw is the same; the credential changes.</p></div></details>
 <details class="recall"><summary>Where does OAuth actually go?</summary><div><p>In place of <code>BearerAuthMiddleware</code>, typically an API gateway or an auth library that validates tokens. The tools do not change. Claude's connector flow expects it.</p></div></details>
 <details class="recall"><summary>Why does demo 05 have no auth if this is the "production" module?</summary><div><p>Claude's connector UI cannot send a bearer header, and the demo is about reachability and the App. Set <code>MCP_AUTH_TOKEN</code> and the optional middleware turns on for clients that can send headers. The real answer is OAuth, covered as the ladder.</p></div></details>
-<details class="recall"><summary>What does the 2026-07-28 spec change here?</summary><div><p>The protocol core becomes stateless: no initialize handshake, no <code>Mcp-Session-Id</code>. Demo 05 is already shaped that way with <code>stateless_http=True</code>. Do not bump to SDK v2 yet; it renames <code>FastMCP</code> to <code>MCPServer</code>.</p></div></details>
+<details class="recall"><summary>What does the 2026-07-28 spec change here?</summary><div><p>The protocol core becomes stateless: no initialize handshake, no <code>Mcp-Session-Id</code>. Demo 05 is already shaped that way with <code>stateless_http=True</code>. The course runs on SDK v2, which speaks 2026-07-28 and still accepts older clients that send <code>initialize</code>.</p></div></details>
 <details class="recall"><summary>Does the MCP App run on my server?</summary><div><p>No. The server only serves the HTML as a resource. The host runs it in a sandboxed iframe and relays <code>tools/call</code> for it. The server never learns whether a UI was rendered.</p></div></details>
 
 <h2 id="checklist"><span class="n">8</span>Pre-class checklist</h2>
