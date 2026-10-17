@@ -10,9 +10,11 @@ automatically when asked to scaffold an MCP server.'
 
 The gotchas that bite learners (called out in the SDK docs):
 
-  - `setting_sources` must include 'project' (and/or 'user') for skills
-    to be discovered. With the default `setting_sources=[]`, the
-    `skills=...` option loads NOTHING.
+  - Skills are discovered only from the setting sources the SDK loads.
+    Leave `setting_sources` unset and it loads 'user' + 'project' (your
+    personal ~/.claude skills come along too); pass `[]` and the
+    `skills=...` option finds none of them, only the CLI's built-ins.
+    Pass ['project'] to load only the repo's skills.
   - The `allowed-tools` frontmatter inside SKILL.md is IGNORED by the
     SDK — only Claude Code (the CLI) reads it. Gate tools through the
     SDK's `allowed_tools` option instead.
@@ -49,9 +51,9 @@ def build_options() -> ClaudeAgentOptions:
     return ClaudeAgentOptions(
         model="claude-sonnet-5-5",
         cwd=str(HERE),
-        # REQUIRED: skills are discovered only through 'user' / 'project'
-        # setting sources. Default is []; without this, skills="all" loads
-        # nothing.
+        # Skills are discovered only through the 'user' / 'project' setting
+        # sources. Unset loads both; [] loads none. ['project'] keeps
+        # discovery to this repo's .claude/skills/.
         setting_sources=["project"],
         skills="all",
         allowed_tools=["Read", "Write", "Bash", "Skill"],

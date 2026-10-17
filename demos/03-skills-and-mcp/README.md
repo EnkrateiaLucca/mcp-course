@@ -37,8 +37,9 @@ claude   # then: "Use the mcp-builder skill to scaffold an MCP server for <your 
 **Via the Agent SDK** — `skill_loader_demo.py`, which also documents the
 gotchas that bite everyone:
 
-- `setting_sources` must include `"project"` (and/or `"user"`) or
-  `skills="all"` loads **nothing** (the default is `[]`).
+- Skills load only from the setting sources you enable. Unset loads
+  `"user"` + `"project"`; with `setting_sources=[]`, `skills="all"` finds
+  **none** of your skills. The demo passes `["project"]` to load only this repo's.
 - The `allowed-tools` frontmatter in SKILL.md is read by Claude Code only —
   the SDK ignores it; gate tools with the SDK's `allowed_tools` option.
 - `cwd` decides which folder counts as "project" for discovery.
