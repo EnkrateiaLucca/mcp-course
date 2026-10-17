@@ -52,7 +52,8 @@ cd mcp-course
 # run anything directly
 uv run demos/01-introduction-to-mcp/mcp_server.py
 
-# inspect any MCP server
+# inspect any MCP server (install the `mcp` CLI once; uv alone doesn't put it on PATH)
+uv tool install "mcp[cli]>=2.3,<3"
 mcp dev demos/01-introduction-to-mcp/mcp_server.py
 ```
 

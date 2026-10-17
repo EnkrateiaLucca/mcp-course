@@ -36,10 +36,12 @@ cd demos/03-skills-and-mcp/skills-over-mcp
 # 1. The server (stdio). It waits for a client; Ctrl-C to stop.
 uv run skills_server.py
 
-# 2. MCP Inspector CLI (needs 2.6.0+; tested with 2.10.1)
-npx -y @modelcontextprotocol/inspector --cli uv run skills_server.py --method skills/list
-npx -y @modelcontextprotocol/inspector --cli uv run skills_server.py --method skills/list --verify
-npx -y @modelcontextprotocol/inspector --cli uv run skills_server.py \
+# 2. MCP Inspector CLI (needs 2.6.0+; tested with 2.11.0). The skills/* methods
+#    need --protocol-era modern: the server declares the extension in
+#    server/discover (2026-07-28), not in the legacy initialize handshake.
+npx -y @modelcontextprotocol/inspector --cli --protocol-era modern uv run skills_server.py --method skills/list
+npx -y @modelcontextprotocol/inspector --cli --protocol-era modern uv run skills_server.py --method skills/list --verify
+npx -y @modelcontextprotocol/inspector --cli --protocol-era modern uv run skills_server.py \
   --method skills/get --uri skill://mcp-builder/SKILL.md --verify
 npx -y @modelcontextprotocol/inspector --cli uv run skills_server.py \
   --method resources/read --uri skill://mcp-builder/reference/python_mcp_server.md

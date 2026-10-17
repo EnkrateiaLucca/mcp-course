@@ -41,6 +41,7 @@ demo 02's Agent SDK replaces it, but it's worth reading once.)*
 cd demos/01-introduction-to-mcp
 
 # 1. Inspect the server interactively (tools, resources, try a call)
+#    needs the mcp CLI once: uv tool install "mcp[cli]>=2.3,<3"
 mcp dev ./mcp_server.py
 
 # 2. Watch the raw protocol happen — one round-trip per primitive

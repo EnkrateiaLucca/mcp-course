@@ -34,5 +34,6 @@ The **agent** (`link_checker_agent.py`) uses Claude to compose these tools intel
 ## Test the MCP Server Independently
 
 ```bash
+uv tool install "mcp[cli]>=2.3,<3"   # once: puts the mcp CLI on PATH
 mcp dev link_checker_mcp_server.py
 ```
