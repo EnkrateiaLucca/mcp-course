@@ -66,4 +66,4 @@ through context. Design lesson survives; the framing evolves.
 
 For very large tool surfaces, the current guidance goes one step further:
 expose a thin **code-execution** tool over your API instead of hundreds of
-endpoints (see `presentation/code-execution-with-mcp.html`).
+endpoints (see [Code execution with MCP](https://www.anthropic.com/engineering/code-execution-with-mcp)).

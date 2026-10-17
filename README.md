@@ -226,7 +226,6 @@ paths, restart after editing.
 [PulseMCP](https://www.pulsemcp.com/servers)
 
 **Course materials:** `presentation/presentation.html` ·
-`presentation/code-execution-with-mcp.html` ·
 `demos/assets-resources/MCP_TECHNICAL_CHEATSHEET.md`
 
 **Two handouts, different audiences:**
