@@ -25,7 +25,7 @@ from claude_agent_sdk import (
 )
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DEMOS_DIR = os.path.dirname(SCRIPT_DIR)
+DEMOS_DIR = os.path.dirname(os.path.dirname(SCRIPT_DIR))
 PRESENTATION_DIR = os.path.join(os.path.dirname(DEMOS_DIR), "presentation")
 REPORTS_DIR = os.path.join(SCRIPT_DIR, "reports")
 
@@ -83,7 +83,7 @@ def format_tool_result(block):
 
 
 options = ClaudeAgentOptions(
-    model="claude-sonnet-5",
+    model="claude-sonnet-5-5",
     system_prompt=f"""You are a link health checker assistant. You help developers find broken links
 in their markdown documentation by checking each URL and producing an audit report.
 

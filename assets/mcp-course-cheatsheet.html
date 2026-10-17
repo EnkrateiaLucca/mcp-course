@@ -391,7 +391,7 @@
     <div class="page-header">
         <h1>Building AI Agents with MCP</h1>
         <div class="subtitle">From Agent Loop to Production Servers — O'Reilly Live Training Cheatsheet</div>
-        <div class="meta">Model Context Protocol · Claude Agent SDK · FastMCP · Deployment · MCP Apps</div>
+        <div class="meta">Model Context Protocol · Claude Agent SDK · MCPServer · Deployment · MCP Apps</div>
     </div>
 
     <!-- Section 1: What is MCP -->
@@ -437,7 +437,7 @@
 
     <div class="info-box mb-small">
         <div class="info-box-title">The Analogy</div>
-        <p>MCP is the <strong>"USB-C port for AI"</strong> — one universal standard that lets any AI model plug into any tool, database, or service. The "HTTP moment" happened: MCP joined the <strong>Linux Foundation</strong> (Agentic AI Foundation, Dec 2025) with Anthropic, OpenAI, Google, Microsoft and AWS on board. Current spec: <strong>2026-07-28</strong> — the largest revision since launch, now shipped (stateless core, extensions, multi round-trip requests). This course pins the v1 SDK, which speaks <strong>2025-11-25</strong>.</p>
+        <p>MCP is the <strong>"USB-C port for AI"</strong> — one universal standard that lets any AI model plug into any tool, database, or service. The "HTTP moment" happened: MCP joined the <strong>Linux Foundation</strong> (Agentic AI Foundation, Dec 2025) with Anthropic, OpenAI, Google, Microsoft and AWS on board. Current spec: <strong>2026-07-28</strong> — the largest revision since launch, now shipped (stateless core, extensions, multi round-trip requests). This course uses SDK v2, which speaks both <strong>2026-07-28</strong> and <strong>2025-11-25</strong>.</p>
     </div>
 
     <!-- Section 2: The MCP Primitives -->
@@ -510,16 +510,16 @@
 
     <div class="grid-2 mb-small">
         <div class="code-card">
-            <div class="code-card-header">FastMCP Server Pattern</div>
+            <div class="code-card-header">MCPServer Pattern</div>
             <pre><code>#!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["mcp[cli]>=1.12,<2"]
-# ///  # pin v1! v2 renames FastMCP -> MCPServer
+# dependencies = ["mcp[cli]>=2.3,<3"]
+# ///  # v1 called this class FastMCP
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
-mcp = FastMCP("server-name")
+mcp = MCPServer("server-name")
 
 @mcp.tool()
 def my_tool(param: str) -> str:
@@ -641,7 +641,7 @@ options = ClaudeAgentOptions(
                 <tr>
                     <td><strong>01</strong></td>
                     <td>Intro to MCP</td>
-                    <td>First FastMCP server + thin client</td>
+                    <td>First MCPServer + thin client</td>
                     <td>stdio, Inspector, M×N payoff (2 hosts)</td>
                 </tr>
                 <tr>
@@ -848,7 +848,7 @@ claude mcp add prod --transport http \
             <li><strong>Design tools around intent:</strong> few well-named tools beat an API mirror — even with tool search on by default</li>
             <li><strong>Security first:</strong> validate paths, PreToolUse hooks, least-privilege <code>allowed_tools</code>, treat tool descriptions as untrusted input</li>
             <li><strong>Deploy the server, not a wrapper:</strong> <code>stateless_http=True</code> + <code>mcp.streamable_http_app()</code> runs anywhere — no FastAPI plumbing</li>
-            <li><strong>UV handles deps:</strong> Inline <code># /// script</code> headers mean zero setup — <code>uv run server.py</code> just works; pin <code>mcp&lt;2</code></li>
+            <li><strong>UV handles deps:</strong> Inline <code># /// script</code> headers mean zero setup — <code>uv run server.py</code> just works; pin <code>mcp&gt;=2.3,&lt;3</code></li>
         </ul>
     </div>
 

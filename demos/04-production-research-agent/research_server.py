@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["mcp[cli]>=1.12,<2", "ddgs", "starlette", "uvicorn", "httpx"]
+# dependencies = ["mcp[cli]>=2.3,<3", "ddgs", "starlette", "uvicorn", "httpx"]
 # ///
 """Demo 04 — Production-shaped MCP server for the research assistant.
 
@@ -43,6 +43,7 @@ Inspect:
 
 from __future__ import annotations
 
+import html
 import json
 import logging
 import os
@@ -54,7 +55,7 @@ from urllib.parse import urlparse
 
 import httpx
 from ddgs import DDGS
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 logger = logging.getLogger("research-server")
 
@@ -75,7 +76,7 @@ except KeyError as exc:  # pragma: no cover - startup guard
         "MCP_AUTH_TOKEN must be set. Example: export MCP_AUTH_TOKEN=demo-secret"
     ) from exc
 
-mcp = FastMCP("research-assistant", host="127.0.0.1", port=8765)
+mcp = MCPServer("research-assistant")
 
 
 # --- Helpers (private, not exposed as tools) -------------------------------
@@ -132,13 +133,26 @@ def _fetch_page(url: str, max_chars: int = 4000) -> str:
         resp.raise_for_status()
     except Exception as exc:  # noqa: BLE001
         logger.info("fetch failed for %s: %r", url, exc)
-        return f"(fetch failed: {exc})"
+        return ""
 
-    text = re.sub(r"<script\b.*?</script>", " ", resp.text, flags=re.DOTALL | re.IGNORECASE)
-    text = re.sub(r"<style\b.*?</style>", " ", text, flags=re.DOTALL | re.IGNORECASE)
-    text = re.sub(r"<[^>]+>", " ", text)
-    text = re.sub(r"\s+", " ", text).strip()
+    text = _page_text(resp.text)
+    # Keep the page's main content when it marks one: otherwise nav menus and
+    # cookie banners fill the excerpt. Pages often hold several blocks (teaser
+    # cards, sidebars), so take the longest, and only if it has real text.
+    blocks = [m.group(0) for m in re.finditer(r"<(main|article)\b.*?</\1>", resp.text, flags=re.DOTALL | re.IGNORECASE)]
+    if blocks:
+        main_text = _page_text(max(blocks, key=len))
+        if len(main_text) >= 500:
+            text = main_text
     return text[:max_chars]
+
+
+def _page_text(page: str) -> str:
+    """Strip page chrome and tags from HTML, leaving readable text."""
+    for tag in ("head", "script", "style", "noscript", "nav", "header", "footer", "aside", "form"):
+        page = re.sub(rf"<{tag}\b.*?</{tag}>", " ", page, flags=re.DOTALL | re.IGNORECASE)
+    text = re.sub(r"<[^>]+>", " ", page)
+    return re.sub(r"\s+", " ", html.unescape(text)).strip()
 
 
 def _format_brief(topic: str, hits: list[dict]) -> str:
@@ -235,7 +249,7 @@ def briefs_index() -> str:
 
 # --- Auth middleware -------------------------------------------------------
 #
-# FastMCP's streamable-http transport does not bundle OAuth. In production you
+# MCPServer's streamable-http transport does not bundle OAuth. In production you
 # would put this server behind an API gateway that validates OAuth/CIMD tokens
 # (see MCP spec auth section). For the course we validate a static bearer
 # token at the ASGI layer — the *seam* where real auth would slot in.
@@ -271,7 +285,7 @@ if __name__ == "__main__":
     logger.info("🚀 research-assistant MCP server on http://127.0.0.1:8765/mcp")
     logger.info("    auth: Bearer %s  (override with MCP_AUTH_TOKEN)", AUTH_TOKEN)
 
-    # FastMCP exposes the underlying Starlette ASGI app via streamable_http_app().
+    # MCPServer exposes the underlying Starlette ASGI app via streamable_http_app().
     # We wrap it with auth middleware before handing it to uvicorn.
     import uvicorn
 

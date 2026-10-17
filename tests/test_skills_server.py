@@ -15,8 +15,8 @@ from typing import Any
 import pytest
 from mcp import ClientSession, StdioServerParameters, types
 from mcp.client.stdio import stdio_client
-from mcp.shared.exceptions import McpError
-from pydantic import AnyUrl
+from mcp.shared.exceptions import MCPError
+from pydantic import TypeAdapter
 
 DEMO = Path(__file__).resolve().parent.parent / "demos" / "03-skills-and-mcp" / "skills-over-mcp"
 SKILL_DIR = DEMO / "skills" / "mcp-builder"
@@ -26,14 +26,14 @@ SERVER = StdioServerParameters(command="uv", args=["run", "--quiet", str(DEMO / 
 
 async def call(session: ClientSession, method: str, **params: Any) -> dict:
     request = types.Request[dict[str, Any] | None, str](method=method, params=params or None)
-    return (await session.send_request(request, types.Result)).model_dump(exclude_none=True)  # type: ignore[arg-type]
+    return await session.send_request(request, TypeAdapter(dict[str, Any]))
 
 
 def run_with_session(check):
     async def main():
         async with stdio_client(SERVER) as (r, w), ClientSession(r, w) as session:
-            init = await session.initialize()
-            return await check(session, init)
+            await session.discover()  # Skills is a 2026-07-28 extension: modern handshake
+            return await check(session, session.server_capabilities)
 
     return asyncio.run(main())
 
@@ -45,10 +45,9 @@ def test_list_get_and_digests():
         if p.is_file() and not p.name.startswith(".")
     }
 
-    async def check(session: ClientSession, init: types.InitializeResult):
-        caps = init.capabilities
+    async def check(session: ClientSession, caps: types.ServerCapabilities):
         assert caps.resources is not None
-        assert "io.modelcontextprotocol/skills" in caps.model_extra["extensions"]
+        assert "io.modelcontextprotocol/skills" in (caps.extensions or {})
 
         listing = await call(session, "skills/list")
         assert listing["resultType"] == "complete" and "ttlMs" in listing and "cacheScope" in listing
@@ -66,7 +65,7 @@ def test_list_get_and_digests():
 
         assert (await call(session, "skills/get", uri=SKILL_URI))["skill"] == entry
 
-        served = await session.read_resource(AnyUrl("skill://mcp-builder/reference/python_mcp_server.md"))
+        served = await session.read_resource("skill://mcp-builder/reference/python_mcp_server.md")
         assert served.contents[0].text.encode() == disk["skill://mcp-builder/reference/python_mcp_server.md"]
 
     run_with_session(check)
@@ -74,12 +73,12 @@ def test_list_get_and_digests():
 
 def test_unknown_skill_is_invalid_params():
     async def check(session: ClientSession, _init):
-        with pytest.raises(McpError) as err:
+        with pytest.raises(MCPError) as err:
             await call(session, "skills/get", uri="skill://nope/SKILL.md")
-        assert err.value.error.code == types.INVALID_PARAMS  # -32602, per spec §Error Handling
+        assert err.value.code == types.INVALID_PARAMS  # -32602, per spec §Error Handling
 
-        with pytest.raises(McpError) as err:
-            await session.read_resource(AnyUrl("skill://mcp-builder/../../etc/passwd"))
-        assert err.value.error.code == types.INVALID_PARAMS
+        with pytest.raises(MCPError) as err:
+            await session.read_resource("skill://mcp-builder/../../etc/passwd")
+        assert err.value.code == types.INVALID_PARAMS
 
     run_with_session(check)

@@ -31,8 +31,8 @@ Run:
 from __future__ import annotations
 
 import asyncio
+import os
 import sys
-from pathlib import Path
 
 from claude_agent_sdk import (
     AgentDefinition,
@@ -48,10 +48,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Reuse the demo 04 research server (in-process via stdio). We expect demo 04
-# to be present as a sibling directory.
-DEMO_04 = Path(__file__).resolve().parent.parent / "04-production-research-agent"
-RESEARCH_SERVER = DEMO_04 / "research_server.py"
+# Reuse the demo 04 research server over HTTP, connecting exactly the way
+# demo 04's agent does. Start it first in another terminal:
+#   uv run demos/04-production-research-agent/research_server.py
+SERVER_URL = os.getenv("MCP_SERVER_URL", "http://127.0.0.1:8765/mcp")
+try:
+    AUTH_TOKEN = os.environ["MCP_AUTH_TOKEN"]
+except KeyError as exc:
+    raise SystemExit(
+        "MCP_AUTH_TOKEN must be set so the agent can authenticate to the server."
+    ) from exc
 
 SYSTEM_PROMPT = (
     "You are a research lead. Use mcp__research__research_topic to produce "
@@ -63,11 +69,15 @@ SYSTEM_PROMPT = (
 
 def build_options() -> ClaudeAgentOptions:
     return ClaudeAgentOptions(
-        model="claude-sonnet-5",
+        model="claude-sonnet-5-5",
         system_prompt=SYSTEM_PROMPT,
         mcp_servers={
-            # Our own server, run as a subprocess (stdio transport).
-            "research": {"command": "uv", "args": ["run", str(RESEARCH_SERVER)]},
+            # Our own server from demo 04, reached over streamable HTTP.
+            "research": {
+                "type": "http",
+                "url": SERVER_URL,
+                "headers": {"Authorization": f"Bearer {AUTH_TOKEN}"},
+            },
             # Playwright's published MCP server. Zero custom code.
             "playwright": {"command": "npx", "args": ["@playwright/mcp@latest"]},
         },

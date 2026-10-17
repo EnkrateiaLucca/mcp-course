@@ -1,6 +1,6 @@
 # MCP Technical Cheat Sheet for Instructors
 
-> **Status:** current spec revision is **2026-07-28** (stateless core, extensions framework, MCP Apps + Tasks as official extensions), now shipped; this course's pinned SDK (`mcp>=1.12,<2`) speaks **2025-11-25**. MCP is governed by the Linux Foundation's Agentic AI Foundation (since Dec 2025). v2 renames `FastMCP` → `MCPServer`.
+> **Status:** current spec revision is **2026-07-28** (stateless core, extensions framework, MCP Apps + Tasks as official extensions), now shipped; this course's SDK (`mcp>=2.3,<3`, v2) speaks it and still accepts **2025-11-25** clients. MCP is governed by the Linux Foundation's Agentic AI Foundation (since Dec 2025). v2 renamed v1's `FastMCP` to `MCPServer`.
 
 ## Core Concepts Overview
 
@@ -73,16 +73,18 @@ MCP uses JSON-RPC 2.0 for all communication. Every message follows this structur
 ## MCP Lifecycle
 
 > **Protocol versions are dates, never semver.** There has never been a
-> `"1.0.0"`. The pinned SDK in this course (`mcp>=1.12,<2`) speaks
-> **`2025-11-25`**; the current revision is **`2026-07-28`**.
+> `"1.0.0"`. The SDK in this course (`mcp>=2.3,<3`) speaks both
+> **`2025-11-25`** and the current revision, **`2026-07-28`**.
 
 There are two lifecycles to know, because the course demos and the current spec
 differ here. **This is the single most likely student question of day 2.**
 
 ### A. The handshake — `2025-11-25`, what our demos actually do
 
-This is what students will see in MCP Inspector, because it is what the pinned
-v1 SDK speaks.
+Module 01's thin client connects this way (`session.initialize()`), and so does
+Claude Code, the host inside the Agent SDK (verified Oct 2026: it sends
+`initialize` with `2025-11-25`). v2 servers accept it: the client's first
+request picks the era.
 
 ```
 Client → Server: initialize request
@@ -144,8 +146,8 @@ Client → Server: any request, no handshake first
     "name": "get_weather",
     "arguments": {"city": "Lisbon"},
     "_meta": {
-      "protocolVersion": "2026-07-28",
-      "capabilities": {"tools": {}}
+      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+      "io.modelcontextprotocol/clientCapabilities": {}
     }
   }
 }
@@ -156,9 +158,9 @@ ordinary load balancers with no shared session store. That is exactly what
 module 05 already does with `stateless_http=True` — the demo and the spec now
 agree.
 
-**Teaching note:** don't fight the mismatch, name it. "The SDK we pin speaks the
-handshake; the spec moved past it; module 05 already builds the way the spec
-wants." Deck positions 24 and 68–70 carry the same framing.
+**Teaching note:** name the split. "Our v2 servers speak both; hosts like
+Claude Code still connect with the 2025-11-25 handshake." Deck positions 23,
+26 and 66–68 carry the same framing.
 
 ## The Three MCP Primitives (plus one deprecated)
 
@@ -348,7 +350,7 @@ async def sensitive_operation(param: str) -> str:
 
 ## Under the Hood: How @mcp.tool() Works
 
-When you decorate a function with `@mcp.tool()`, FastMCP:
+When you decorate a function with `@mcp.tool()`, `MCPServer`:
 
 1. **Registers the function** in an internal tool registry
 2. **Extracts metadata** from the function signature and docstring
@@ -359,7 +361,7 @@ When you decorate a function with `@mcp.tool()`, FastMCP:
 
 ### Simplified Internal Implementation
 ```python
-class FastMCP:
+class MCPServer:
     def __init__(self, name):
         self.tools = {}
         
@@ -494,7 +496,7 @@ logging.basicConfig(level=logging.DEBUG)
 ## Quick Reference: Course Module Progression (July 2026 redesign)
 
 1. **Module 00 — Agents are loops**: hand-rolled loop, web search + filesystem tools, no MCP yet
-2. **Module 01 — Intro to MCP**: same tools behind FastMCP; thin standalone client; connect Claude Code + Claude Desktop
+2. **Module 01 — Intro to MCP**: same tools behind `MCPServer`; thin standalone client; connect Claude Code + Claude Desktop
 3. **Module 02 — Agent SDK as host**: loop collapses to ~15 lines; `in_process_agent.py` shows `create_sdk_mcp_server`
 4. **Module 03 — Skills vs MCP**: access vs know-how framing; `mcp-builder` skill scaffolds a server live
 5. **Module 04 — Production shape**: intent-grouped tools (7→3), streamable-http, bearer-auth seam (→ OAuth 2.1/CIMD ladder), hooks, evals, structured outputs

@@ -21,7 +21,7 @@ demos/
 ## Key Dependencies
 
 - **claude-agent-sdk** — Claude Agent SDK (all agent demos)
-- **mcp[cli]>=1.12,<2** — official MCP Python SDK, pinned to v1 (v2 renames FastMCP → MCPServer)
+- **mcp[cli]>=2.3,<3** — official MCP Python SDK v2 (`MCPServer`; v1 called it `FastMCP`)
 - **ANTHROPIC_API_KEY** — required for all agent demos
 
 ## Running Any Demo

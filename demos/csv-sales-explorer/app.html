@@ -246,7 +246,7 @@ function renderToolResult(result) {
     const text = (result?.content || []).find((c) => c.type === "text")?.text;
     try { data = JSON.parse(text); } catch { data = null; }
   }
-  // FastMCP wraps plain-dict returns as {"result": {...}} in structuredContent
+  // Some SDK versions wrap plain-dict returns as {"result": {...}} in structuredContent
   if (data && data.result && !data.kpis) data = data.result;
   if (!data || !data.ok) { setStatus(data?.error || "no data"); return; }
 

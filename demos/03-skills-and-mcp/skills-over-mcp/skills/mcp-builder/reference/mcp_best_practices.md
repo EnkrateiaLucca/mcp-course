@@ -868,9 +868,9 @@ Here's how to define tools with annotations for different scenarios:
 
   <Tab title="Python">
     ```python
-    from mcp.server.fastmcp import FastMCP
+    from mcp.server.mcpserver import MCPServer
 
-    mcp = FastMCP("example-server")
+    mcp = MCPServer("example-server")
 
     @mcp.tool(
         annotations={

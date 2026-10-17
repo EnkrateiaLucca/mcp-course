@@ -14,8 +14,8 @@ Seven modules grow ONE use case — a personal research assistant — a layer at
 - **Primary**: UV. Every script has inline UV metadata headers; run with `uv run <script>.py`.
 - Alternative: `python -m venv venv && source venv/bin/activate && pip install -r requirements/requirements.txt`
 
-### Version pins (important, July 2026)
-- **`mcp[cli]>=1.12,<2`** everywhere. Official SDK v2 (tracking spec 2026-07-28) renames `FastMCP` → `MCPServer` and changes low-level APIs — do NOT bump to v2 without migrating all servers. The standalone "FastMCP 3" (PrefectHQ/fastmcp) is a different package; this course uses the official SDK's built-in FastMCP.
+### Version pins (important, October 2026)
+- **`mcp[cli]>=2.3,<3`** everywhere — official SDK v2 (migrated 2026-10-17). `from mcp.server.mcpserver import MCPServer` (v1's `FastMCP` is gone). Transport args (`host`, `port`, `stateless_http`, `json_response`, `transport_security`) go on `run()` / `streamable_http_app()`, not the constructor. Fields are snake_case (`mime_type`, `structured_content`, `input_schema`); `McpError` → `MCPError(code, msg)`; `streamable_http_client` yields `(read, write)`. v2 servers speak 2026-07-28 and still accept 2025-11-25 `initialize` clients. The standalone "FastMCP 3" (PrefectHQ/fastmcp) is a different package; never use it here.
 - **`claude-agent-sdk>=0.1.0`** (0.2.x current) — bundles the Claude Code CLI, Python ≥3.10.
 
 ### Environment Variables (`.env` at repo root)
@@ -25,7 +25,7 @@ Seven modules grow ONE use case — a personal research assistant — a layer at
 ## Demo Organization
 
 1. **`00-intro-agents/`** — hand-rolled agent loop, tools as plain Python functions. `basic_personal_agent.py` + teaching notebook. KEEP AS-IS: loop-first pedagogy is intentional (presenter notes are in the notebook).
-2. **`01-introduction-to-mcp/`** — same tools behind FastMCP (`mcp_server.py`); `mcp_client.py` is a thin, standalone-runnable protocol client. The old hand-rolled host lives in `archive/01-full-host-client/`.
+2. **`01-introduction-to-mcp/`** — same tools behind `MCPServer` (`mcp_server.py`); `mcp_client.py` is a thin, standalone-runnable protocol client. The old hand-rolled host lives in `archive/01-full-host-client/`.
 3. **`02-research-agent-sdk/`** — Agent SDK as MCP host (`research_agent.py`, ~15 LOC core); `in_process_agent.py` shows `create_sdk_mcp_server`; `research_agent_multiturn.py` shows `ClaudeSDKClient`.
 4. **`03-skills-and-mcp/`** — skills vs MCP teaching module + `mcp-builder-skill/` (agent scaffolds MCP servers) + `skill_loader_demo.py` (SDK skills gotchas).
 5. **`04-production-research-agent/`** — intent-grouped tools (7→3), `streamable-http`, bearer-auth seam, hooks, permission callback, `evals.py` (3-layer correctness), `structured_output_demo.py`.
@@ -38,17 +38,17 @@ Seven modules grow ONE use case — a personal research assistant — a layer at
 
 ## MCP Server Patterns
 
-**FastMCP, external (stdio or HTTP) — modules 01, 04, 05:**
+**MCPServer, external (stdio or HTTP) — modules 01, 04, 05:**
 ```python
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["mcp[cli]>=1.12,<2"]
+# dependencies = ["mcp[cli]>=2.3,<3"]
 # ///
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
-mcp = FastMCP("server-name")            # module 05 adds: stateless_http=True, json_response=True,
-                                        # and transport_security=TransportSecuritySettings(
+mcp = MCPServer("server-name")          # module 05 passes to mcp.streamable_http_app(): stateless_http=True,
+                                        # json_response=True, transport_security=TransportSecuritySettings(
                                         #   enable_dns_rebinding_protection=False)  # else 421 behind tunnel/Vercel
 
 @mcp.tool()
@@ -115,12 +115,13 @@ Claude Desktop config: macOS `~/Library/Application Support/Claude/claude_deskto
 - Module 05 → server binds 8000; Claude custom connectors need a public URL (cloudflared tunnel or Vercel) and support OAuth-or-no-auth only (no bearer header field).
 - Module 05 `421 Misdirected Request` via tunnel/Vercel (localhost works) → the mcp SDK auto-enables DNS-rebinding protection when binding 127.0.0.1 and rejects non-localhost `Host` headers at the origin. `server.py` opts out via `transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False)` — keep that when editing, and pre-flight with `uv run test_client.py <public-url>/mcp` (the localhost pre-flight can't catch this).
 - DDGS empty results → throttling; tools degrade gracefully, retry.
-- `mcp` not found → `pip install "mcp[cli]>=1.12,<2"`.
-- `mcp dev` Inspector shows Failed / "Connection closed" → the Inspector spawns `uv run --with mcp mcp run <file>` in a clean env, so unpinned `mcp` resolves to v2 without the cli extra. Keep `FastMCP(..., dependencies=["mcp[cli]>=1.12,<2", "ddgs"])` on stdio servers (01/02) and keep the `ddgs` import lazy so `mcp dev` can import the module before installing deps.
+- `mcp` not found → `pip install "mcp[cli]>=2.3,<3"`.
+- `mcp dev` Inspector shows Failed / "Connection closed" → the Inspector spawns the server in a clean env. Keep `MCPServer(..., dependencies=["mcp[cli]>=2.3,<3", "ddgs"])` on stdio servers (01/02) and keep the `ddgs` import lazy so `mcp dev` can import the module before installing deps.
+- Skills extension (module 03) not advertised → v2 only puts `capabilities.extensions` in the 2026-07-28 `server/discover` result; clients must call `session.discover()`, not `initialize()`.
 
 ## Additional Resources
-- Spec 2026-07-28 (**current revision**, shipped final): https://modelcontextprotocol.io/specification/2026-07-28 — stateless core, extensions framework, MRTR; covered in slides (deck positions 24, 68–70)
-- Spec 2025-11-25: https://modelcontextprotocol.io/specification/2025-11-25 — what the pinned v1 SDK implements, so what the demos actually speak
+- Spec 2026-07-28 (**current revision**, shipped final): https://modelcontextprotocol.io/specification/2026-07-28 — stateless core, extensions framework, MRTR; covered in slides (deck positions 23, 26, 66–68)
+- Spec 2025-11-25: https://modelcontextprotocol.io/specification/2025-11-25 — previous revision; v2 servers still accept its `initialize` handshake (module 01's thin client uses it)
 - Claude Agent SDK: https://code.claude.com/docs/en/agent-sdk/overview
 - MCP Apps extension: https://modelcontextprotocol.io/extensions/apps
 - Production post (basis for modules 04–05): https://claude.com/blog/building-agents-that-reach-production-systems-with-mcp

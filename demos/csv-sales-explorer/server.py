@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["mcp[cli]>=1.12,<2"]
+# dependencies = ["mcp[cli]>=2.3,<3"]
 # ///
 """CSV Sales Explorer — an MCP server with an MCP App dashboard.
 
@@ -33,20 +33,11 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 from mcp.server.transport_security import TransportSecuritySettings
 from mcp.types import ToolAnnotations
 
-mcp = FastMCP(
-    "csv-sales-explorer",
-    stateless_http=True,
-    json_response=True,
-    host="127.0.0.1",
-    port=8010,
-    # allow non-localhost Host headers (cloudflared tunnel / Vercel) — see
-    # demo 05 for why this is required behind a public hostname
-    transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
-)
+mcp = MCPServer("csv-sales-explorer")
 
 # ---------------------------------------------------------------------------
 # Data loading — one pass at import time; the CSV is the source of truth.
@@ -260,4 +251,13 @@ if __name__ == "__main__":
         print("📊 csv-sales-explorer on http://127.0.0.1:8010/mcp")
         print(f"   {len(ROWS)} rows loaded from {CSV_PATH.name} "
               f"({DATE_MIN} .. {DATE_MAX})")
-        mcp.run(transport="streamable-http")
+        mcp.run(
+            transport="streamable-http",
+            stateless_http=True,
+            json_response=True,
+            host="127.0.0.1",
+            port=8010,
+            # allow non-localhost Host headers (cloudflared tunnel / Vercel) — see
+            # demo 05 for why this is required behind a public hostname
+            transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
+        )

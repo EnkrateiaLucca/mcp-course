@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["mcp[cli]>=1.12,<2", "pyyaml"]
+# dependencies = ["mcp[cli]>=2.3,<3", "pyyaml"]
 # ///
 """Check skills_server.py the way a careful host would (SEP-2640 §Integrity and Verification).
 
@@ -25,7 +25,7 @@ from typing import Any
 import yaml
 from mcp import ClientSession, StdioServerParameters, types
 from mcp.client.stdio import stdio_client
-from pydantic import AnyUrl
+from pydantic import TypeAdapter
 
 HERE = Path(__file__).parent
 EXTENSION = "io.modelcontextprotocol/skills"
@@ -39,14 +39,14 @@ def server_params(skills_dir: Path | None = None) -> StdioServerParameters:
 
 
 async def call(session: ClientSession, method: str, **params: Any) -> dict:
-    """Send any JSON-RPC request. The v1 client SDK has no skills/* types yet."""
+    """Send any JSON-RPC request. The client SDK has no skills/* types yet."""
     request = types.Request[dict[str, Any] | None, str](method=method, params=params or None)
-    result = await session.send_request(request, types.Result)  # type: ignore[arg-type]
-    return result.model_dump(exclude_none=True)
+    # A plain dict keeps the extension's fields (types.Result would drop unknown ones).
+    return await session.send_request(request, TypeAdapter(dict[str, Any]))
 
 
 async def read_bytes(session: ClientSession, uri: str) -> bytes:
-    result = await session.read_resource(AnyUrl(uri))
+    result = await session.read_resource(uri)
     return result.contents[0].text.encode("utf-8")
 
 
@@ -64,8 +64,10 @@ async def verify_file(session: ClientSession, expected: dict) -> bool:
 
 async def verify() -> bool:
     async with stdio_client(server_params()) as (r, w), ClientSession(r, w) as session:
-        init = await session.initialize()
-        declared = (init.capabilities.model_extra or {}).get("extensions", {})
+        # The Skills extension is a 2026-07-28 feature, so connect the modern way
+        # (server/discover); the legacy initialize handshake has no `extensions`.
+        await session.discover()
+        declared = session.server_capabilities.extensions or {}
         if EXTENSION not in declared:
             print(f"FAIL  server does not declare {EXTENSION}")
             return False
@@ -93,7 +95,7 @@ async def tamper() -> bool:
         skills = Path(tmp) / "skills"
         shutil.copytree(HERE / "skills", skills)
         async with stdio_client(server_params(skills)) as (r, w), ClientSession(r, w) as session:
-            await session.initialize()
+            await session.discover()
 
             held = (await call(session, "skills/get", uri=SKILL_URI))["skill"]
             approved = {(f["uri"], f["digest"]) for f in held["resources"]}

@@ -24,10 +24,10 @@ This demo also ships an **MCP App** — the first official MCP extension
 
 ## Files
 
-- `server.py` — FastMCP server, `stateless_http=True` + `json_response=True`
+- `server.py` — `MCPServer` app, `stateless_http=True` + `json_response=True`
   (serverless-friendly; also where the 2026-07-28 spec is headed: a stateless
   protocol core). Declares the MCP App via `meta={"ui": {"resourceUri": ...}}`.
-  Also disables FastMCP's DNS-rebinding protection (`transport_security=...`) —
+  Also disables the SDK's DNS-rebinding protection (`transport_security=...`) —
   without this, recent SDK versions reject any non-localhost `Host` header with
   `421 Misdirected Request`, which breaks tunnels and Vercel (see below).
 - `app.html` — the MCP App view. Implements the postMessage handshake
@@ -99,7 +99,7 @@ opts out in `server.py`:
 ```python
 from mcp.server.transport_security import TransportSecuritySettings
 
-mcp = FastMCP(..., transport_security=TransportSecuritySettings(
+app = mcp.streamable_http_app(..., transport_security=TransportSecuritySettings(
     enable_dns_rebinding_protection=False))
 ```
 

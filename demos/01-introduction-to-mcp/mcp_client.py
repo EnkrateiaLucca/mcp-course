@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["mcp[cli]>=1.12,<2"]
+# dependencies = ["mcp[cli]>=2.3,<3"]
 # ///
 """Minimal MCP client — the protocol, demystified in one file.
 
@@ -29,7 +29,6 @@ from typing import Any, Optional
 
 from mcp import ClientSession, StdioServerParameters, types
 from mcp.client.stdio import stdio_client
-from pydantic import AnyUrl
 
 
 class SimpleMCPClient:
@@ -63,7 +62,7 @@ class SimpleMCPClient:
         return await self.session.call_tool(name, arguments)
 
     async def read_resource(self, uri: str) -> Any:
-        result = await self.session.read_resource(AnyUrl(uri))
+        result = await self.session.read_resource(uri)
         if not result.contents:
             return ""
         resource = result.contents[0]

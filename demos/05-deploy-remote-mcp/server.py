@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run --script
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["mcp[cli]>=1.12,<2", "ddgs"]
+# dependencies = ["mcp[cli]>=2.3,<3", "ddgs"]
 # ///
 """Demo 05 — A remote, deployable MCP server (+ an MCP App).
 
@@ -45,22 +45,10 @@ import os
 from pathlib import Path
 
 from ddgs import DDGS
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 from mcp.server.transport_security import TransportSecuritySettings
 
-mcp = FastMCP(
-    "research-explorer",
-    stateless_http=True,   # serverless/load-balancer friendly
-    json_response=True,    # no SSE stream; plain JSON responses
-    host="127.0.0.1",
-    port=8000,
-    # FastMCP auto-enables DNS-rebinding protection when host is localhost,
-    # which rejects any non-localhost Host header with 421 — including the
-    # cloudflared tunnel and Vercel hostnames this server exists to serve.
-    # This server is meant to be reached through a public hostname, so turn
-    # the localhost-only Host check off.
-    transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
-)
+mcp = MCPServer("research-explorer")
 
 # ---------------------------------------------------------------------------
 # MCP App wiring — a tool + a ui:// resource, linked through _meta.
@@ -128,7 +116,17 @@ def research_explorer_app() -> str:
 
 def build_app():
     """Build the ASGI app (used by uvicorn locally AND by Vercel)."""
-    app = mcp.streamable_http_app()
+    # In SDK v2 the transport settings live on the app, not the constructor.
+    app = mcp.streamable_http_app(
+        stateless_http=True,   # serverless/load-balancer friendly
+        json_response=True,    # no SSE stream; plain JSON responses
+        # The SDK auto-enables DNS-rebinding protection when host is localhost,
+        # which rejects any non-localhost Host header with 421 — including the
+        # cloudflared tunnel and Vercel hostnames this server exists to serve.
+        # This server is meant to be reached through a public hostname, so turn
+        # the localhost-only Host check off.
+        transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
+    )
 
     token = os.environ.get("MCP_AUTH_TOKEN")
     if token:

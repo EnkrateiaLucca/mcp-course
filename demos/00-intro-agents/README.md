@@ -21,4 +21,4 @@ jupyter lab intro-agents-cld.ipynb
 uv run basic_personal_agent.py "Research the Model Context Protocol and save a brief."
 ```
 
-Tools the agent has: `web_search` (DuckDuckGo, no key), `read`, `write`, `edit`, and `bash` (runs with `cwd=./workspace/`). Every file the agent touches lives under `./workspace/`.
+Tools the agent has: `web_search` (DuckDuckGo, no key, in the notebook; Anthropic's server-side web search in the `.py`), `read`, `write`, `edit`, and `bash` (runs with `cwd=./workspace/`). Every file the agent touches lives under `./workspace/`.

@@ -52,7 +52,8 @@ cd mcp-course
 # run anything directly
 uv run demos/01-introduction-to-mcp/mcp_server.py
 
-# inspect any MCP server
+# inspect any MCP server (install the `mcp` CLI once; uv alone doesn't put it on PATH)
+uv tool install "mcp[cli]>=2.3,<3"
 mcp dev demos/01-introduction-to-mcp/mcp_server.py
 ```
 
@@ -84,9 +85,10 @@ MCP_AUTH_TOKEN=demo-secret     # module 04 (and optionally 05)
 ```
 
 **Version pins that matter:**
-- `mcp>=1.12,<2` — the official Python SDK, pinned to v1. **v2 (tracking
-  the 2026-07-28 spec) renames `FastMCP` → `MCPServer`**; the standalone
-  "FastMCP 3" is a separate Prefect-backed project. Concepts identical.
+- `mcp>=2.3,<3` — the official Python SDK v2 (`from mcp.server.mcpserver
+  import MCPServer`). It speaks the 2026-07-28 spec and still accepts
+  2025-11-25 clients. v1 called the class `FastMCP`; the standalone
+  "FastMCP 3" is a separate Prefect-backed project.
 - `claude-agent-sdk` 0.2.x — bundles the Claude Code CLI; Python ≥3.10.
 
 ---
@@ -105,7 +107,7 @@ uv run demos/00-intro-agents/basic_personal_agent.py "Research MCP and save a br
 ```
 
 ### 01 — Introduction to MCP
-**`demos/01-introduction-to-mcp/`** · Same tools behind a FastMCP server.
+**`demos/01-introduction-to-mcp/`** · Same tools behind an `MCPServer`.
 Inspect with MCP Inspector, watch the raw protocol via the thin client,
 then connect **Claude Code** and **Claude Desktop** to it — two hosts, one
 server, zero changes.
@@ -136,7 +138,9 @@ async functions, no subprocess, ideal for serverless.
 **`demos/03-skills-and-mcp/`** · The 2026 question, answered: **MCP =
 access, skills = know-how, plugins bundle both.** Then the wow moment:
 the `mcp-builder` skill scaffolds a working MCP server from one prompt —
-the workflow the official MCP docs now recommend.
+the workflow the official MCP docs now recommend. Finally,
+`skills-over-mcp/` serves that same skill over MCP through the official
+Skills extension (SEP-2640).
 
 ### 04 — Production-shaped research agent
 **`demos/04-production-research-agent/`** · Intent-grouped tools (7→3),
@@ -194,19 +198,19 @@ paths, restart after editing.
 ## 🐛 Troubleshooting
 
 - **`mcp` module not found** → `uv` reads each script's inline metadata;
-  for manual envs `pip install "mcp[cli]>=1.12,<2"`.
+  for manual envs `pip install "mcp[cli]>=2.3,<3"`.
 - **Claude Desktop doesn't see the server** → absolute paths, `which uv`,
   run the server standalone first, restart the app.
 - **Module 04 401s** → `MCP_AUTH_TOKEN` must be set in *both* terminals.
 - **DDGS returns nothing** → DuckDuckGo throttles; the tools degrade
   gracefully — retry, or swap in your favorite search API.
-- **Rate limits** → iterate on `claude-haiku`.
+- **Rate limits** → iterate on `claude-haiku-5-5`.
 
 ## 📖 Resources
 
 **Official:** [MCP docs](https://modelcontextprotocol.io/docs/getting-started/intro) ·
 [Spec (2026-07-28 — current)](https://modelcontextprotocol.io/specification/2026-07-28) ·
-[Spec (2025-11-25 — what our pinned SDK speaks)](https://modelcontextprotocol.io/specification/2025-11-25) ·
+[Spec (2025-11-25 — previous revision)](https://modelcontextprotocol.io/specification/2025-11-25) ·
 [2026-07-28 release post](https://blog.modelcontextprotocol.io/posts/2026-07-28/) ·
 [Python SDK](https://github.com/modelcontextprotocol/python-sdk) ·
 [Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk/overview) ·
@@ -226,12 +230,11 @@ paths, restart after editing.
 [PulseMCP](https://www.pulsemcp.com/servers)
 
 **Course materials:** `presentation/presentation.html` ·
-`presentation/code-execution-with-mcp.html` ·
 `demos/assets-resources/MCP_TECHNICAL_CHEATSHEET.md`
 
 **Two handouts, different audiences:**
-- **Students** — [`mcp-course-cheatsheet.html`](mcp-course-cheatsheet.html)
-  (printable: [`mcp-course-cheatsheet-print.pdf`](mcp-course-cheatsheet-print.pdf)).
+- **Students** — [`assets/mcp-course-cheatsheet.html`](assets/mcp-course-cheatsheet.html)
+  (printable: [`assets/mcp-course-cheatsheet.pdf`](assets/mcp-course-cheatsheet.pdf)).
   The quick-reference card to keep after the session.
 - **Instructor** — [`assets/mcp-instructor-cheatsheet.html`](assets/mcp-instructor-cheatsheet.html)
   ([PDF](assets/mcp-instructor-cheatsheet.pdf)), generated from

@@ -1,13 +1,13 @@
 """Lightweight connection handling for MCP servers."""
 
 from abc import ABC, abstractmethod
-from contextlib import AsyncExitStack
+from contextlib import AsyncExitStack, asynccontextmanager
 from typing import Any
 
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.sse import sse_client
 from mcp.client.stdio import stdio_client
-from mcp.client.streamable_http import streamablehttp_client
+from mcp.client.streamable_http import create_mcp_http_client, streamable_http_client
 
 
 class MCPConnection(ABC):
@@ -59,7 +59,7 @@ class MCPConnection(ABC):
             {
                 "name": tool.name,
                 "description": tool.description,
-                "input_schema": tool.inputSchema,
+                "input_schema": tool.input_schema,
             }
             for tool in response.tools
         ]
@@ -67,7 +67,7 @@ class MCPConnection(ABC):
     async def call_tool(self, tool_name: str, arguments: dict[str, Any]) -> Any:
         """Call a tool on the MCP server with provided arguments."""
         result = await self.session.call_tool(tool_name, arguments=arguments)
-        return result.content
+        return [block.model_dump() for block in result.content]
 
 
 class MCPConnectionStdio(MCPConnection):
@@ -106,7 +106,15 @@ class MCPConnectionHTTP(MCPConnection):
         self.headers = headers or {}
 
     def _create_context(self):
-        return streamablehttp_client(url=self.url, headers=self.headers)
+        return _streamable_http(self.url, self.headers)
+
+
+@asynccontextmanager
+async def _streamable_http(url: str, headers: dict[str, str]):
+    """streamable_http_client takes an HTTP client, not headers, so build one."""
+    async with create_mcp_http_client(headers=headers) as http_client:
+        async with streamable_http_client(url, http_client=http_client) as streams:
+            yield streams
 
 
 def create_connection(

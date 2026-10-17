@@ -263,12 +263,12 @@
         <h2>Lifecycle</h2>
         <div class="callout">
             <div class="callout-title">Protocol versions are dates, never semver</div>
-            There has never been a <code>"1.0.0"</code>. Our pinned SDK
-            (<code>mcp&gt;=1.12,&lt;2</code>) speaks <strong>2025-11-25</strong>;
-            the current revision is <strong>2026-07-28</strong>.
+            There has never been a <code>"1.0.0"</code>. Our SDK
+            (<code>mcp&gt;=2.3,&lt;3</code>) speaks both <strong>2025-11-25</strong>
+            and the current revision, <strong>2026-07-28</strong>.
         </div>
 
-        <h3>A. The handshake — 2025-11-25 (what our demos do)</h3>
+        <h3>A. The handshake — 2025-11-25 (what our demos and Claude Code do)</h3>
         <ol>
             <li><strong>Initialize</strong> — client sends <code>initialize</code> with capabilities + clientInfo; server responds with its own capabilities + serverInfo</li>
             <li><strong>Initialized</strong> — client sends <code>notifications/initialized</code></li>
@@ -286,15 +286,14 @@
   "name": "get_weather",
   "arguments": {"city": "Lisbon"},
   "_meta": {
-    "protocolVersion": "2026-07-28",
-    "capabilities": {"tools": {}}
+    "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+    "io.modelcontextprotocol/clientCapabilities": {}
   }}}</code></pre>
         <p>
-            Any replica serves any request — no shared session store. Module 05
-            already builds this way with <code>stateless_http=True</code>.
-            <strong>Don't fight the mismatch, name it:</strong> the SDK we pin speaks
-            the handshake, the spec moved past it, and module 05 already builds the
-            way the spec wants.
+            Any replica serves any request — no shared session store. Module 05's
+            <code>stateless_http=True</code> gives the same property at the transport.
+            <strong>Name the split:</strong> our v2 servers speak both; hosts like
+            Claude Code still connect with the 2025-11-25 handshake.
         </p>
 
         <h2>The Three Primitives (plus one deprecated)</h2>
@@ -372,7 +371,7 @@ async def read_file(filename: str) -> str:
         </div>
 
         <h2>Under the Hood: @mcp.tool()</h2>
-        <p>FastMCP registers the function, extracts a JSON Schema from its signature/docstring,
+        <p><code>MCPServer</code> registers the function, extracts a JSON Schema from its signature/docstring,
         routes <code>tools/call</code> to it, validates + marshals arguments, and formats the
         response as <code>{"content": [...]}</code>.</p>
 
@@ -415,28 +414,22 @@ async def read_file(filename: str) -> str:
         <div class="ref-box">
             <div class="ref-box-title">demos/</div>
             <dl>
-                <dt>00 — Intro to agents</dt>
+                <dt>00 — Agents are loops</dt>
                 <dd>Hand-rolled agent loop, no MCP yet — web search + filesystem tools</dd>
-                <dt>01 — Introduction to MCP</dt>
-                <dd>Same tools behind a FastMCP server; host/client/server split</dd>
-                <dt>02 — Research agent on the SDK</dt>
-                <dd>Claude Agent SDK as the MCP host — loop collapses to ~15 lines</dd>
-                <dt>03 — Query tabular data</dt>
-                <dd>CSV/pandas MCP server driven by the Agent SDK</dd>
-                <dt>04 — Production research agent</dt>
-                <dd>Intent-grouped tools, HTTP transport, bearer auth, hooks + evals</dd>
-                <dt>05 — Link health checker</dt>
-                <dd>Agent SDK + dedicated link-checking MCP server</dd>
-                <dt>06 — Data analysis agent</dt>
-                <dd>FastAPI + SSE, in-process MCP server, deployed to Vercel</dd>
-                <dt>07 — Hacks, tips, tools</dt>
-                <dd>Ecosystem tools + the <code>mcp-builder-skill</code></dd>
-                <dt>08 — MCP security lab</dt>
-                <dd>Tool poisoning: attack and defense</dd>
-                <dt>09 — Multi-server + subagents</dt>
-                <dd>Composes servers the agent didn't write; delegates to a subagent</dd>
-                <dt>10 — Sessions</dt>
-                <dd>Resume a session or fork it to explore an alternative</dd>
+                <dt>01 — Intro to MCP</dt>
+                <dd>Same tools behind <code>MCPServer</code>; thin client; Claude Code + Claude Desktop</dd>
+                <dt>02 — Agent SDK as host</dt>
+                <dd>Loop collapses to ~15 lines; in-process servers via <code>create_sdk_mcp_server</code></dd>
+                <dt>03 — Skills vs MCP</dt>
+                <dd>Access vs know-how; <code>mcp-builder</code> skill scaffolds a server live</dd>
+                <dt>04 — Production shape</dt>
+                <dd>Intent-grouped tools (7→3), streamable-http, bearer auth, hooks, evals</dd>
+                <dt>05 — Deploy + MCP Apps</dt>
+                <dd>Stateless remote server on Vercel; in-chat MCP App; <code>test_client.py</code></dd>
+                <dt>06 — Defend &amp; scale</dt>
+                <dd>Tool-poisoning lab; multi-server composition, subagents, sessions</dd>
+                <dt>Take-home</dt>
+                <dd><code>demos/exercises/link-checker/</code> · retired demos in <code>demos/archive/</code></dd>
             </dl>
         </div>
 
