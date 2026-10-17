@@ -204,7 +204,7 @@
     | 2025-03-26 | Streamable HTTP, OAuth 2.1 base |
     | 2025-06-18 | Structured output, elicitation, resource servers |
     | **2025-11-25** | OIDC, CIMD, tasks (exp.), icons — **← what Claude Code still connects with** |
-    | **2026-07-28** | **Current.** Stateless core, extensions, MRTR *(day 2)* — our v2 servers speak both |
+    | **2026-07-28** | **Current.** Stateless core, extensions, MRTR *(day 2)* |
 
     ---
     class: center, middle
@@ -228,7 +228,7 @@
     <div class="bad">from <mark class="r">fastmcp</mark> import <mark class="r">FastMCP</mark><span class="lbl">❌ Prefect's project</span></div>
     </div>
 
-    ### We use SDK v2 — `mcp>=2.3,<3`
+    ### We use SDK v2 — `mcp>=2.3,<3` — it speaks both 2025-11-25 and 2026-07-28
 
     .fm-why[Older tutorials import <code>mcp.server.fastmcp.FastMCP</code> — that's the same official SDK, v1.]
 
@@ -329,7 +329,7 @@
     ## The `mcp-builder` skill scaffolds a working MCP server from one prompt
 
     ### *Agents building their own tools*
-    ### Then the same skill, served *over* MCP — Skills extension (final, Sep 2026)
+    ### Bonus: an MCP server can hand out that same skill
 
     ---
     class: center, middle
@@ -516,17 +516,17 @@
     ---
     class: center, middle
 
-    # What shipped on July 28, 2026
+    # The 2026-07-28 spec, revisited
 
-    ## The largest spec revision since launch
+    ## You've already used some of it
 
     ---
 
     # The four changes that matter
 
-    - **Stateless core** — no `initialize`, no session header
+    - **Stateless core** — no `initialize` (the Demo 01 handshake), no session header
 
-    - **Extensions** — MCP Apps and Tasks become official
+    - **Extensions** — Tasks joins MCP Apps as an official extension
 
     - **Multi round-trip** — tools ask for input mid-call
 
@@ -534,9 +534,7 @@
 
     --
 
-    ### Module 05 already lives this way.
-
-    ### SDK **v2** speaks it — and it's what this course runs on.
+    ### Your servers already speak it. Hosts are catching up.
 
     ---
 
