@@ -25,7 +25,7 @@ from claude_agent_sdk import (
 )
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DEMOS_DIR = os.path.dirname(SCRIPT_DIR)
+DEMOS_DIR = os.path.dirname(os.path.dirname(SCRIPT_DIR))
 PRESENTATION_DIR = os.path.join(os.path.dirname(DEMOS_DIR), "presentation")
 REPORTS_DIR = os.path.join(SCRIPT_DIR, "reports")
 
