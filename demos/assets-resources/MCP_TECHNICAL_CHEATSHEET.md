@@ -79,10 +79,12 @@ MCP uses JSON-RPC 2.0 for all communication. Every message follows this structur
 There are two lifecycles to know, because the course demos and the current spec
 differ here. **This is the single most likely student question of day 2.**
 
-### A. The handshake — `2025-11-25`, what module 01's client does
+### A. The handshake — `2025-11-25`, what our demos actually do
 
-Module 01's thin client still connects this way (`session.initialize()`), and
-v2 servers still accept it: the client's first request picks the era.
+Module 01's thin client connects this way (`session.initialize()`), and so does
+Claude Code, the host inside the Agent SDK (verified Oct 2026: it sends
+`initialize` with `2025-11-25`). v2 servers accept it: the client's first
+request picks the era.
 
 ```
 Client → Server: initialize request
