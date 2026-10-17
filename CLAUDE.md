@@ -120,7 +120,7 @@ Claude Desktop config: macOS `~/Library/Application Support/Claude/claude_deskto
 - Skills extension (module 03) not advertised → v2 only puts `capabilities.extensions` in the 2026-07-28 `server/discover` result; clients must call `session.discover()`, not `initialize()`.
 
 ## Additional Resources
-- Spec 2026-07-28 (**current revision**, shipped final): https://modelcontextprotocol.io/specification/2026-07-28 — stateless core, extensions framework, MRTR; covered in slides (deck positions 24, 68–70)
+- Spec 2026-07-28 (**current revision**, shipped final): https://modelcontextprotocol.io/specification/2026-07-28 — stateless core, extensions framework, MRTR; covered in slides (deck positions 23, 26, 66–68)
 - Spec 2025-11-25: https://modelcontextprotocol.io/specification/2025-11-25 — previous revision; v2 servers still accept its `initialize` handshake (module 01's thin client uses it)
 - Claude Agent SDK: https://code.claude.com/docs/en/agent-sdk/overview
 - MCP Apps extension: https://modelcontextprotocol.io/extensions/apps

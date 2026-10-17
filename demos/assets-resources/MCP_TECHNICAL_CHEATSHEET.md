@@ -146,8 +146,8 @@ Client → Server: any request, no handshake first
     "name": "get_weather",
     "arguments": {"city": "Lisbon"},
     "_meta": {
-      "protocolVersion": "2026-07-28",
-      "capabilities": {"tools": {}}
+      "io.modelcontextprotocol/protocolVersion": "2026-07-28",
+      "io.modelcontextprotocol/clientCapabilities": {}
     }
   }
 }
@@ -158,9 +158,9 @@ ordinary load balancers with no shared session store. That is exactly what
 module 05 already does with `stateless_http=True` — the demo and the spec now
 agree.
 
-**Teaching note:** don't fight the mismatch, name it. "The SDK we pin speaks the
-handshake; the spec moved past it; module 05 already builds the way the spec
-wants." Deck positions 24 and 68–70 carry the same framing.
+**Teaching note:** name the split. "Our v2 servers speak both; hosts like
+Claude Code still connect with the 2025-11-25 handshake." Deck positions 23,
+26 and 66–68 carry the same framing.
 
 ## The Three MCP Primitives (plus one deprecated)
 

@@ -233,8 +233,8 @@ paths, restart after editing.
 `demos/assets-resources/MCP_TECHNICAL_CHEATSHEET.md`
 
 **Two handouts, different audiences:**
-- **Students** — [`mcp-course-cheatsheet.html`](mcp-course-cheatsheet.html)
-  (printable: [`mcp-course-cheatsheet-print.pdf`](mcp-course-cheatsheet-print.pdf)).
+- **Students** — [`assets/mcp-course-cheatsheet.html`](assets/mcp-course-cheatsheet.html)
+  (printable: [`assets/mcp-course-cheatsheet.pdf`](assets/mcp-course-cheatsheet.pdf)).
   The quick-reference card to keep after the session.
 - **Instructor** — [`assets/mcp-instructor-cheatsheet.html`](assets/mcp-instructor-cheatsheet.html)
   ([PDF](assets/mcp-instructor-cheatsheet.pdf)), generated from
