@@ -67,7 +67,7 @@ class MCPConnection(ABC):
     async def call_tool(self, tool_name: str, arguments: dict[str, Any]) -> Any:
         """Call a tool on the MCP server with provided arguments."""
         result = await self.session.call_tool(tool_name, arguments=arguments)
-        return result.content
+        return [block.model_dump() for block in result.content]
 
 
 class MCPConnectionStdio(MCPConnection):

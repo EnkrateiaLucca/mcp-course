@@ -52,7 +52,7 @@ load_dotenv()
 
 HERE = Path(__file__).parent
 CHECKSUM_FILE = HERE / ".tool_checksums.json"
-HOST_MODEL = "claude-haiku-4-5-20251001"
+HOST_MODEL = "claude-haiku-5-5"
 SYSTEM_PROMPT = "You are a helpful assistant. Use the provided tools when relevant."
 
 # Heuristic markers. NOTE FOR LEARNERS: keyword scanning is brittle — the

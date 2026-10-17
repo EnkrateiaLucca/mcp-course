@@ -54,8 +54,8 @@ load_dotenv()
 HERE = Path(__file__).parent
 
 # A small, cheap model — the kind many real MCP hosts run. Swap for
-# "claude-sonnet-5" or "claude-fable-5" to watch a frontier model refuse instead.
-HOST_MODEL = "claude-haiku-4-5-20251001"
+# "claude-sonnet-5-5" or "claude-fable-5-1" to watch a frontier model refuse instead.
+HOST_MODEL = "claude-haiku-5-5"
 
 SYSTEM_PROMPT = "You are a helpful assistant. Use the provided tools when relevant."
 

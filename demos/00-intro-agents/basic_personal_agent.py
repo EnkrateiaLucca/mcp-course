@@ -24,7 +24,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-MODEL = "claude-sonnet-5"
+MODEL = "claude-sonnet-5-5"
 WORKSPACE = Path("./workspace").resolve()
 WORKSPACE.mkdir(exist_ok=True)
 
