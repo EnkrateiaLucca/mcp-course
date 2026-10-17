@@ -136,7 +136,9 @@ async functions, no subprocess, ideal for serverless.
 **`demos/03-skills-and-mcp/`** · The 2026 question, answered: **MCP =
 access, skills = know-how, plugins bundle both.** Then the wow moment:
 the `mcp-builder` skill scaffolds a working MCP server from one prompt —
-the workflow the official MCP docs now recommend.
+the workflow the official MCP docs now recommend. Finally,
+`skills-over-mcp/` serves that same skill over MCP through the official
+Skills extension (SEP-2640).
 
 ### 04 — Production-shaped research agent
 **`demos/04-production-research-agent/`** · Intent-grouped tools (7→3),
@@ -200,7 +202,7 @@ paths, restart after editing.
 - **Module 04 401s** → `MCP_AUTH_TOKEN` must be set in *both* terminals.
 - **DDGS returns nothing** → DuckDuckGo throttles; the tools degrade
   gracefully — retry, or swap in your favorite search API.
-- **Rate limits** → iterate on `claude-haiku`.
+- **Rate limits** → iterate on `claude-haiku-5-5`.
 
 ## 📖 Resources
 
