@@ -43,6 +43,7 @@ Inspect:
 
 from __future__ import annotations
 
+import html
 import json
 import logging
 import os
@@ -132,13 +133,26 @@ def _fetch_page(url: str, max_chars: int = 4000) -> str:
         resp.raise_for_status()
     except Exception as exc:  # noqa: BLE001
         logger.info("fetch failed for %s: %r", url, exc)
-        return f"(fetch failed: {exc})"
+        return ""
 
-    text = re.sub(r"<script\b.*?</script>", " ", resp.text, flags=re.DOTALL | re.IGNORECASE)
-    text = re.sub(r"<style\b.*?</style>", " ", text, flags=re.DOTALL | re.IGNORECASE)
-    text = re.sub(r"<[^>]+>", " ", text)
-    text = re.sub(r"\s+", " ", text).strip()
+    text = _page_text(resp.text)
+    # Keep the page's main content when it marks one: otherwise nav menus and
+    # cookie banners fill the excerpt. Pages often hold several blocks (teaser
+    # cards, sidebars), so take the longest, and only if it has real text.
+    blocks = [m.group(0) for m in re.finditer(r"<(main|article)\b.*?</\1>", resp.text, flags=re.DOTALL | re.IGNORECASE)]
+    if blocks:
+        main_text = _page_text(max(blocks, key=len))
+        if len(main_text) >= 500:
+            text = main_text
     return text[:max_chars]
+
+
+def _page_text(page: str) -> str:
+    """Strip page chrome and tags from HTML, leaving readable text."""
+    for tag in ("head", "script", "style", "noscript", "nav", "header", "footer", "aside", "form"):
+        page = re.sub(rf"<{tag}\b.*?</{tag}>", " ", page, flags=re.DOTALL | re.IGNORECASE)
+    text = re.sub(r"<[^>]+>", " ", page)
+    return re.sub(r"\s+", " ", html.unescape(text)).strip()
 
 
 def _format_brief(topic: str, hits: list[dict]) -> str:
