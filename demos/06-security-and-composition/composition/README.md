@@ -8,8 +8,8 @@ with a narrower toolset.
 
 | File | What it does |
 |------|--------------|
-| `research_team.py` | A research agent wired to two MCP servers: the in-process `research` server from demo 04 *and* the public Playwright MCP server (`npx @playwright/mcp@latest`). It defines a `fact-checker` subagent that verifies each claim in a brief by opening the cited source in a real browser. |
-| `git_research_agent.py` | A variant that composes the in-process research server with the **Git MCP server** — the canonical "real third-party server" example from Anthropic's `02_The_observability_agent` cookbook. |
+| `research_team.py` | A research agent wired to two MCP servers: the `research` server from demo 04 (over HTTP) *and* the public Playwright MCP server (`npx @playwright/mcp@latest`). It defines a `fact-checker` subagent that verifies each claim in a brief by opening the cited source in a real browser. |
+| `git_research_agent.py` | A variant that composes demo 04's research server with the **Git MCP server** — the canonical "real third-party server" example from Anthropic's `02_The_observability_agent` cookbook. |
 
 ## What this teaches
 
@@ -29,11 +29,17 @@ with a narrower toolset.
 
 ```bash
 export ANTHROPIC_API_KEY=sk-...
+export MCP_AUTH_TOKEN=demo-secret
 
-# Playwright MCP needs npx in PATH and will install on first use.
+# Both demos reach demo 04's research server over HTTP: start it first, in another terminal.
+uv run ../../04-production-research-agent/research_server.py
+
+# Playwright MCP needs npx in PATH and installs itself on first use, but not
+# the browser it drives. Install that once:
+npx playwright install chrome
 uv run research_team.py "Research MCP authentication, then verify your sources are still live."
 
-# Git MCP composes with our in-process research server.
+# Git MCP composes with demo 04's research server.
 uv run git_research_agent.py
 ```
 

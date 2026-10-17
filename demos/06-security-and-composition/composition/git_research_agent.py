@@ -24,6 +24,7 @@ Run:
 from __future__ import annotations
 
 import asyncio
+import os
 from pathlib import Path
 
 from claude_agent_sdk import (
@@ -39,9 +40,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DEMO_04 = Path(__file__).resolve().parent.parent / "04-production-research-agent"
-RESEARCH_SERVER = DEMO_04 / "research_server.py"
-REPO_ROOT = Path(__file__).resolve().parents[2]
+# Reuse the demo 04 research server over HTTP, connecting exactly the way
+# demo 04's agent does. Start it first in another terminal:
+#   uv run demos/04-production-research-agent/research_server.py
+SERVER_URL = os.getenv("MCP_SERVER_URL", "http://127.0.0.1:8765/mcp")
+try:
+    AUTH_TOKEN = os.environ["MCP_AUTH_TOKEN"]
+except KeyError as exc:
+    raise SystemExit(
+        "MCP_AUTH_TOKEN must be set so the agent can authenticate to the server."
+    ) from exc
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 SYSTEM_PROMPT = (
     "You are a research lead with access to two MCP servers: 'research' "
@@ -56,7 +65,11 @@ def build_options() -> ClaudeAgentOptions:
         model="claude-sonnet-5-5",
         system_prompt=SYSTEM_PROMPT,
         mcp_servers={
-            "research": {"command": "uv", "args": ["run", str(RESEARCH_SERVER)]},
+            "research": {
+                "type": "http",
+                "url": SERVER_URL,
+                "headers": {"Authorization": f"Bearer {AUTH_TOKEN}"},
+            },
             # The Git MCP server, run via uvx (Python ecosystem equivalent of
             # npx). Reference: github.com/modelcontextprotocol/servers
             "git": {
