@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Module 04 — Code Walkthrough</title>
+    <meta charset="utf-8">
+    <style>
+      @import url(https://fonts.googleapis.com/css?family=Yanone+Kaffeesatz);
+      @import url(https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic);
+      @import url(https://fonts.googleapis.com/css?family=Ubuntu+Mono:400,700,400italic);
+      body { font-family: 'Droid Serif'; }
+      h1, h2, h3 { font-family: 'Yanone Kaffeesatz'; font-weight: normal; }
+      .remark-code, .remark-inline-code { font-family: 'Ubuntu Mono'; }
+      .remark-code { font-size: 0.78em; line-height: 1.35; }
+      .remark-code-line-highlighted { background-color: #fde68a; }
+      .remark-slide-content { padding: 1em 2.5em; }
+      .remark-slide-content h1 { font-size: 2.6em; margin: 0.2em 0 0.3em; }
+      .remark-slide-content h2 { font-size: 1.6em; margin: 0.2em 0 0.4em; }
+      .file { font-family: 'Ubuntu Mono'; color: #888; font-size: 0.75em; position: absolute; top: 0.6em; right: 1.2em; }
+      .tag { display: inline-block; background: #1a1a1a; color: #fde68a; font-family: 'Ubuntu Mono'; font-size: 0.7em; padding: 2px 8px; border-radius: 4px; margin-bottom: 0.4em; }
+      .big { font-size: 1.4em; }
+      .muted { color: #777; }
+      .ok { color: #15803d; } .bad { color: #b91c1c; }
+      .cols { display: flex; gap: 2em; } .cols > div { flex: 1; }
+      table { border-collapse: collapse; margin: 0 auto; }
+      th, td { padding: 8px 16px; border-bottom: 1px solid #ddd; text-align: left; }
+      .flow { font-family: 'Ubuntu Mono'; font-size: 0.8em; white-space: pre; background: #f6f6f6; padding: 0.8em 1em; border-radius: 6px; text-align: left; display: inline-block; }
+    </style>
+  </head>
+  <body>
+    <textarea id="source">
+
+class: center, middle
+
+# Module 04 — Production shape
+
+## Same research assistant. Four changes.
+
+### HTTP · Auth · Hooks · Evals
+
+---
+class: center, middle
+
+# Four moves
+
+| Module 01 | Module 04 |
+|---|---|
+| 7 tools that mirror an API | **3 tools** that do a job |
+| stdio subprocess | **HTTP** at a URL |
+| no lock on the door | **bearer token** on every request |
+| hope it worked | **hooks + evals** |
+
+---
+
+<span class="file">research_server.py</span>
+<span class="tag">move 1 · intent-grouped tools</span>
+
+# 7 → 3
+
+<div class="cols">
+<div>
+
+**Module 01**
+
+`web_search`
+`write_file`
+`edit_file`
+`read_file`
+`list_files`
+`move_file`
+`delete_file`
+
+*4–6 agent turns per brief*
+
+</div>
+<div>
+
+**Module 04**
+
+`research_topic`  ← search + fetch + format + save
+`list_briefs`
+`read_brief`
+
+*1 turn per brief*
+
+</div>
+</div>
+
+---
+
+<span class="file">research_server.py</span>
+<span class="tag">move 1 · one tool does the whole job</span>
+
+```python
+@mcp.tool()
+def research_topic(topic: str, max_sources: int = 5) -> dict:
+    """Search the web for ``topic`` and save a markdown brief."""
+*   hits = _search(topic, max_results=max_sources)
+    if not hits:
+*       return {"ok": False, "error": "search_unavailable", "topic": topic}
+
+    for hit in hits:
+*       hit["excerpt"] = _fetch_page(hit["url"])
+
+*   brief = _format_brief(topic, hits)
+*   (BRIEFS_DIR / f"{_slugify(topic)}.md").write_text(brief)
+
+*   return {"ok": True, "brief_path": f"briefs/{filename}",
+*           "source_count": len(hits), "summary": "..."}
+```
+
+.muted[Search → fetch → format → save. Structured dict back, never a blob.]
+
+---
+
+<span class="file">research_server.py</span>
+<span class="tag">move 2 · stdio → HTTP</span>
+
+```python
+mcp = MCPServer("research-assistant")
+
+# ... tools ...
+
+if __name__ == "__main__":
+*   app = mcp.streamable_http_app()      # a Starlette ASGI app
+    app.add_middleware(BearerAuthMiddleware)
+*   uvicorn.run(app, host="127.0.0.1", port=8765)
+```
+
+.muted[Module 01 ended with `mcp.run(transport="stdio")`. That is the only line that changed for transport.]
+
+---
+class: center, middle
+
+# Auth
+
+## "Who is calling my server, and are they allowed?"
+
+--
+
+### stdio: never asked. The server was your own child process.
+
+### HTTP: anyone on the network can send a request.
+
+---
+class: center, middle
+
+# Two halves, one seam
+
+<div class="flow">research_agent.py                      research_server.py
+─────────────────                      ──────────────────
+  sends one header       ──────►       one middleware checks it
+  Authorization: Bearer &lt;token&gt;        before MCP sees anything
+
+        MCP_AUTH_TOKEN                        MCP_AUTH_TOKEN
+        (same value, both sides)</div>
+
+---
+
+<span class="file">research_agent.py</span>
+<span class="tag">auth · client half</span>
+
+```python
+AUTH_TOKEN = os.environ["MCP_AUTH_TOKEN"]   # fail fast if unset
+
+def build_options() -> ClaudeAgentOptions:
+    return ClaudeAgentOptions(
+        mcp_servers={
+            "research": {
+*               "type": "http",
+*               "url": "http://127.0.0.1:8765/mcp",
+*               "headers": {"Authorization": f"Bearer {AUTH_TOKEN}"},
+            }
+        },
+        ...
+    )
+```
+
+.muted[That is all the client does. The SDK attaches the header to every request.]
+
+---
+
+<span class="file">research_server.py</span>
+<span class="tag">auth · server half</span>
+
+```python
+AUTH_TOKEN = os.environ["MCP_AUTH_TOKEN"]   # fail fast if unset
+
+class BearerAuthMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+*       header = request.headers.get("authorization", "")
+*       if header != f"Bearer {AUTH_TOKEN}":
+*           return JSONResponse({"error": "unauthorized"}, status_code=401)
+        return await call_next(request)
+
+app = mcp.streamable_http_app()
+*app.add_middleware(BearerAuthMiddleware)
+```
+
+.muted[Runs on every request, before the MCP layer. Tool code never knows auth exists.]
+
+---
+class: center, middle
+
+# Every request
+
+<div class="flow">HTTP request ──► BearerAuthMiddleware ──► header matches? ──► MCP layer ──► tool runs
+                                              │
+                                              └── no ──► 401  (MCP never sees it)</div>
+
+--
+
+## initialize · tools/list · tools/call — all pass through the same gate
+
+---
+
+<span class="tag">auth · prove it</span>
+
+# curl
+
+```bash
+# no header
+curl -s -X POST http://127.0.0.1:8765/mcp \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' -d "$BODY"
+```
+.bad[→ 401 `{"error": "unauthorized"}`]
+
+```bash
+# right header
+curl -s -X POST http://127.0.0.1:8765/mcp \
+* -H 'Authorization: Bearer demo-secret' \
+  -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' -d "$BODY"
+```
+.ok[→ 200 initialize result]
+
+---
+
+# The auth ladder
+
+| | Client gets token by | Server checks by | Use when |
+|---|---|---|---|
+| 0 · None | — | — | stdio on your laptop |
+| **1 · Static bearer** | env var | string compare | one trusted caller |
+| 2 · OAuth 2.1 | login flow → short-lived, scoped token | signature / introspection + scopes | many users, third-party hosts |
+
+--
+
+.big[**Rung 1 → rung 2: same header, same seam, zero tool changes.**]
+
+---
+class: center, middle
+
+# OAuth in one slide
+
+| Role | Who |
+|---|---|
+| Resource server | **your MCP server** (holds the tools) |
+| Authorization server | Auth0 / Okta / your own (issues tokens) |
+| Client | the MCP host: Claude, Cursor (runs the login) |
+
+--
+
+### OAuth changes *how the token is obtained and verified*.
+### It does not change *where it travels* or *where it is checked*.
+
+---
+
+<span class="file">research_agent.py</span>
+<span class="tag">control · allow-list + callback</span>
+
+```python
+*ALLOWED_TOOLS = {
+*   "mcp__research__research_topic",
+*   "mcp__research__list_briefs",
+*   "mcp__research__read_brief",
+*}
+
+async def can_use_tool(tool_name, input_data, context):
+*   if tool_name not in ALLOWED_TOOLS:
+*       return PermissionResultDeny(message=f"{tool_name} not in allow-list")
+    return PermissionResultAllow()
+
+ClaudeAgentOptions(
+*   allowed_tools=sorted(ALLOWED_TOOLS),
+*   can_use_tool=can_use_tool,
+)
+```
+
+.muted[MCP tools are never auto-approved. Two gates, same list: defense in depth.]
+
+---
+
+<span class="file">research_agent.py</span>
+<span class="tag">control · PreToolUse hook</span>
+
+```python
+async def pre_tool_validate(input_data, tool_use_id, context) -> dict:
+    tool_name  = input_data.get("tool_name", "")
+    tool_input = input_data.get("tool_input", {})
+
+    if tool_name == "mcp__research__read_brief":
+        path = tool_input.get("brief_path", "")
+*       if ".." in path or path.startswith("/"):
+*           return {"hookSpecificOutput": {
+*               "hookEventName": "PreToolUse",
+*               "permissionDecision": "deny",
+*               "permissionDecisionReason": "Path must be relative, under briefs/",
+*           }}
+    return {}
+
+hooks={"PreToolUse": [HookMatcher(matcher="mcp__research__*",
+                                  hooks=[pre_tool_validate])]}
+```
+
+.muted[Reject bad input before a network round-trip. The server checks again anyway.]
+
+---
+
+<span class="file">research_agent.py</span>
+<span class="tag">control · PostToolUse hook</span>
+
+```python
+async def post_tool_log(input_data, tool_use_id, context) -> dict:
+    name   = input_data.get("tool_name", "?")
+*   result = _tool_result_dict(input_data.get("tool_response"))
+    ok     = result.get("ok", True)
+*   log.info("tool %s -> %s", name, "ok" if ok else f"error: {result!r}")
+    return {}
+```
+
+--
+
+```python
+def _tool_result_dict(response):
+    # MCP results are content blocks; our dict is JSON inside the text block
+*   for block in response["content"]:
+*       if block["type"] == "text":
+*           return json.loads(block["text"])
+```
+
+.muted[One log line per call. Observability, not control.]
+
+---
+
+<span class="file">research_agent.py</span>
+<span class="tag">control · catch auth failures at init</span>
+
+```python
+async for message in client.receive_response():
+    if isinstance(message, SystemMessage) and message.subtype == "init":
+*       for srv in message.data.get("mcp_servers", []):
+*           status = srv.get("status")
+*           if status in ("connected", "pending"):
+*               log.info("MCP server %r: %s", srv["name"], status)
+*           else:
+*               log.error("MCP server %r: %s", srv["name"], status)
+```
+
+.muted[A 401 shows up here as `failed`, not as "the agent ignored the tool" 30 seconds later.]
+
+---
+
+<span class="file">research_agent.py</span>
+<span class="tag">telemetry · did it run?</span>
+
+```python
+@dataclass
+class ExecutionTracker:
+    tool_calls: list[dict] = field(default_factory=list)
+    cost_usd: float = 0.0
+    status: str = "running"
+
+    def on_message(self, message):
+        if isinstance(message, AssistantMessage):
+            for block in message.content:
+                if isinstance(block, ToolUseBlock):
+*                   self.tool_calls.append({"name": block.name, "input": block.input})
+        elif isinstance(message, ResultMessage):
+*           self.cost_usd = message.total_cost_usd or 0.0
+*           self.status = message.subtype
+```
+
+.muted[Status, duration, cost, tool counts. Tells you it *ran*. Not that it was *right*.]
+
+---
+
+<span class="file">evals.py</span>
+<span class="tag">evals · was it right?</span>
+
+```python
+# 1. deterministic — free, fast
+def grade_brief(brief_path, topic):
+*   checks = {
+*       "file_exists":         brief_path.exists(),
+*       "has_sources_section": "## Sources" in text,
+*       "mentions_topic":      any(w in text.lower() for w in topic_words),
+*       "nontrivial_length":   len(text) > 300,
+*   }
+    return {"passed": all(checks.values()), "checks": checks}
+
+# 2. LLM-as-judge — the SDK, locked to Read only
+async def judge_brief(brief_path, topic):
+*   opts = ClaudeAgentOptions(model="claude-sonnet-5-5", allowed_tools=["Read"])
+    ...  # scores faithfulness / coverage / usefulness 1–5
+
+# 3. gate — run every case, exit 1 on failure
+```
+
+---
+
+<span class="file">structured_output_demo.py</span>
+<span class="tag">bonus · typed final answers</span>
+
+```python
+class ResearchReport(BaseModel):
+    source_count: int
+    key_findings: list[str] = Field(min_length=1, max_length=5)
+    confidence: float = Field(ge=0, le=1)
+
+options = build_options()
+*options.output_format = {
+*   "type": "json_schema",
+*   "schema": ResearchReport.model_json_schema(),
+*}
+
+async for message in query(prompt="...", options=options):
+    if isinstance(message, ResultMessage) and message.structured_output:
+*       report = ResearchReport.model_validate(message.structured_output)
+```
+
+.muted[A validated object is gradeable. Prose is not.]
+
+---
+class: center, middle
+
+# Recap
+
+## 3 tools · 1 URL · 1 header · 2 hooks · 1 eval file
+
+--
+
+### Next: module 05 puts it on a public URL.
+
+    </textarea>
+    <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+    <script>
+      var slideshow = remark.create({ highlightLines: true, highlightLanguage: 'python', ratio: '16:9' });
+    </script>
+  </body>
+</html>

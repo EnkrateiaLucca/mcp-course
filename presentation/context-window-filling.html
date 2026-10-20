@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Filling the Window</title>
+<style>
+  :root {
+    --page: #151515; --surface-1: #20201f; --surface-2: #2c2c2a;
+    --text: #f0efec; --text-2: #c3c2b7; --muted: #898781;
+    --border: rgba(255,255,255,.1); --border-strong: rgba(255,255,255,.2);
+    --field: rgba(255,255,255,.05); --hover: rgba(255,255,255,.08);
+    --primary-bg: #f0efec; --primary-fg: #0b0b0b;
+    --danger: #ef8080; --danger-bg: rgba(230,103,103,.14); --focus: rgba(57,135,229,.6);
+    --spark: #d97757;
+    --c-system: #3987e5; --c-user: #d95926; --c-assistant: #199e70;
+    --c-tool_call: #c98500; --c-tool_result: #d55181; --c-summary: #008300;
+    --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --serif: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    color-scheme: dark;
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --page: #faf9f5; --surface-1: #ffffff; --surface-2: #f0eee6;
+      --text: #141413; --text-2: #3d3d3a; --muted: #73726c;
+      --border: rgba(0,0,0,.1); --border-strong: rgba(0,0,0,.22);
+      --field: rgba(0,0,0,.03); --hover: rgba(0,0,0,.06);
+      --primary-bg: #141413; --primary-fg: #faf9f5;
+      --danger: #c0392b; --danger-bg: rgba(192,57,43,.1);
+      color-scheme: light;
+    }
+  }
+  :root[data-theme="light"] {
+    --page: #faf9f5; --surface-1: #ffffff; --surface-2: #f0eee6;
+    --text: #141413; --text-2: #3d3d3a; --muted: #73726c;
+    --border: rgba(0,0,0,.1); --border-strong: rgba(0,0,0,.22);
+    --field: rgba(0,0,0,.03); --hover: rgba(0,0,0,.06);
+    --primary-bg: #141413; --primary-fg: #faf9f5;
+    --danger: #c0392b; --danger-bg: rgba(192,57,43,.1);
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--page); color: var(--text); font: 15px/1.5 var(--sans); }
+  main { max-width: 960px; margin: 0 auto; padding: 48px 16px; }
+  h1 { font: 400 clamp(28px, 4vw, 40px)/1.15 var(--serif); margin: 0 0 12px; }
+  .lede { color: var(--text-2); font-size: 18px; margin: 0 0 32px; max-width: 64ch; }
+  button { font: inherit; }
+  :focus-visible { outline: none; box-shadow: 0 0 0 3px var(--focus); }
+
+  .frame { display: flex; flex-direction: column; gap: 12px; background: var(--surface-1); border-radius: 16px; padding: 16px; box-shadow: inset 0 0 0 1px var(--border); }
+  .frame-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .label { font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .ghost { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; color: var(--text); font-size: 14px; padding: 4px 8px; border-radius: 8px; cursor: pointer; }
+  .ghost:hover { background: var(--hover); }
+  .ghost svg { width: 16px; height: 16px; }
+
+  .grid { display: flex; flex-direction: column; gap: 12px; }
+  .transcript { height: 320px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+  .stack { display: flex; flex-direction: column; gap: 10px; }
+  .meter { order: -1; display: flex; flex-direction: column; gap: 8px; }
+  .usage-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .usage { font: 500 12px/1.4 var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+  .full { display: inline-flex; align-items: center; gap: 4px; border-radius: 4px; background: var(--danger-bg); color: var(--danger); padding: 0 4px; font: 12px var(--mono); }
+  .full svg { width: 12px; height: 12px; }
+  .bar { display: flex; flex-direction: row; gap: 2px; height: 24px; width: 100%; }
+  .seg { flex: 0 0 0px; min-width: 4px; min-height: 4px; border-radius: 5px; transition: flex-grow .5s ease-out; }
+  .free { flex: 1 0 0px; display: flex; align-items: center; justify-content: center; min-width: 0; min-height: 0; overflow: hidden; border: 1px dashed var(--border-strong); border-radius: 5px; font: 12px var(--mono); color: var(--muted); transition: flex-grow .5s ease-out; }
+  .free span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; }
+  .free.danger { border-color: var(--danger); color: var(--danger); }
+  .legend { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; font: 12px var(--mono); color: var(--muted); }
+  .legend li { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .legend b { font-weight: 400; color: var(--text-2); }
+  @media (min-width: 640px) {
+    .grid { display: grid; grid-template-columns: 2fr 1fr; align-items: stretch; }
+    .meter { order: 0; height: 320px; }
+    .bar { flex: 1; flex-direction: column; height: auto; min-height: 0; }
+    .legend { flex-direction: column; gap: 4px; }
+  }
+
+  .msg { display: flex; flex-direction: column; gap: 4px; opacity: 0; transform: translateY(4px); transition: opacity .3s ease-out, transform .3s ease-out; }
+  .msg.in { opacity: 1; transform: none; }
+  .meta { font: 12px var(--mono); color: var(--muted); }
+  .you { align-items: flex-end; }
+  .bubble { max-width: 85%; background: var(--surface-2); border-radius: 16px 16px 6px 16px; padding: 8px 12px; white-space: pre-line; }
+  .claude-row { display: flex; gap: 8px; max-width: 92%; }
+  .claude-row .text { min-width: 0; white-space: pre-line; }
+  .spark { flex-shrink: 0; margin-top: 2px; color: var(--spark); }
+  .thinking .spark { animation: spin 1.6s linear infinite; }
+  .meta.indent { padding-left: 26px; }
+  .card { background: var(--surface-2); border-radius: 10px; padding: 8px 12px; }
+  .card-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; }
+  .chip { font: 12px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); white-space: nowrap; }
+  .card-body { font: 13px/1.55 var(--mono); color: var(--text-2); white-space: pre-wrap; }
+  .dots { display: inline-flex; gap: 4px; align-items: center; height: 22px; }
+  .dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: pulse 1s ease-in-out infinite; }
+  .dots span:nth-child(2) { animation-delay: .15s; }
+  .dots span:nth-child(3) { animation-delay: .3s; }
+  @keyframes pulse { 50% { opacity: .25; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .composer { display: flex; gap: 8px; align-items: center; }
+  .field { flex: 1; min-width: 0; min-height: 38px; display: flex; align-items: center; border: 1px solid var(--border); background: var(--field); border-radius: 999px; padding: 4px 14px; font-size: 15px; color: var(--text); text-align: left; cursor: pointer; transition: background .15s; }
+  .field:hover:enabled { background: var(--hover); }
+  .field:disabled { color: var(--muted); cursor: default; }
+  .field.danger { border-color: var(--danger); }
+  .field span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .send { width: 38px; height: 38px; flex-shrink: 0; display: grid; place-items: center; border: 0; border-radius: 8px; background: var(--primary-bg); color: var(--primary-fg); cursor: pointer; transition: opacity .15s, box-shadow .15s; }
+  .send:disabled { opacity: .35; cursor: default; }
+  .send.nudge { box-shadow: 0 0 0 3px var(--focus); }
+  .send svg { width: 18px; height: 18px; }
+  .error { display: flex; gap: 8px; align-items: flex-start; border-radius: 10px; background: var(--danger-bg); color: var(--danger); padding: 8px 12px; font-size: 13px; }
+  .error svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 2px; }
+
+  .tip { margin-top: 16px; border: 1px solid var(--border); border-left: 3px solid var(--spark); border-radius: 10px; padding: 12px 16px; background: var(--surface-1); color: var(--text-2); opacity: 0; transform: translateY(4px); transition: opacity .5s ease-out, transform .5s ease-out; }
+  .tip.in { opacity: 1; transform: none; }
+  .tip p { margin: 0; }
+  .tip p + p { margin-top: 8px; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <h1 id="title"></h1>
+  <p class="lede" id="intro"></p>
+
+  <section class="frame">
+    <div class="frame-head">
+      <span class="label" id="label"></span>
+      <button class="ghost" id="reset" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+        Reset
+      </button>
+    </div>
+
+    <div class="grid">
+      <div class="transcript" id="transcript"><div class="stack" id="stack"></div></div>
+      <div class="meter">
+        <div class="usage-row">
+          <span class="usage" id="usage"></span>
+          <span class="full" id="full" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            full
+          </span>
+        </div>
+        <div class="bar" id="bar" role="list"><div class="free" id="free" role="listitem"><span></span></div></div>
+        <ul class="legend" id="legend" aria-label="Tokens by author"></ul>
+      </div>
+    </div>
+
+    <div class="composer" role="group" aria-label="Composer">
+      <button class="field" id="field" type="button"><span></span></button>
+      <button class="send" id="send" type="button" aria-label="Send">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9 22 2z"/></svg>
+      </button>
+    </div>
+
+    <div class="error" id="error" role="status" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+      <span></span>
+    </div>
+  </section>
+
+  <div class="tip" id="tip" role="status" hidden></div>
+</main>
+
+<script>
+// Edit this object to make a new demo. Beat types: user, assistant, tool_call, tool_result, blocked.
+// `tokens` is optional on chat beats (falls back to ~4 chars per token).
+// `blocked` must be the last beat: the reply that no longer fits, with `needs` tokens.
+const SCENARIO = {
+  title: "Filling the window",
+  intro: "Send each message and watch the context window fill. To keep the numbers readable, this model has a tiny window of only 1,000 tokens.",
+  label: "A 1,000-token context window",
+  budget: 1000,
+  preloaded: { type: "system", label: "system prompt + preloaded context", tokens: 345 },
+  beats: [
+    { type: "user", tokens: 22, text: "I'm spending a long weekend in Lisbon. What should I prioritize?" },
+    { type: "assistant", tokens: 58, text: "Group your days by neighborhood so you aren't crossing the city all the time: Alfama and the castle one day, Baixa and Chiado the next, then Belém. Book anything with a queue ahead of time. When are you going?" },
+    { type: "user", tokens: 14, text: "Late March. What's the weather like then?" },
+    { type: "tool_call", tokens: 12, label: "tool call · web_search", text: 'web_search("Lisbon weather late March")' },
+    { type: "tool_result", tokens: 190, text: "[1] climate-stats.example — Lisbon, March: average high 18 °C, low 10 °C, about 8 rainy days.\n[2] travel-guide.example — Spring brings longer days (~12 h of daylight). Mornings stay cool; pack layers.\n[3] city-weather.example — Late March pattern: mostly sunny with passing Atlantic showers and light winds." },
+    { type: "assistant", tokens: 54, text: "Expect mild spring weather: highs around 18 °C, lows near 10 °C, and a fair chance of a shower or two. Pack layers and a light rain jacket, and keep an indoor stop in mind for rainy afternoons." },
+    { type: "user", tokens: 20, text: "What food shouldn't I miss? And is tram 28 worth it?" },
+    { type: "assistant", tokens: 128, text: "Get pastéis de nata warm from the oven, grilled sardines or a bacalhau dish, and a bifana from a counter bar. Tram 28 is scenic but packed by mid-morning, so ride it before 9 am or walk the same route through Graça and Alfama. The miradouros along the way give you the views for free. Want me to turn all this into a day-by-day itinerary?" },
+    { type: "user", tokens: 14, text: "Yes, a 3-day itinerary would be great." },
+    { type: "blocked", needs: 180 },
+  ],
+  takeaways: [
+    "Two things to notice. The system prompt used a third of the window before you sent a single message. And the one web search Claude ran cost more tokens than everything you typed combined.",
+    "When the window runs out, something has to give: start a new chat, or compress the old turns to make room.",
+  ],
+};
+
+const AUTHOR = { system: "system", user: "you", assistant: "Claude", tool_call: "tool call", tool_result: "tool result", summary: "summary" };
+const fmt = n => n.toLocaleString("en-US");
+const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = id => document.getElementById(id);
+const S = SCENARIO, beats = S.beats;
+for (const b of beats) if (b.type !== "blocked") b.tokens ??= Math.ceil(b.text.length / 4);
+
+const used0 = S.preloaded.tokens + beats.reduce((n, b) => n + (b.tokens || 0), 0);
+console.assert(used0 <= S.budget, `Scenario uses ${used0} tokens, over the ${S.budget} budget`);
+
+const theme = new URLSearchParams(location.search).get("theme");
+if (theme) document.documentElement.dataset.theme = theme;
+$("title").textContent = S.title; $("intro").textContent = S.intro; $("label").textContent = S.label;
+
+const SPARK = (() => {
+  let d = "";
+  for (let i = 0; i < 12; i++) {
+    const a = i * Math.PI / 6 + 0.15, r = i % 2 ? 7 : 9.5;
+    d += `M12 12L${(12 + r * Math.cos(a)).toFixed(1)} ${(12 + r * Math.sin(a)).toFixed(1)}`;
+  }
+  return `<svg class="spark" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="${d}" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>`;
+})();
+
+let timers = [], msgs = [], step = 0, replying = false, blocked = false, typingEl = null;
+const after = (ms, fn) => reduced ? fn() : timers.push(setTimeout(fn, ms));
+
+function bubble(m) {
+  const el = document.createElement("div");
+  const meta = `<span class="meta${m.type === "assistant" ? " indent" : ""}">${fmt(m.tokens)} tokens</span>`;
+  if (m.type === "user") {
+    el.className = "msg you";
+    el.innerHTML = `<div class="bubble"></div>${meta}`;
+    el.querySelector(".bubble").textContent = m.text;
+  } else if (m.type === "assistant") {
+    el.className = "msg";
+    el.innerHTML = `<div class="claude-row">${SPARK}<div class="text"></div></div>${meta}`;
+    el.querySelector(".text").textContent = m.text;
+  } else {
+    el.className = "msg card";
+    el.innerHTML = `<div class="card-head"><span class="chip"></span>${meta}</div>${m.text ? '<div class="card-body"></div>' : ""}`;
+    el.querySelector(".chip").textContent = m.label ?? AUTHOR[m.type];
+    if (m.text) el.querySelector(".card-body").textContent = m.text;
+  }
+  return el;
+}
+
+function addMessage(m) {
+  msgs.push(m);
+  const el = bubble(m);
+  $("stack").insertBefore(el, typingEl);
+  const seg = document.createElement("div");
+  seg.className = "seg";
+  seg.setAttribute("role", "listitem");
+  seg.style.background = `var(--c-${m.type})`;
+  seg.title = `${m.label ?? AUTHOR[m.type]} · ${fmt(m.tokens)} tokens`;
+  $("bar").insertBefore(seg, $("free"));
+  void el.offsetWidth; // flush styles so the enter transitions run
+  el.classList.add("in");
+  seg.style.flexGrow = m.tokens;
+  renderMeter();
+  scrollDown();
+}
+
+function renderMeter() {
+  const used = msgs.reduce((n, m) => n + m.tokens, 0), free = Math.max(0, S.budget - used);
+  $("usage").textContent = `${fmt(used)}/${fmt(S.budget)} tokens`;
+  $("bar").setAttribute("aria-label", `Context window: ${fmt(used)} of ${fmt(S.budget)} tokens used`);
+  $("free").style.flexGrow = free;
+  $("free").firstChild.textContent = `${fmt(free)} free`;
+  const by = {};
+  for (const m of msgs) by[m.type] = (by[m.type] || 0) + m.tokens;
+  $("legend").innerHTML = Object.keys(AUTHOR).filter(t => by[t]).map(t =>
+    `<li><i style="background:var(--c-${t})"></i><span>${AUTHOR[t]}</span><b>${fmt(by[t])}</b></li>`).join("");
+}
+
+function setTyping(on) {
+  typingEl?.remove();
+  typingEl = null;
+  if (on) {
+    typingEl = document.createElement("div");
+    typingEl.className = "msg in thinking";
+    typingEl.innerHTML = `<div class="claude-row">${SPARK}<span class="dots" aria-label="Claude is typing"><span></span><span></span><span></span></span></div>`;
+    $("stack").append(typingEl);
+    scrollDown();
+  }
+}
+
+function scrollDown() { const t = $("transcript"); t.scrollTop = t.scrollHeight; }
+
+function renderComposer() {
+  const cur = beats[step], full = step >= beats.length;
+  const sendable = !replying && cur?.type === "user";
+  const field = $("field");
+  field.firstChild.textContent = sendable ? cur.text : replying ? "Claude is replying…" : "";
+  field.disabled = $("send").disabled = !sendable;
+  field.setAttribute("aria-label", sendable ? `Send: ${cur.text}` : "Composer");
+  field.classList.toggle("danger", full);
+  $("send").classList.toggle("nudge", sendable && step === 0);
+  $("full").hidden = !full;
+  $("free").classList.toggle("danger", full);
+  $("error").hidden = !blocked;
+  if (blocked) {
+    const free = S.budget - msgs.reduce((n, m) => n + m.tokens, 0);
+    $("error").lastElementChild.textContent = `Not enough room for Claude's reply (needs ~${fmt(beats.at(-1).needs)} tokens, ${fmt(free)} free)`;
+  }
+  const tip = $("tip");
+  if (full && tip.hidden) {
+    tip.innerHTML = S.takeaways.map(() => "<p></p>").join("");
+    S.takeaways.forEach((t, i) => tip.children[i].textContent = t);
+    tip.hidden = false;
+    void tip.offsetWidth;
+    tip.classList.add("in");
+  } else if (!full) {
+    tip.hidden = true;
+    tip.classList.remove("in");
+  }
+}
+
+// Mirrors the original timing: Claude "types" before replies and tool calls; tool results land after a pause.
+function advance(i) {
+  const b = beats[i];
+  if (!b || b.type === "user") { step = i; replying = false; return renderComposer(); }
+  if (b.type === "blocked") {
+    after(300, () => { setTyping(true); after(1100, () => {
+      setTyping(false); blocked = true; step = i + 1; replying = false; renderComposer();
+    }); });
+  } else if (b.type === "tool_result") {
+    after(900, () => { addMessage(b); advance(i + 1); });
+  } else {
+    const [wait, type] = b.type === "tool_call" ? [400, 800] : [200, 600];
+    after(wait, () => { setTyping(true); after(type, () => { setTyping(false); addMessage(b); advance(i + 1); }); });
+  }
+}
+
+function send() {
+  if (replying || beats[step]?.type !== "user") return;
+  addMessage(beats[step]);
+  replying = true;
+  renderComposer();
+  advance(step + 1);
+}
+
+function reset() {
+  timers.forEach(clearTimeout);
+  timers = []; msgs = []; step = 0; replying = false; blocked = false;
+  setTyping(false);
+  $("stack").innerHTML = "";
+  $("bar").querySelectorAll(".seg").forEach(s => s.remove());
+  addMessage(S.preloaded);
+  renderComposer();
+}
+
+$("field").onclick = $("send").onclick = send;
+$("reset").onclick = reset;
+// Presenter keys: → or PageDown (most clickers) sends, R resets.
+document.addEventListener("keydown", e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === "ArrowRight" || e.key === "PageDown") { e.preventDefault(); send(); }
+  else if (e.key === "r" || e.key === "R") reset();
+});
+reset();
+</script>
+</body>
+</html>

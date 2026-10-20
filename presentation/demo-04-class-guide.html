@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Module 04 Class Guide</title>
+<style>
+  :root { --bg:#fff; --fg:#1a1a1a; --muted:#666; --line:#ddd; --code:#f4f4f4; --accent:#b45309; --ok:#15803d; --bad:#b91c1c; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#111; --fg:#eee; --muted:#999; --line:#333; --code:#1e1e1e; --accent:#f59e0b; --ok:#4ade80; --bad:#f87171; } }
+  :root[data-theme="dark"] { --bg:#111; --fg:#eee; --muted:#999; --line:#333; --code:#1e1e1e; --accent:#f59e0b; --ok:#4ade80; --bad:#f87171; }
+  body { background:var(--bg); color:var(--fg); font:16px/1.5 -apple-system,system-ui,sans-serif; max-width:860px; margin:0 auto; padding:24px 16px; }
+  h1 { font-size:1.6em; margin:0 0 4px; } h2 { font-size:1.2em; margin:28px 0 8px; border-bottom:1px solid var(--line); padding-bottom:4px; }
+  h3 { font-size:1em; margin:16px 0 4px; }
+  .sub { color:var(--muted); margin:0 0 16px; }
+  pre { background:var(--code); padding:10px 12px; border-radius:6px; overflow-x:auto; font-size:13px; line-height:1.4; }
+  code { background:var(--code); padding:1px 4px; border-radius:3px; font-size:0.92em; }
+  pre code { padding:0; background:none; }
+  table { border-collapse:collapse; width:100%; font-size:14px; } td, th { border:1px solid var(--line); padding:6px 8px; text-align:left; vertical-align:top; }
+  th { background:var(--code); }
+  .say { border-left:3px solid var(--accent); padding:6px 12px; margin:10px 0; background:var(--code); }
+  .say b { color:var(--accent); }
+  .ok { color:var(--ok); font-weight:600; } .bad { color:var(--bad); font-weight:600; }
+  ol li, ul li { margin:4px 0; }
+  .flow { font-family:ui-monospace,monospace; font-size:13px; white-space:pre; background:var(--code); padding:12px; border-radius:6px; overflow-x:auto; }
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:12px; } @media (max-width:640px) { .two { grid-template-columns:1fr; } }
+  @media print { body { max-width:none; } h2 { page-break-after:avoid; } }
+</style>
+</head>
+<body>
+
+<h1>Module 04: the agent goes to production</h1>
+<p class="sub">Same research assistant as 00–02. Four changes make it production-shaped: 3 tools instead of 7, HTTP instead of stdio, an auth seam, and hooks + evals. ~40 min.</p>
+
+<div class="say"><b>Open with:</b> "Everything you built so far runs as a subprocess on your laptop with no lock on the door. Today we move it to a URL and put a lock on it. Nothing about the tools changes."</div>
+
+<h2>1. Auth, explained so you can explain it</h2>
+
+<h3>The only question auth answers</h3>
+<p><b>"Who is calling my server, and are they allowed?"</b> On stdio that question never came up: the server was a child process of the client, so whoever ran the client owned the server. On HTTP anyone on the network can send a request. So now every request must carry proof.</p>
+
+<h3>The two halves (this is the whole demo)</h3>
+<div class="flow">research_agent.py                          research_server.py
+─────────────────                          ──────────────────
+ClaudeAgentOptions(mcp_servers={           app = mcp.streamable_http_app()
+  "research": {                            app.add_middleware(BearerAuthMiddleware)
+    "type": "http",                                   │
+    "url": ".../mcp",                                 ▼
+    "headers": {"Authorization":        every HTTP request ──► header == "Bearer &lt;MCP_AUTH_TOKEN&gt;" ?
+       "Bearer &lt;MCP_AUTH_TOKEN&gt;"}}})                        │ yes ──► MCP handles it (tools run)
+                                                       │ no  ──► 401, MCP never sees it</div>
+<ul>
+  <li><b>Client half:</b> the SDK attaches one HTTP header to every request it makes to that server. That is all the client does.</li>
+  <li><b>Server half:</b> a Starlette middleware runs <i>before</i> the MCP layer parses anything. Wrong or missing header → 401. Tool code never knows auth exists.</li>
+  <li><b>The shared secret:</b> both sides read <code>MCP_AUTH_TOKEN</code> from the environment. Same value in both terminals or you get 401.</li>
+</ul>
+
+<div class="say"><b>Say:</b> "Auth lives at the HTTP layer, not the MCP layer. MCP is just JSON-RPC over HTTP, so anything that protects HTTP protects MCP. That's why you'll never see the word <i>auth</i> inside a tool function."</div>
+
+<h3>The ladder: where a static token sits, and what OAuth changes</h3>
+<table>
+  <tr><th>Rung</th><th>How the client gets a token</th><th>How the server checks it</th><th>Use when</th></tr>
+  <tr><td>0. None</td><td>—</td><td>—</td><td>stdio on your laptop</td></tr>
+  <tr><td><b>1. Static bearer (this demo)</b></td><td>You paste it in an env var</td><td>String compare</td><td>Internal service, one trusted caller, dev/staging</td></tr>
+  <tr><td>2. OAuth 2.1 (the spec's answer)</td><td>Host sends the user through a login flow, receives a short-lived scoped token</td><td>Verifies signature or introspects with the auth server, checks scopes</td><td>Many users, third-party hosts (Claude "custom connector"), per-user permissions</td></tr>
+</table>
+<p><b>The insight that makes OAuth click:</b> OAuth changes <i>how the token is obtained</i> and <i>how it is verified</i>. The transport is identical: still <code>Authorization: Bearer ...</code> on every request, still a middleware at the same seam. Swap rung 1 for rung 2 and no tool function changes.</p>
+<p>OAuth vocabulary they'll hear: your MCP server is the <b>resource server</b> (it holds the tools). An <b>authorization server</b> issues tokens (Auth0, Okta, your own). The MCP host (Claude, Cursor) is the <b>client</b> that runs the login flow. Client ID Metadata Documents (CIMD) let a host identify itself to your auth server without pre-registration.</p>
+
+<div class="say"><b>If someone asks "why not just do OAuth in the demo?":</b> "It's 100+ lines of redirect handling that teaches OAuth, not MCP. The seam is the lesson. Module 05 shows what a host that speaks OAuth-or-nothing looks like from the outside."</div>
+
+<h2>2. Live run script</h2>
+
+<h3>Terminal 1: server</h3>
+<pre><code>cd demos/04-production-research-agent
+export MCP_AUTH_TOKEN=demo-secret
+uv run research_server.py          # http://127.0.0.1:8765/mcp</code></pre>
+<p>Point at the log line that prints the token. Point at <code>SystemExit</code> if the env var is missing: fail fast, never default to a secret.</p>
+
+<h3>Terminal 2: prove the lock with curl (do this before the agent)</h3>
+<pre><code>BODY='{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"curl","version":"0"}}}'
+
+# no header  →  401
+curl -s -X POST http://127.0.0.1:8765/mcp \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d "$BODY"
+
+# right header  →  initialize result
+curl -s -X POST http://127.0.0.1:8765/mcp \
+  -H 'Authorization: Bearer demo-secret' \
+  -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
+  -d "$BODY"</code></pre>
+<p>Server log shows <span class="bad">rejected request: bad/missing Authorization header</span> for the first and nothing for the second. That is the seam, visible.</p>
+
+<h3>Terminal 2: the agent</h3>
+<pre><code>export ANTHROPIC_API_KEY=sk-...  MCP_AUTH_TOKEN=demo-secret
+uv run research_agent.py "Research how MCP authentication works"</code></pre>
+<p>What to point at, in order:</p>
+<ol>
+  <li><code>MCP server 'research': connected</code> in the init log. A 401 shows up here as <span class="bad">failed</span>, not as "the agent ignored the tool" later.</li>
+  <li>One tool call: <code>mcp__research__research_topic</code>. In module 01 this was 4–6 calls. Intent-grouped tools.</li>
+  <li><code>tool ... -> ok</code>: the PostToolUse hook logging.</li>
+  <li>The summary box: status, duration, cost. Telemetry.</li>
+</ol>
+
+<h3>Optional: break it live</h3>
+<p>Change the token in terminal 2 only and rerun. Init log shows the server as failed and the agent answers without tools. Then ask: "Where in the code would you catch this in production?" Answer: the init status check.</p>
+
+<h2>3. The other three pieces, one line each</h2>
+<table>
+  <tr><th>Piece</th><th>Where</th><th>Say</th></tr>
+  <tr><td>Allow-list</td><td><code>allowed_tools=[...]</code></td><td>MCP tools are never auto-approved by permission modes. You list them or they're blocked.</td></tr>
+  <tr><td><code>can_use_tool</code></td><td>permission callback</td><td>Second gate. Same list, different mechanism. Defense in depth.</td></tr>
+  <tr><td>PreToolUse hook</td><td><code>pre_tool_validate</code></td><td>Rejects bad input before a network round-trip. Short topic, <code>..</code> in a path.</td></tr>
+  <tr><td>PostToolUse hook</td><td><code>post_tool_log</code></td><td>One log line per call. Note the JSON-in-text-block unwrapping; MCP results are content blocks.</td></tr>
+  <tr><td>Server-side path check</td><td><code>read_brief</code></td><td>The hook is client-side. The server checks again. Never trust the caller.</td></tr>
+</table>
+
+<div class="two">
+  <div>
+    <h3>Telemetry</h3>
+    <p><code>ExecutionTracker</code>. Did it run, how long, what did it cost. Cost is a client-side estimate.</p>
+  </div>
+  <div>
+    <h3>Evals</h3>
+    <p><code>evals.py</code>. Was it <i>right</i>. Deterministic asserts → LLM judge → exit 1. Run before class, show the output.</p>
+  </div>
+</div>
+
+<h2>4. When it breaks</h2>
+<table>
+  <tr><td>401 / server "failed" at init</td><td><code>MCP_AUTH_TOKEN</code> differs between terminals, or unset in one.</td></tr>
+  <tr><td>Address already in use</td><td><code>lsof -ti :8765 | xargs kill</code></td></tr>
+  <tr><td><code>search_unavailable</code></td><td>DDGS throttled. Rerun. Tool degrades, agent reports it. That's the structured-return lesson.</td></tr>
+  <tr><td>Agent uses zero tools, no error</td><td>Look at the init log first. Almost always the server status line.</td></tr>
+</table>
+
+<h2>5. Questions students ask</h2>
+<ul>
+  <li><b>"Is a bearer token secure?"</b> Over HTTPS, yes as a transport. The weakness is the lifecycle: it never expires, can't be scoped, and one leak means rotating everyone. OAuth fixes the lifecycle, not the transport.</li>
+  <li><b>"Where does the token go in Claude Desktop?"</b> Nowhere. Custom connectors speak OAuth or no auth. A static bearer works for the SDK, Claude Code, and your own clients only.</li>
+  <li><b>"Why middleware and not a check inside each tool?"</b> One place, runs for every request including <code>initialize</code> and <code>tools/list</code>, and the tool author can't forget it.</li>
+  <li><b>"Does the server know which user called?"</b> Not at rung 1. That is exactly what OAuth adds: the token carries identity and scopes, and the middleware can put them on the request for tools to read.</li>
+  <li><b>"Can I use an API gateway instead?"</b> Yes, and in production you usually do. The middleware is the same seam moved one hop out.</li>
+</ul>
+
+<div class="say"><b>Close with:</b> "Three tools, one URL, one header, two hooks, one eval file. That's the whole production shape. Module 05 puts it on a public URL."</div>
+
+</body>
+</html>

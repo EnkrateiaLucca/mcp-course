@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP Context Cost Calculator</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:960px;margin:0 auto;padding:20px;line-height:1.5;background:#f5f5f5;color:#111}
+h1{margin:0 0 4px}h2{margin:0 0 10px;font-size:1.15em}
+.sub{color:#555;margin-bottom:18px}
+.card{background:#fff;border-radius:8px;padding:18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+textarea{width:100%;min-height:130px;padding:10px;border:1px solid #d1d5db;border-radius:6px;font:13px 'SF Mono',Monaco,Consolas,monospace;resize:vertical}
+textarea:focus,input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
+button{background:#2563eb;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:14px}
+button:hover{background:#1d4ed8}button.ghost{background:#e5e7eb;color:#111}button.ghost:hover{background:#d1d5db}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+.error{background:#fef2f2;border:1px solid #fecaca;color:#dc2626;padding:10px;border-radius:6px;margin:10px 0}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #eee}th{color:#555;font-weight:600}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.bar{height:22px;background:#e5e7eb;border-radius:4px;overflow:hidden;margin:4px 0 12px}
+.bar>div{height:100%;background:#2563eb;transition:width .3s}
+.bar.green>div{background:#16a34a}.bar.red>div{background:#dc2626}
+.lbl{display:flex;justify-content:space-between;font-size:14px}
+.big{font-size:1.6em;font-weight:700}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:12px 0}
+.kpi div{background:#f9fafb;border-radius:6px;padding:10px}
+.kpi small{color:#555;display:block}
+input[type=range]{width:100%}
+input[type=number]{width:110px;padding:6px;border:1px solid #d1d5db;border-radius:6px;font-size:16px}
+label.opt{display:flex;gap:8px;align-items:center;font-size:14px}
+.muted{color:#666;font-size:13px}
+pre{background:#1e293b;color:#e2e8f0;padding:12px;border-radius:6px;overflow-x:auto;font-size:13px}
+</style>
+</head>
+<body>
+<h1>MCP Context Cost Calculator</h1>
+<div class="sub">How many tokens do your tool definitions burn before the first user message, and what does progressive disclosure or code execution save?</div>
+
+<div class="card">
+<h2>1. Tool definitions</h2>
+<div class="row">
+  <span class="muted">Load a course server:</span>
+  <button class="ghost" data-s="01-intro">01 intro (7 tools)</button>
+  <button class="ghost" data-s="04-production">04 production (3 tools)</button>
+  <button class="ghost" data-s="05-remote">05 remote (2 tools)</button>
+  <button class="ghost" data-s="all">All three</button>
+</div>
+<textarea id="src" placeholder='Paste a tools/list result: {"tools":[...]}, a full JSON-RPC response, or a bare array of tools'></textarea>
+<div class="row">
+  <button id="parse">Analyze</button>
+  <label class="opt">Servers connected (multiplier): <input id="mult" type="number" min="1" max="500" value="1"></label>
+  <span class="muted">Tokens ≈ JSON chars ÷ 4</span>
+</div>
+<div id="err"></div>
+</div>
+
+<div class="card" id="defs" hidden>
+<h2>2. Upfront cost vs progressive disclosure</h2>
+<p class="muted">Tick the tools this task actually needs. Progressive disclosure pays for a <code>search_tools</code> stub plus only those.</p>
+<table><thead><tr><th></th><th>Tool</th><th class="n">Desc chars</th><th class="n">Schema tokens</th></tr></thead><tbody id="rows"></tbody></table>
+<div class="kpi">
+  <div><small>All definitions upfront</small><span class="big" id="kAll">0</span> tokens</div>
+  <div><small>Progressive disclosure</small><span class="big" id="kProg">0</span> tokens</div>
+  <div><small>Saved</small><span class="big" id="kSave">0%</span></div>
+</div>
+<div class="lbl"><span>Upfront</span><span id="bAllT"></span></div><div class="bar red"><div id="bAll"></div></div>
+<div class="lbl"><span>Progressive</span><span id="bProgT"></span></div><div class="bar green"><div id="bProg"></div></div>
+</div>
+
+<div class="card">
+<h2>3. Result bloat: through the model vs in the sandbox</h2>
+<p class="muted">The deck example: a 50,000-token transcript read from Drive, then re-written into Salesforce by the model.</p>
+<label class="opt">Tool result size: <b id="rsT">50,000</b> tokens</label>
+<input id="rs" type="range" min="500" max="200000" step="500" value="50000">
+<label class="opt">Passes through the model (read + re-write = 2): <input id="passes" type="number" min="1" max="6" value="2"></label>
+<label class="opt">What the model sees in sandbox mode: <input id="peek" type="number" min="0" max="20000" step="50" value="300"> tokens (summary / first rows)</label>
+<div class="kpi">
+  <div><small>Classic loop</small><span class="big" id="kLoop">0</span> tokens</div>
+  <div><small>Code execution</small><span class="big" id="kCode">0</span> tokens</div>
+  <div><small>Saved</small><span class="big" id="kSave2">0%</span></div>
+</div>
+<div class="lbl"><span>Classic</span><span id="bLoopT"></span></div><div class="bar red"><div id="bLoop"></div></div>
+<div class="lbl"><span>Sandbox</span><span id="bCodeT"></span></div><div class="bar green"><div id="bCode"></div></div>
+</div>
+
+<div class="card">
+<h2>Summary</h2>
+<pre id="summary">Analyze some tools first.</pre>
+<button id="copy">Copy summary</button>
+</div>
+
+<script>
+const SAMPLES = {"01-intro":[{"name":"web_search","description":"Search the web with DuckDuckGo. Returns JSON list of {title, url, snippet}.","inputSchema":{"properties":{"query":{"title":"Query","type":"string"},"max_results":{"default":5,"title":"Max Results","type":"integer"}},"required":["query"],"title":"web_searchArguments","type":"object"},"outputSchema":{"properties":{"result":{"title":"Result","type":"string"}},"required":["result"],"title":"web_searchOutput","type":"object"}},{"name":"read_file","description":"Read a text file from the workspace.","inputSchema":{"properties":{"path":{"title":"Path","type":"string"}},"required":["path"],"title":"read_fileArguments","type":"object"},"outputSchema":{"properties":{"result":{"title":"Result","type":"string"}},"required":["result"],"title":"read_fileOutput","type":"object"}},{"name":"write_file","description":"Create or overwrite a file in the workspace.","inputSchema":{"properties":{"path":{"title":"Path","type":"string"},"content":{"title":"Content","type":"string"}},"required":["path","content"],"title":"write_fileArguments","type":"object"},"outputSchema":{"properties":{"result":{"title":"Result","type":"string"}},"required":["result"],"title":"write_fileOutput","type":"object"}},{"name":"edit_file","description":"Replace an exact substring in an existing file.","inputSchema":{"properties":{"path":{"title":"Path","type":"string"},"old":{"title":"Old","type":"string"},"new":{"title":"New","type":"string"}},"required":["path","old","new"],"title":"edit_fileArguments","type":"object"},"outputSchema":{"properties":{"result":{"title":"Result","type":"string"}},"required":["result"],"title":"edit_fileOutput","type":"object"}},{"name":"move_file","description":"Move or rename a file inside the workspace.","inputSchema":{"properties":{"src":{"title":"Src","type":"string"},"dst":{"title":"Dst","type":"string"}},"required":["src","dst"],"title":"move_fileArguments","type":"object"},"outputSchema":{"properties":{"result":{"title":"Result","type":"string"}},"required":["result"],"title":"move_fileOutput","type":"object"}},{"name":"delete_file","description":"Delete a file from the workspace.","inputSchema":{"properties":{"path":{"title":"Path","type":"string"}},"required":["path"],"title":"delete_fileArguments","type":"object"},"outputSchema":{"properties":{"result":{"title":"Result","type":"string"}},"required":["result"],"title":"delete_fileOutput","type":"object"}},{"name":"list_files","description":"List files under a directory in the workspace.","inputSchema":{"properties":{"directory":{"default":".","title":"Directory","type":"string"}},"title":"list_filesArguments","type":"object"},"outputSchema":{"properties":{"result":{"title":"Result","type":"string"}},"required":["result"],"title":"list_filesOutput","type":"object"}}],"04-production":[{"name":"research_topic","description":"Search the web for ``topic`` and save a markdown brief.\n\n    This is an *intent-grouped* tool: it does the whole job (search \u2192 format\n    \u2192 persist) in one call instead of forcing the agent to orchestrate\n    `web_search` + `write_file` across multiple turns.\n\n    Returns a structured dict so the agent can decide next steps without\n    re-parsing prose.\n    ","inputSchema":{"properties":{"topic":{"title":"Topic","type":"string"},"max_sources":{"default":5,"title":"Max Sources","type":"integer"}},"required":["topic"],"title":"research_topicArguments","type":"object"}},{"name":"list_briefs","description":"List previously saved briefs (filename + modified time).","inputSchema":{"properties":{},"title":"list_briefsArguments","type":"object"}},{"name":"read_brief","description":"Read a saved brief by path (must live under briefs/).","inputSchema":{"properties":{"brief_path":{"title":"Brief Path","type":"string"}},"required":["brief_path"],"title":"read_briefArguments","type":"object"}}],"05-remote":[{"name":"research_explorer","description":"Search the web for a topic and open an interactive source explorer.\n\n    Returns structured results; in hosts that support MCP Apps this renders\n    as an interactive card grid the user can click through and re-search.\n    ","inputSchema":{"properties":{"topic":{"title":"Topic","type":"string"},"max_sources":{"default":6,"title":"Max Sources","type":"integer"}},"required":["topic"],"title":"research_explorerArguments","type":"object"},"meta":{"ui":{"resourceUri":"ui://research-explorer/app.html"}}},{"name":"quick_search","description":"Plain web search returning {title, url, snippet} items (no UI).","inputSchema":{"properties":{"query":{"title":"Query","type":"string"},"max_results":{"default":5,"title":"Max Results","type":"integer"}},"required":["query"],"title":"quick_searchArguments","type":"object"}}]};
+SAMPLES.all = [].concat(...Object.values(SAMPLES));
+const SEARCH_STUB_TOKENS = 150; // a search_tools(query, detail_level) definition
+const $ = id => document.getElementById(id);
+const fmt = n => Math.round(n).toLocaleString();
+const tok = o => Math.ceil(JSON.stringify(o).length / 4); // ponytail: chars/4 heuristic, swap for a real tokenizer if numbers must be exact
+let tools = [];
+
+function extractTools(text) {
+  const j = JSON.parse(text);
+  const t = Array.isArray(j) ? j : (j.tools || (j.result && j.result.tools));
+  if (!Array.isArray(t) || !t.length) throw new Error('No tools array found');
+  return t;
+}
+
+function analyze() {
+  $('err').textContent = '';
+  try { tools = extractTools($('src').value); }
+  catch (e) { $('err').innerHTML = '<div class="error"></div>'; $('err').firstChild.textContent = 'Could not parse: ' + e.message; $('defs').hidden = true; return; }
+  const tb = $('rows'); tb.textContent = '';
+  tools.forEach((t, i) => {
+    const tr = document.createElement('tr');
+    const cb = document.createElement('input'); cb.type = 'checkbox'; cb.dataset.i = i; cb.addEventListener('change', render);
+    const c0 = document.createElement('td'); c0.appendChild(cb);
+    const c1 = document.createElement('td'); c1.textContent = t.name || '(unnamed)';
+    const c2 = document.createElement('td'); c2.className = 'n'; c2.textContent = (t.description || '').length;
+    const c3 = document.createElement('td'); c3.className = 'n'; c3.textContent = fmt(tok(t));
+    tr.append(c0, c1, c2, c3); tb.appendChild(tr);
+  });
+  $('defs').hidden = false;
+  render();
+}
+
+function render() {
+  const mult = Math.max(1, +$('mult').value || 1);
+  const all = tools.reduce((s, t) => s + tok(t), 0) * mult;
+  const picked = [...document.querySelectorAll('#rows input:checked')].map(cb => tools[+cb.dataset.i]);
+  const prog = SEARCH_STUB_TOKENS + picked.reduce((s, t) => s + tok(t), 0);
+  const save1 = all ? 1 - prog / all : 0;
+  $('kAll').textContent = fmt(all); $('kProg').textContent = fmt(prog); $('kSave').textContent = (save1 * 100).toFixed(1) + '%';
+  $('bAll').style.width = '100%'; $('bProg').style.width = (all ? 100 * prog / all : 0) + '%';
+  $('bAllT').textContent = fmt(all); $('bProgT').textContent = fmt(prog);
+
+  const rs = +$('rs').value, passes = +$('passes').value || 1, peek = +$('peek').value || 0;
+  $('rsT').textContent = fmt(rs);
+  const loop = rs * passes, code = peek;
+  const save2 = loop ? 1 - code / loop : 0;
+  $('kLoop').textContent = fmt(loop); $('kCode').textContent = fmt(code); $('kSave2').textContent = (save2 * 100).toFixed(1) + '%';
+  $('bLoop').style.width = '100%'; $('bCode').style.width = (100 * code / loop) + '%';
+  $('bLoopT').textContent = fmt(loop); $('bCodeT').textContent = fmt(code);
+
+  $('summary').textContent =
+`Tool definitions: ${tools.length} tools × ${mult} server(s)
+  All upfront:             ${fmt(all)} tokens
+  Progressive disclosure:  ${fmt(prog)} tokens (${picked.length} needed + search_tools stub)
+  Saved:                   ${(save1*100).toFixed(1)}%
+
+Result bloat: ${fmt(rs)}-token result, ${passes} pass(es) through the model
+  Classic loop:            ${fmt(loop)} tokens
+  Code execution sandbox:  ${fmt(code)} tokens
+  Saved:                   ${(save2*100).toFixed(1)}%
+
+Total context, one task:   ${fmt(all + loop)} → ${fmt(prog + code)} tokens`;
+}
+
+document.querySelectorAll('[data-s]').forEach(b => b.addEventListener('click', () => {
+  $('src').value = JSON.stringify({ tools: SAMPLES[b.dataset.s] }, null, 2); analyze();
+}));
+$('parse').addEventListener('click', analyze);
+['mult', 'rs', 'passes', 'peek'].forEach(id => $(id).addEventListener('input', render));
+$('copy').addEventListener('click', async () => {
+  await navigator.clipboard.writeText($('summary').textContent);
+  $('copy').textContent = 'Copied!'; setTimeout(() => $('copy').textContent = 'Copy summary', 1500);
+});
+$('src').value = JSON.stringify({ tools: SAMPLES.all }, null, 2); $('mult').value = 20; analyze();
+</script>
+</body>
+</html>
+
