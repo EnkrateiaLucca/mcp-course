@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<!-- MCP App view for `start_timer`. Rendered by the host in a sandboxed iframe. -->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Timer</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --fg: light-dark(#111, #eee);
+    --muted: light-dark(#8888, #8888);
+  }
+  body {
+    margin: 0; padding: 20px 16px;
+    font-family: system-ui, -apple-system, sans-serif;
+    color: var(--fg);
+    display: flex; flex-direction: column; align-items: center; gap: 14px;
+    user-select: none;
+  }
+  #label { font-size: 12px; letter-spacing: .04em; text-transform: uppercase; opacity: .55; margin: 0; }
+  #time {
+    font-size: 56px; font-weight: 500; line-height: 1;
+    font-variant-numeric: tabular-nums;
+    transition: opacity 200ms ease, transform 200ms var(--ease-out);
+  }
+  #time:not(.running) { cursor: text; }
+  #time:focus { outline: none; opacity: .7; }
+  #time.done { animation: pulse 900ms ease-in-out infinite alternate; }
+  @keyframes pulse { to { opacity: .35; } }
+  #bar {
+    width: 100%; max-width: 280px; height: 3px; border-radius: 2px;
+    background: var(--muted); overflow: hidden;
+  }
+  #fill {
+    height: 100%; background: currentColor;
+    transform-origin: left; transform: scaleX(0);
+    transition: transform 1000ms linear;   /* one tick = one linear step */
+  }
+  #fill.snap { transition: transform 200ms var(--ease-out); }
+  #controls { display: flex; gap: 8px; }
+  button {
+    font: inherit; font-size: 14px; padding: 8px 16px;
+    border: 1px solid var(--muted); border-radius: 999px;
+    background: transparent; color: inherit; cursor: pointer;
+    transition: transform 160ms var(--ease-out), opacity 160ms ease;
+  }
+  button.primary { background: var(--fg); color: light-dark(#fff, #111); border-color: transparent; }
+  button:active { transform: scale(0.97); }
+  @media (hover: hover) and (pointer: fine) { button:hover { opacity: .85; } }
+  @media (prefers-reduced-motion: reduce) {
+    #time, button { transition: none; }
+    #time:not(.running) { cursor: text; }
+  #time:focus { outline: none; opacity: .7; }
+  #time.done { animation: none; opacity: .5; }
+  }
+</style>
+</head>
+<body>
+  <p id="label">Focus</p>
+  <div id="time" title="Click to edit minutes" tabindex="0">25:00</div>
+  <div id="bar"><div id="fill"></div></div>
+  <div id="controls">
+    <button id="toggle" class="primary">Start</button>
+    <button id="reset">Reset</button>
+  </div>
+
+<script type="module">
+// --- Minimal MCP Apps client ------------------------------------------------
+let nextId = 1;
+const pending = new Map();
+const post = (m) => window.parent.postMessage(m, "*");
+const request = (method, params) => new Promise((resolve, reject) => {
+  const id = nextId++;
+  pending.set(id, { resolve, reject });
+  post({ jsonrpc: "2.0", id, method, params });
+});
+window.addEventListener("message", ({ data: msg }) => {
+  if (!msg || msg.jsonrpc !== "2.0") return;
+  if (msg.id !== undefined && pending.has(msg.id)) {
+    const { resolve, reject } = pending.get(msg.id);
+    pending.delete(msg.id);
+    return msg.error ? reject(msg.error) : resolve(msg.result);
+  }
+  if (msg.method === "ui/notifications/tool-input") {
+    const a = msg.params?.arguments || {};
+    setup(Number(a.minutes) || 25, a.label);
+    if (a.autostart !== false) start();
+  }
+});
+try {
+  await request("ui/initialize", {
+    appInfo: { name: "productivity-timer", version: "1.0.0" },
+    appCapabilities: { availableDisplayModes: ["inline"] },
+    protocolVersion: "2026-01-26",
+  });
+  post({ jsonrpc: "2.0", method: "ui/notifications/initialized" });
+} catch {} // standalone (browser) still works
+
+// --- Timer: wall-clock based, so background tabs don't drift ----------------
+const $ = (id) => document.getElementById(id);
+let total = 25 * 60, remaining = total, endAt = null, tick = null;
+
+function setup(minutes, label) {
+  stop();
+  total = remaining = Math.max(1, Math.round(minutes * 60));
+  if (label) $("label").textContent = label;
+  $("time").classList.remove("done");
+  $("fill").classList.add("snap");
+  render();
+}
+function render() {
+  const m = Math.floor(remaining / 60), s = remaining % 60;
+  $("time").textContent = `${m}:${String(s).padStart(2, "0")}`;
+  $("time").classList.toggle("running", !!endAt);
+  $("fill").style.transform = `scaleX(${1 - remaining / total})`;
+  $("toggle").textContent = endAt ? "Pause" : remaining === total ? "Start" : "Resume";
+}
+function start() {
+  if (endAt || remaining <= 0) return;
+  endAt = Date.now() + remaining * 1000;
+  $("fill").classList.remove("snap");
+  tick = setInterval(() => {
+    remaining = Math.max(0, Math.round((endAt - Date.now()) / 1000));
+    render();
+    if (remaining === 0) finish();
+  }, 250);
+  render();
+}
+function stop() { clearInterval(tick); tick = null; endAt = null; }
+function finish() {
+  stop();
+  $("time").classList.add("done");
+  $("toggle").textContent = "Done";
+  render();
+}
+$("toggle").onclick = () => { endAt ? (stop(), render()) : start(); };
+$("reset").onclick = () => setup(total / 60);
+
+// --- Inline edit: click the time while paused, type minutes, Enter ----------
+const time = $("time");
+time.onclick = () => { if (!endAt && !time.isContentEditable) edit(); };
+function edit() {
+  time.contentEditable = "true";
+  time.textContent = String(total / 60);
+  time.focus();
+  document.getSelection().selectAllChildren(time);
+}
+function commit() {
+  time.contentEditable = "false";
+  const mins = parseFloat(time.textContent);
+  Number.isFinite(mins) && mins > 0 ? setup(mins) : render();
+}
+time.addEventListener("blur", () => { if (time.isContentEditable) commit(); });
+document.addEventListener("keydown", (e) => {
+  if (time.isContentEditable) {
+    if (e.key === "Enter") { e.preventDefault(); commit(); }
+    if (e.key === "Escape") { time.contentEditable = "false"; render(); }
+    return;
+  }
+  if (e.code === "Space") { e.preventDefault(); $("toggle").click(); }
+});
+render();
+</script>
+</body>
+</html>
