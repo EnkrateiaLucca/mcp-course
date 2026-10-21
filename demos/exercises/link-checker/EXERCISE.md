@@ -29,5 +29,5 @@ uv run link_checker_agent.py
 ```
 
 Compare your tool design with the solution's four-primitive split, then
-read `demos/04-production-research-agent/README.md` again and decide which
+read `demos/archive/04-production-research-agent/README.md` again and decide which
 you'd ship.

@@ -1,8 +1,19 @@
-# Demo 06 — Security, composition & sessions
+# Demo 05 — Security, composition & sessions
 
 Two sub-modules that close the course: first *defend* the stack you built,
 then *scale* it — multiple servers, delegation to subagents, resumable
 sessions.
+
+## `data-exposure-lab/` — what can your agent read? (uses module 04)
+
+Module 04's shop analytics server is read-only, and it still hands customer names and emails to anyone who asks `run_sql`. The lab shows the leak with a plain MCP client (no API spend), then turns on a SQLite authorizer (`PII_GUARD=1`) that blocks the personal columns while every metric keeps working. The exercise at the end finds the second exit: Markdown images in the chat UI.
+
+```bash
+cd ../04-shop-analytics-agent && docker compose up --build     # terminal 1
+cd data-exposure-lab && uv run exposure_check.py               # terminal 2: LEAK
+PII_GUARD=1 docker compose up -d mcp                           # terminal 1: guard on
+uv run exposure_check.py                                       # BLOCKED, metrics still OK
+```
 
 ## `security-lab/` — tool poisoning: attack & defense
 

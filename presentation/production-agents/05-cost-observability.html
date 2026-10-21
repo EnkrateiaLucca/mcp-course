@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 5: Cost and Observability</title>
+<link rel="stylesheet" href="lessons.css">
+</head>
+<body>
+<nav><a href="04-security.html">← Lesson 4</a><a href="06-ship-it.html">Lesson 6 →</a></nav>
+
+<h1>Lesson 5: Cost and observability</h1>
+<p class="goal">Goal: you can read the SDK's cost fields without double-counting, cap spend per session, export traces, and say what telemetry can and cannot tell you.</p>
+<div class="tldr">
+<h2>TL;DR</h2>
+<p><b>The problem:</b> The AI tokens cost far more than the servers. The SDK gives you cost numbers, but they are estimates and easy to count twice.</p>
+<p><b>The shape of the solution:</b></p>
+<ul>
+  <li><b>Read the cost once per turn,</b> from the final result message. For a resumed conversation, the newest number already includes the old ones, so don't add them up.</li>
+  <li><b>Set caps</b> per turn, per conversation and per user per day, so a looping agent can't burn money.</li>
+  <li><b>Turn on tracing</b> so you can see which tools ran, how long they took, and where things stalled.</li>
+  <li><b>Remember:</b> "it ran" is not "it was right". Keep running your evals against the deployed version.</li>
+</ul>
+<p class="like">Think of it like: A taxi meter shows the running total. Write down the final fare, not every reading on the way, and set a maximum before you get in.</p>
+</div>
+
+
+<h2>1. Where the money goes</h2>
+<p>The hosting docs give the ratio: a minimal container costs about <b>$0.05 per hour</b>, and one long agent session can spend <b>dollars</b> in tokens. Token cost usually beats infrastructure cost by an order of magnitude or more. Optimize tokens first: fewer turns (intent-grouped tools), smaller tool results, prompt caching, and the right model per job.</p>
+
+<h2>2. Four scopes, one rule each</h2>
+<div class="tablewrap"><table>
+  <tr><th>Scope</th><th>What it is</th><th>Rule</th></tr>
+  <tr><td>Step</td><td>One model request/response inside a <code>query()</code></td><td>Parallel tool calls produce several <code>AssistantMessage</code>s with the <b>same</b> <code>message_id</code> and the same usage. Count each ID once.</td></tr>
+  <tr><td><code>query()</code> call</td><td>Everything from prompt to <code>ResultMessage</code></td><td>Read <code>total_cost_usd</code> from the <code>ResultMessage</code>, on success <i>and</i> on error subtypes. In Python it can be <code>None</code>.</td></tr>
+  <tr><td>Session</td><td>Calls linked by <code>resume</code></td><td>A resumed call's result already includes the session's earlier spend. <b>Read the latest result. Do not sum them.</b></td></tr>
+  <tr><td>Tenant / day</td><td>Your billing view</td><td>Add the per-call deltas you recorded. Reconcile against the Usage and Cost API.</td></tr>
+</table></div>
+
+<h3>The traps</h3>
+<ul>
+  <li><b><code>total_cost_usd</code> is an estimate.</b> The SDK computes it from a price table bundled at build time. It drifts when prices change or the SDK does not know a model. Never bill users or trigger financial decisions from it. Use the <a href="https://platform.claude.com/docs/en/build-with-claude/usage-cost-api">Usage and Cost API</a> or the Console for authoritative numbers.</li>
+  <li><b>Per-step <code>output_tokens</code> is a placeholder.</b> It holds the count from the start of the response. Read output tokens from the <code>ResultMessage</code>.</li>
+  <li><b><code>usage</code> excludes subagents.</b> <code>total_cost_usd</code> and <code>model_usage</code> include them. Use <code>model_usage</code> for whole-tree token accounting and a per-model breakdown.</li>
+  <li><b>Crashes can zero the totals.</b> An <code>error_during_execution</code> result after a crash may carry zeroed cost fields. In streaming mode, fall back to the previous turn's result.</li>
+</ul>
+
+<h2>3. Record cost per turn, per session, per tenant</h2>
+<p>This replaces <code>ExecutionTracker.print_summary()</code>. It turns cumulative session totals into per-turn deltas, so a dashboard can sum them safely.</p>
+<pre><code>_last_total: dict[str, float] = {}      # session key -> last cumulative total (use Redis in prod)
+
+def record_cost(key: str, msg: ResultMessage) -> None:
+    total = msg.total_cost_usd or 0.0
+    delta = max(total - _last_total.get(key, 0.0), 0.0)   # resumed results include earlier spend
+    _last_total[key] = total
+    log.info(json.dumps({
+        "event": "agent_turn",
+        "tenant": key.split(":", 1)[0], "session": key,
+        "subtype": msg.subtype,                     # success | error_max_turns | error_max_budget_usd | ...
+        "turn_cost_usd_est": round(delta, 6),
+        "session_cost_usd_est": round(total, 6),
+        "num_turns": msg.num_turns, "duration_ms": msg.duration_ms,
+        "models": list((msg.model_usage or {}).keys()),
+    }))</code></pre>
+<p>One JSON line per turn is enough to answer: cost per tenant per day, sessions that hit the budget, and turns that end in errors.</p>
+
+<h2>4. Cap spend before it happens</h2>
+<div class="tablewrap"><table>
+  <tr><th>Guard</th><th>Set with</th><th>What happens</th></tr>
+  <tr><td>Turn cap</td><td><code>max_turns=12</code></td><td>The query stops with <code>error_max_turns</code> and raises after it yields the result. Catch it.</td></tr>
+  <tr><td>Dollar cap per call</td><td><code>max_budget_usd=0.50</code></td><td>Stops with <code>error_max_budget_usd</code>. Counts only this call's spend, not spend restored from a resumed session.</td></tr>
+  <tr><td>Daily cap per tenant</td><td>Your code: sum of <code>turn_cost_usd_est</code></td><td>The gateway refuses new turns once a tenant reaches its limit.</td></tr>
+  <tr><td>Subagent fan-out</td><td><code>maxTurns</code> in each <code>AgentDefinition</code></td><td>Bounds each subagent. Large parallel fan-outs can also hit rate limits: dispatch in smaller batches.</td></tr>
+</table></div>
+<p>Because <code>max_budget_usd</code> ignores restored spend, a long conversation can exceed it across many calls. The per-tenant daily cap closes that gap.</p>
+
+<h3>Prompt caching</h3>
+<p>The SDK caches automatically. Watch <code>cache_creation_input_tokens</code> (written at a higher rate) and <code>cache_read_input_tokens</code> (read at a reduced rate) in the usage. With API-key auth the cache TTL defaults to 5 minutes. A hybrid assistant whose users come back after 20 minutes pays full input price on every return. <code>ENABLE_PROMPT_CACHING_1H=1</code> requests a 1-hour TTL: writes cost more, and more reads hit the cache. Measure both before you keep it.</p>
+
+<h2>5. Traces, metrics and logs with OpenTelemetry</h2>
+<p>The SDK reads OTEL settings from the environment. Set them on the container, and every <code>query()</code> exports:</p>
+<pre><code>CLAUDE_CODE_ENABLE_TELEMETRY=1
+CLAUDE_CODE_ENHANCED_TELEMETRY_BETA=1      # needed for traces only
+OTEL_TRACES_EXPORTER=otlp
+OTEL_METRICS_EXPORTER=otlp
+OTEL_LOGS_EXPORTER=otlp
+OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+OTEL_EXPORTER_OTLP_ENDPOINT=http://collector:4318</code></pre>
+<ul>
+  <li>Prompt text and tool inputs are <b>not</b> exported by default. Keep it that way unless your data policy allows otherwise.</li>
+  <li>Traces show which tools ran, how long each took, and where a session stalled. That is the question <code>ExecutionTracker</code> tried to answer for one run.</li>
+  <li>Add the MCP server's own request logs (method, tool name, subject, latency) and you can follow one turn across both deployables.</li>
+</ul>
+
+<h3>Alerts worth having on day one</h3>
+<ul>
+  <li><code>mirror_error</code> system messages (transcripts not reaching your store)</li>
+  <li>Rate of <code>error_max_budget_usd</code> and <code>error_max_turns</code> results per hour</li>
+  <li>MCP server status other than <code>connected</code> at <code>init</code></li>
+  <li>Peak RSS per session approaching your per-session memory ceiling</li>
+</ul>
+
+<h2>6. Telemetry is not correctness</h2>
+<p>Everything above tells you the agent <b>ran</b>: cost, time, tools, errors. None of it tells you the brief was <b>right</b>. Your module 04 <code>evals.py</code> answers that: deterministic checks, then an LLM judge, then a CI gate. In production, run the same evals against the <b>staging deployment</b> through the real HTTP contract, not against a local script. A deploy that breaks the MCP URL, the auth or the model ID then fails the gate before users see it.</p>
+
+<h2>Try it</h2>
+<ol>
+  <li>Run module 04's agent with a prompt that makes it call <code>research_topic</code> twice in parallel. Print every <code>AssistantMessage.message_id</code> and its <code>usage</code>. Find the duplicate IDs.</li>
+  <li>Set <code>max_budget_usd=0.01</code> and run a research prompt. Read the result's <code>subtype</code>, and compare <code>usage</code> with <code>total_cost_usd</code>.</li>
+  <li>Resume the same session for a second call. Confirm that the second <code>total_cost_usd</code> includes the first.</li>
+</ol>
+
+<h2>Check yourself</h2>
+<details><summary>Three resumed calls report $0.10, $0.25 and $0.40. What did the session cost?</summary>About $0.40 (an estimate). Each resumed result already includes earlier spend, so you read the latest one. The per-call deltas are $0.10, $0.15 and $0.15.</details>
+<details><summary>Your main agent uses Sonnet, and a subagent uses Haiku. Which field shows the full token picture?</summary><code>model_usage</code>. The top-level <code>usage</code> excludes subagent requests.</details>
+<details><summary>Why not send invoices to customers from <code>total_cost_usd</code>?</summary>The SDK computes it on the client from a bundled price table. It can drift from what Anthropic bills. Use the Usage and Cost API.</details>
+<details><summary>All traces look healthy, yet users complain the briefs are wrong. What is missing?</summary>Evals. Traces measure execution. Correctness needs graded test cases run against the deployed system.</details>
+
+<nav class="bottom"><a href="04-security.html">← Lesson 4</a><a href="06-ship-it.html">Lesson 6: Ship it →</a></nav>
+</body>
+</html>

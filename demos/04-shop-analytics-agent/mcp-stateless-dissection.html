@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stateless MCP, Dissected</title>
+<style>
+:root {
+  --bg: #f6f5f1; --card: #ffffff; --ink: #1c1b18; --muted: #6b6860; --line: #e2dfd6;
+  --accent: #2d5bd7; --accent-soft: #e8eefc;
+  --ok: #1f7a4a; --ok-soft: #e3f3ea; --warn: #9a5b00; --warn-soft: #fbf0dc; --bad: #b42318; --bad-soft: #fde8e6;
+  --code-bg: #1d1f24; --code-ink: #e6e3da;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15161a; --card: #1e2026; --ink: #ecebe6; --muted: #9a978e; --line: #32343c;
+    --accent: #7aa2ff; --accent-soft: #232c45;
+    --ok: #5fd39a; --ok-soft: #173025; --warn: #f0b45a; --warn-soft: #33281a; --bad: #ff8a80; --bad-soft: #3a1d1b;
+    --code-bg: #0f1013;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+main { max-width: 860px; margin: 0 auto; padding: 32px 16px 80px; }
+h1 { font-size: 1.6rem; margin: 0 0 4px; letter-spacing: -0.01em; }
+h2 { font-size: 1.15rem; margin: 40px 0 12px; }
+.sub { color: var(--muted); margin: 0 0 24px; }
+code, pre { font-family: "SF Mono", Menlo, Consolas, monospace; font-size: 0.86em; }
+:not(pre) > code { background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+pre { background: var(--code-bg); color: var(--code-ink); padding: 14px 16px; border-radius: 8px; overflow-x: auto; margin: 10px 0; line-height: 1.5; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 20px; }
+
+/* Quote */
+.quote { font-size: 1.15rem; line-height: 1.8; }
+.seg {
+  cursor: pointer; border-radius: 4px; padding: 2px 3px; transition: background .15s;
+  border-bottom: 2px solid var(--line); background: none; border-top: 0; border-left: 0; border-right: 0;
+  font: inherit; color: inherit; text-align: left; display: inline;
+}
+.seg:hover { background: var(--accent-soft); }
+.seg.active { background: var(--accent-soft); border-bottom-color: var(--accent); }
+.seg .n { font-size: .7em; color: var(--accent); font-weight: 700; vertical-align: super; margin-right: 2px; }
+.hint { color: var(--muted); font-size: .85rem; margin-top: 10px; }
+
+/* Detail panel */
+#detail { margin-top: 16px; }
+.verdict { display: inline-block; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 3px 9px; border-radius: 99px; }
+.v-ok { background: var(--ok-soft); color: var(--ok); }
+.v-warn { background: var(--warn-soft); color: var(--warn); }
+.detail-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+.detail-head h3 { margin: 0; font-size: 1.05rem; }
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid var(--line); margin: 14px 0 12px; }
+.tab { background: none; border: 0; border-bottom: 2px solid transparent; padding: 8px 12px; cursor: pointer; color: var(--muted); font: inherit; font-size: .92rem; }
+.tab.on { color: var(--ink); border-bottom-color: var(--accent); }
+.pane ul { padding-left: 20px; margin: 6px 0; }
+.pane li { margin: 6px 0; }
+.ba { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ba > div { border: 1px solid var(--line); border-radius: 8px; padding: 12px; }
+.ba h4 { margin: 0 0 6px; font-size: .85rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+@media (max-width: 640px) { .ba { grid-template-columns: 1fr; } }
+.src { font-size: .8rem; color: var(--muted); }
+a { color: var(--accent); }
+
+/* Simulator */
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 16px; }
+.seg-ctl { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg-ctl button { border: 0; background: var(--card); color: var(--muted); padding: 8px 12px; cursor: pointer; font: inherit; font-size: .88rem; }
+.seg-ctl button.on { background: var(--accent); color: #fff; }
+.btn { background: var(--accent); color: #fff; border: 0; padding: 8px 14px; border-radius: 8px; cursor: pointer; font: inherit; font-size: .88rem; }
+.btn.ghost { background: none; color: var(--ink); border: 1px solid var(--line); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+label.chk { font-size: .88rem; display: inline-flex; gap: 6px; align-items: center; color: var(--muted); }
+.topo { display: grid; grid-template-columns: 1fr auto 1fr auto 1.4fr; gap: 10px; align-items: center; }
+.node { border: 1px solid var(--line); border-radius: 8px; padding: 10px; text-align: center; font-size: .85rem; background: var(--bg); }
+.node b { display: block; }
+.arrow { color: var(--muted); }
+.replicas { display: grid; gap: 6px; }
+.replica { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: .8rem; background: var(--bg); transition: all .2s; position: relative; }
+.replica.hit { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.replica.fail { border-color: var(--bad); box-shadow: 0 0 0 2px var(--bad-soft); }
+.replica.dead { opacity: .35; text-decoration: line-through; }
+.replica .mem { color: var(--muted); font-family: "SF Mono", Menlo, monospace; font-size: .75rem; display: block; }
+.replica .kill { position: absolute; right: 6px; top: 6px; font-size: .7rem; background: none; border: 1px solid var(--line); border-radius: 4px; cursor: pointer; color: var(--muted); padding: 0 5px; }
+@media (max-width: 640px) { .topo { grid-template-columns: 1fr; } .arrow { transform: rotate(90deg); justify-self: center; } }
+.stats { display: flex; gap: 16px; margin: 14px 0 6px; font-size: .88rem; }
+.stats span b { font-variant-numeric: tabular-nums; }
+.log { max-height: 260px; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px; font-size: .82rem; }
+.log div { padding: 6px 10px; border-bottom: 1px solid var(--line); display: flex; gap: 8px; }
+.log div:last-child { border-bottom: 0; }
+.log .ok { color: var(--ok); font-weight: 700; } .log .bad { color: var(--bad); font-weight: 700; }
+.log .empty { color: var(--muted); }
+
+/* Rewrite */
+.rewrite { font-size: 1.02rem; border-left: 3px solid var(--accent); padding-left: 14px; margin: 0 0 12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Stateless MCP, dissected</h1>
+  <p class="sub">One paragraph, four claims. Click each claim to check it against the MCP 2026-07-28 spec and this repo's <code>mcp_server/server.py</code>.</p>
+
+  <div class="card">
+    <div class="quote" id="quote"></div>
+    <div class="hint">Click a numbered claim. Keys 1–4 also work.</div>
+    <div id="detail"></div>
+  </div>
+
+  <h2>See it: round-robin load balancer, three replicas</h2>
+  <div class="card">
+    <div class="controls">
+      <div class="seg-ctl" role="group" aria-label="Spec version">
+        <button data-mode="old">2025-11-25 · sessions</button>
+        <button data-mode="new">2026-07-28 · stateless</button>
+      </div>
+      <label class="chk" id="stickyWrap"><input type="checkbox" id="sticky"> sticky sessions</label>
+    </div>
+    <div class="controls">
+      <button class="btn" id="send">Send tools/call</button>
+      <button class="btn ghost" id="burst">Send 10</button>
+      <button class="btn ghost" id="reset">Reset</button>
+    </div>
+    <div class="topo">
+      <div class="node"><b>Agent</b>MCP client</div>
+      <div class="arrow">→</div>
+      <div class="node"><b>Load balancer</b><span id="lbMode">round-robin</span></div>
+      <div class="arrow">→</div>
+      <div class="replicas" id="replicas"></div>
+    </div>
+    <div class="stats"><span>OK <b id="okN">0</b></span><span>Failed <b id="badN">0</b></span></div>
+    <pre id="wire"></pre>
+    <div class="log" id="log"><div class="empty">No requests yet.</div></div>
+  </div>
+
+  <h2>A tighter version of the paragraph</h2>
+  <div class="card">
+    <p class="rewrite" id="rewrite">The MCP protocol is stateless as of spec 2026-07-28. The spec removed the initialize handshake and the <code>Mcp-Session-Id</code> header, so each client request is a self-contained POST that carries its protocol version and capabilities in <code>_meta</code>. Any replica can answer any request. You host the server like a web API: serverless, autoscaled, behind a plain round-robin load balancer. Application state that must survive between calls goes in a store you own, referenced by explicit handles.</p>
+    <button class="btn ghost" id="copy">Copy</button>
+  </div>
+
+  <p class="src" style="margin-top:28px">Source: <a href="https://modelcontextprotocol.io/specification/2026-07-28/changelog">MCP 2026-07-28 changelog</a> (SEP-2567, SEP-2575, SEP-2322, SEP-2243, SEP-2549) · <a href="https://blog.modelcontextprotocol.io/posts/2026-07-28-release-candidate/">release post</a></p>
+</main>
+
+<script>
+const CLAIMS = [
+  {
+    text: "The MCP server is stateless.",
+    title: "“The MCP server is stateless”",
+    verdict: ["warn", "True for the protocol, not for the app"],
+    tabs: {
+      "What it means": `<ul>
+        <li>The server keeps no <b>per-connection protocol state</b>: no negotiated version, no client capabilities, no session table.</li>
+        <li>The server can still hold <b>application state</b> (a database, a cart, a job). That state lives in a store you own, outside the process.</li>
+        <li>The spec's answer for cross-call state: the server mints an <b>explicit handle</b> (e.g. <code>basket_id</code>) and the model passes it back as an ordinary tool argument.</li>
+      </ul>`,
+      "Caveat": `<ul>
+        <li>“Stateless server” overstates it. “Stateless protocol” is precise.</li>
+        <li>Hidden state became visible state. The model now threads handles between calls, so tool descriptions must say which tool returns the handle and which tools consume it.</li>
+      </ul>`,
+      "In this repo": `<p>The server's only state is <code>shop.db</code>, opened read-only on every call. No module-level caches, no per-client data.</p>
+<pre>con = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)</pre>
+<p>Read-only data makes replication trivial: bake the file into the image, and every replica answers identically.</p>`
+    }
+  },
+  {
+    text: "Spec 2026-07-28 removed protocol-level sessions from Streamable HTTP.",
+    title: "“Spec 2026-07-28 removed protocol-level sessions”",
+    verdict: ["ok", "Accurate, and it removed more"],
+    tabs: {
+      "What changed": `<div class="ba">
+        <div><h4>2025-11-25</h4><ul>
+          <li><code>initialize</code> / <code>notifications/initialized</code> handshake</li>
+          <li>Server returns <code>Mcp-Session-Id</code>; client echoes it on every request</li>
+          <li>GET endpoint for a standalone server→client SSE stream</li>
+          <li>Server-initiated <code>sampling</code>/<code>elicitation</code> requests at any time</li>
+        </ul></div>
+        <div><h4>2026-07-28</h4><ul>
+          <li>No handshake. Version + capabilities ride in <code>_meta</code> on every request (SEP-2575)</li>
+          <li>No session id (SEP-2567)</li>
+          <li><code>server/discover</code> for optional up-front capability lookup</li>
+          <li>GET stream → <code>subscriptions/listen</code>, opt-in only</li>
+          <li>Server asks for input by returning <code>input_required</code>; client retries (MRTR, SEP-2322)</li>
+        </ul></div>
+      </div>`,
+      "Caveat": `<ul>
+        <li>The sentence names the removal and skips the replacement. The replacement is the interesting part: each request is <b>self-describing</b>.</li>
+        <li>Roots, Sampling and Logging are deprecated with a 12-month window (SEP-2577). <code>ping</code> and <code>logging/setLevel</code> are gone.</li>
+        <li>Tasks moved to an extension; <code>tasks/list</code> was removed because it can't be scoped without sessions.</li>
+      </ul>`,
+      "In this repo": `<p>The server already opts into stateless mode through the SDK flag:</p>
+<pre>app = mcp.streamable_http_app(stateless_http=True, json_response=True, ...)</pre>
+<p>The new spec makes this mode the only mode.</p>`
+    }
+  },
+  {
+    text: "Every JSON-RPC message is its own POST.",
+    title: "“Every JSON-RPC message is its own POST”",
+    verdict: ["warn", "Close. Every client request is its own POST"],
+    tabs: {
+      "What it means": `<p>Each client→server request is one HTTP POST. The response comes back on that same POST. No message depends on a previous one.</p>
+<pre>POST /mcp
+Mcp-Method: tools/call
+Mcp-Name: kpi_summary
+Authorization: Bearer …
+
+{"jsonrpc":"2.0","id":7,"method":"tools/call",
+ "params":{"name":"kpi_summary",
+   "arguments":{"start_date":"2026-01-01","end_date":"2026-03-31"},
+   "_meta":{"io.modelcontextprotocol/protocolVersion":"2026-07-28",
+            "io.modelcontextprotocol/clientCapabilities":{}}}}</pre>
+<p><code>Mcp-Method</code> and <code>Mcp-Name</code> headers (SEP-2243) let a gateway route or rate-limit by tool without parsing the body.</p>`,
+      "Caveat": `<ul>
+        <li><b>Server messages are not POSTs.</b> Responses and progress notifications flow back on the request's response, which can be an SSE stream.</li>
+        <li><b>One tool call can be several POSTs.</b> With MRTR the server returns <code>input_required</code>; the client retries with <code>inputResponses</code>. Any replica can take the retry.</li>
+        <li><b>One POST can live long.</b> <code>subscriptions/listen</code> holds a single POST open for change notifications.</li>
+        <li><b>stdio has no POSTs.</b> The claim only applies to Streamable HTTP.</li>
+        <li><b>No resumability.</b> <code>Last-Event-ID</code> is gone; a broken stream loses the request and the client re-issues it with a new id.</li>
+      </ul>`
+    }
+  },
+  {
+    text: "You host it like any web API: serverless, autoscaled, behind a load balancer.",
+    title: "“Host it like any web API”",
+    verdict: ["ok", "Accurate, with the usual web-API homework"],
+    tabs: {
+      "What it means": `<ul>
+        <li>Plain round-robin load balancing works. No sticky sessions, no shared session store (Redis etc.).</li>
+        <li>Scale to zero and cold starts are fine: no handshake state is lost when an instance dies.</li>
+        <li>List results now carry <code>ttlMs</code> and <code>cacheScope</code> (SEP-2549), so CDNs and clients can cache <code>tools/list</code> like any GET-ish API.</li>
+      </ul>`,
+      "Caveat": `<ul>
+        <li><b>Serverless timeouts.</b> Long tool calls with streamed progress, and <code>subscriptions/listen</code>, need a host that supports long-lived streaming responses. Long jobs belong in the Tasks extension (return a handle, client polls).</li>
+        <li><b>Retries hit any replica.</b> Lost streams get re-issued, so write tools should be idempotent.</li>
+        <li><b>App state still needs a home.</b> Handles point into a DB or cache that all replicas share.</li>
+        <li><b>Auth per request.</b> No session means every POST must carry and pass auth.</li>
+      </ul>`,
+      "In this repo": `<p>Every request goes through bearer auth, and <code>/health</code> stays open for the load balancer's health check:</p>
+<pre>if scope["type"] == "http" and scope["path"] != "/health":
+    ... hmac.compare_digest(header, f"Bearer {MCP_TOKEN}") ...</pre>
+<p>Port comes from <code>PORT</code>, so it runs on Cloud Run, Fly, Render or Railway unchanged.</p>`
+    }
+  }
+];
+
+// ---------- Claim explorer ----------
+const quoteEl = document.getElementById("quote");
+const detailEl = document.getElementById("detail");
+CLAIMS.forEach((c, i) => {
+  const b = document.createElement("button");
+  b.className = "seg"; b.dataset.i = i;
+  b.innerHTML = `<span class="n">${i + 1}</span>`;
+  b.append(c.text);
+  b.onclick = () => showClaim(i);
+  quoteEl.append(b, " ");
+});
+
+function showClaim(i, tabName) {
+  const c = CLAIMS[i];
+  document.querySelectorAll(".seg").forEach(s => s.classList.toggle("active", +s.dataset.i === i));
+  const names = Object.keys(c.tabs);
+  const active = tabName && c.tabs[tabName] ? tabName : names[0];
+  detailEl.innerHTML = `
+    <div class="detail-head"><h3>${c.title}</h3><span class="verdict v-${c.verdict[0]}">${c.verdict[1]}</span></div>
+    <div class="tabs">${names.map(n => `<button class="tab${n === active ? " on" : ""}" data-t="${n}">${n}</button>`).join("")}</div>
+    <div class="pane">${c.tabs[active]}</div>`;
+  detailEl.querySelectorAll(".tab").forEach(t => t.onclick = () => showClaim(i, t.dataset.t));
+  try { localStorage.setItem("mcp-dissect-claim", i); } catch {}
+}
+document.addEventListener("keydown", e => {
+  if (e.target.matches("input, textarea")) return;
+  const n = +e.key;
+  if (n >= 1 && n <= CLAIMS.length) showClaim(n - 1);
+});
+let startClaim = 0;
+try { startClaim = +(localStorage.getItem("mcp-dissect-claim") || 0); } catch {}
+showClaim(CLAIMS[startClaim] ? startClaim : 0);
+
+// ---------- Load balancer simulator ----------
+const S = { mode: "old", replicas: [], rr: 0, ok: 0, bad: 0, session: null, home: null, reqId: 0 };
+const $ = id => document.getElementById(id);
+
+function reset() {
+  S.replicas = ["A", "B", "C"].map(name => ({ name, alive: true, sessions: new Set() }));
+  Object.assign(S, { rr: 0, ok: 0, bad: 0, session: null, home: null, reqId: 0 });
+  $("log").innerHTML = '<div class="empty">No requests yet.</div>';
+  $("wire").textContent = S.mode === "old"
+    ? "Old spec: the first request is initialize. The replica that answers it stores the session."
+    : "New spec: no initialize. Every request carries what the server needs.";
+  render();
+}
+
+function render() {
+  document.querySelectorAll("[data-mode]").forEach(b => b.classList.toggle("on", b.dataset.mode === S.mode));
+  $("stickyWrap").style.display = S.mode === "old" ? "" : "none";
+  $("lbMode").textContent = S.mode === "old" && $("sticky").checked ? "sticky (by session id)" : "round-robin";
+  $("okN").textContent = S.ok; $("badN").textContent = S.bad;
+  $("replicas").innerHTML = S.replicas.map((r, i) => `
+    <div class="replica${r.alive ? "" : " dead"}" id="rep${i}">
+      <b>Replica ${r.name}</b>
+      <span class="mem">${S.mode === "old" ? "sessions: " + (r.sessions.size ? [...r.sessions].join(", ") : "none") : "sessions: n/a"}</span>
+      <button class="kill" data-k="${i}">${r.alive ? "kill" : "revive"}</button>
+    </div>`).join("");
+  document.querySelectorAll(".kill").forEach(b => b.onclick = () => {
+    const r = S.replicas[+b.dataset.k];
+    r.alive = !r.alive;
+    if (!r.alive) r.sessions.clear();
+    render();
+  });
+}
+
+function pickReplica() {
+  const alive = S.replicas.filter(r => r.alive);
+  if (!alive.length) return null;
+  if (S.mode === "old" && $("sticky").checked && S.home && S.home.alive) return S.home;
+  // ponytail: naive round-robin over live replicas, enough to show the routing effect
+  for (let n = 0; n < S.replicas.length; n++) {
+    const r = S.replicas[S.rr++ % S.replicas.length];
+    if (r.alive) return r;
+  }
+}
+
+function log(ok, msg) {
+  const empty = $("log").querySelector(".empty");
+  if (empty) empty.remove();
+  const d = document.createElement("div");
+  d.innerHTML = `<span class="${ok ? "ok" : "bad"}">${ok ? "200" : "404"}</span>`;
+  d.append(msg);
+  $("log").prepend(d);
+}
+
+function wire(method, extra) {
+  const id = ++S.reqId;
+  if (S.mode === "old") {
+    return `POST /mcp\n${S.session && method !== "initialize" ? "Mcp-Session-Id: " + S.session + "\n" : ""}\n` +
+      JSON.stringify({ jsonrpc: "2.0", id, method, params: extra || {} });
+  }
+  return `POST /mcp\nMcp-Method: ${method}\nMcp-Name: kpi_summary\n\n` +
+    JSON.stringify({ jsonrpc: "2.0", id, method, params: { name: "kpi_summary", arguments: {}, _meta: {
+      "io.modelcontextprotocol/protocolVersion": "2026-07-28", "io.modelcontextprotocol/clientCapabilities": {} } } });
+}
+
+function flash(r, ok) {
+  const el = $("rep" + S.replicas.indexOf(r));
+  if (!el) return;
+  el.classList.add(ok ? "hit" : "fail");
+  setTimeout(() => el.classList.remove("hit", "fail"), 450);
+}
+
+function send() {
+  const r = pickReplica();
+  if (!r) { S.bad++; log(false, "No live replicas."); render(); return; }
+
+  if (S.mode === "new") {
+    $("wire").textContent = wire("tools/call");
+    S.ok++; render(); flash(r, true);
+    log(true, `tools/call → replica ${r.name}. Request is self-contained.`);
+    return;
+  }
+
+  if (!S.session) {
+    S.session = Math.random().toString(16).slice(2, 8);
+    S.home = r; r.sessions.add(S.session);
+    $("wire").textContent = wire("initialize", { protocolVersion: "2025-11-25", capabilities: {} });
+    S.ok++; render(); flash(r, true);
+    log(true, `initialize → replica ${r.name}. Session ${S.session} now lives only on ${r.name}.`);
+    return;
+  }
+  $("wire").textContent = wire("tools/call", { name: "kpi_summary", arguments: {} });
+  const ok = r.sessions.has(S.session);
+  ok ? S.ok++ : S.bad++;
+  if (!ok && S.home && !S.home.alive) S.session = null; // client must re-initialize
+  render(); flash(r, ok);
+  log(ok, ok
+    ? `tools/call → replica ${r.name}. Found session ${S.session}.`
+    : `tools/call → replica ${r.name}. Session unknown here: "Session not found".${S.session ? "" : " Client will re-initialize."}`);
+}
+
+document.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => { S.mode = b.dataset.mode; reset(); });
+$("sticky").onchange = render;
+$("send").onclick = send;
+$("burst").onclick = () => { for (let i = 0; i < 10; i++) setTimeout(send, i * 120); };
+$("reset").onclick = reset;
+$("copy").onclick = async e => {
+  try {
+    await navigator.clipboard.writeText($("rewrite").textContent);
+    e.target.textContent = "Copied"; setTimeout(() => e.target.textContent = "Copy", 1500);
+  } catch {}
+};
+reset();
+</script>
+</body>
+</html>

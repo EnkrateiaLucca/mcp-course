@@ -180,7 +180,7 @@ mcp_servers={"research": {
 <div class="callout warn"><p><strong>Before you start:</strong> quit Anki. AnkiConnect listens on <code>127.0.0.1:8765</code>, the exact port demo 04 hard-codes. Check with <code>lsof -nP -iTCP:8765 -sTCP:LISTEN</code>. Then set <code>MCP_AUTH_TOKEN=demo-secret</code> in <em>both</em> terminals. <code>ANTHROPIC_API_KEY</code> is in your shell today, not in the repo <code>.env</code>.</p></div>
 
 <h3>Step 1 · Start the server (terminal 1)</h3>
-<pre><code>cd demos/04-production-research-agent
+<pre><code>cd demos/archive/04-production-research-agent
 export MCP_AUTH_TOKEN=demo-secret
 uv run research_server.py</code></pre>
 <pre class="out"><code>INFO  research-assistant MCP server on http://127.0.0.1:8765/mcp
@@ -311,7 +311,7 @@ def research_explorer_app() -> str:
 <h2 id="run05"><span class="n">5</span>Demo 05 runbook</h2>
 
 <h3>Step 1 · Start locally <span class="ok">verified</span></h3>
-<pre><code>cd demos/05-deploy-remote-mcp
+<pre><code>cd demos/archive/05-deploy-remote-mcp
 uv run server.py</code></pre>
 <pre class="out"><code>🚀 research-explorer MCP server on http://127.0.0.1:8000/mcp
    stateless_http=True json_response=True — deployable anywhere
@@ -355,7 +355,7 @@ uv run test_client.py https://&lt;random&gt;.trycloudflare.com/mcp</code></pre>
 
 <h3>Step 7 · Vercel</h3>
 <pre><code>npm i -g vercel &amp;&amp; vercel login    <span class="c"># CLI is NOT installed on this Mac yet</span>
-cd demos/05-deploy-remote-mcp
+cd demos/archive/05-deploy-remote-mcp
 vercel deploy --prod
 uv run test_client.py https://&lt;your-app&gt;.vercel.app/mcp</code></pre>
 <p>Deploy once before class and keep the URL. Live, show the pre-flight against it and add it as a second connector. Same server, now permanent. If <code>tools/call</code> returns <code>ok=False</code> from Vercel, DDGS is likely blocking datacenter IPs; the protocol checks still prove the deployment.</p>

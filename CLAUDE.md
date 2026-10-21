@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 O'Reilly Live Training course repo: **"Building AI Agents with MCP: From Agent Loop to Production Servers"** (redesigned July 2026; formerly subtitled "The HTTP Moment of AI?"). Hands-on demos for learning the Model Context Protocol and AI agent development.
 
-Seven modules grow ONE use case — a personal research assistant — a layer at a time: hand-rolled loop (`00`) → MCP server + thin client (`01`) → Claude Agent SDK host (`02`) → skills (`03`) → production HTTP/auth/hooks/evals (`04`) → deployed remote server + MCP Apps (`05`) → security lab + composition/subagents/sessions (`06`).
+Six modules. `00`–`03` grow ONE use case — a personal research assistant — a layer at a time: hand-rolled loop (`00`) → MCP server + thin client (`01`) → Claude Agent SDK host (`02`) → skills (`03`). `04` ships a production use case end to end: a shop analytics agent (FastAPI + Agent SDK) and its governed MCP server (read-only SQLite) as two containers (`04`). `05` attacks and defends it: data-exposure lab + tool-poisoning lab + composition/subagents/sessions.
 
 ## Development Setup
 
@@ -20,7 +20,8 @@ Seven modules grow ONE use case — a personal research assistant — a layer at
 
 ### Environment Variables (`.env` at repo root)
 - `ANTHROPIC_API_KEY` — all agent demos
-- `MCP_AUTH_TOKEN` — module 04 (required); module 05 (optional bearer auth)
+- Module 04 has its own `.env` (`demos/04-shop-analytics-agent/.env.example`): only `ANTHROPIC_API_KEY` is required for Docker Compose; `MCP_TOKEN`/`APP_PASSWORD` have loopback-only defaults and MUST be set for any deployment.
+- `MCP_AUTH_TOKEN` — the archived research server, still used by `05-security-and-composition/composition/`
 
 ## Demo Organization
 
@@ -28,17 +29,16 @@ Seven modules grow ONE use case — a personal research assistant — a layer at
 2. **`01-introduction-to-mcp/`** — same tools behind `MCPServer` (`mcp_server.py`); `mcp_client.py` is a thin, standalone-runnable protocol client. The old hand-rolled host lives in `archive/01-full-host-client/`.
 3. **`02-research-agent-sdk/`** — Agent SDK as MCP host (`research_agent.py`, ~15 LOC core); `in_process_agent.py` shows `create_sdk_mcp_server`; `research_agent_multiturn.py` shows `ClaudeSDKClient`.
 4. **`03-skills-and-mcp/`** — skills vs MCP teaching module + `mcp-builder-skill/` (agent scaffolds MCP servers) + `skill_loader_demo.py` (SDK skills gotchas).
-5. **`04-production-research-agent/`** — intent-grouped tools (7→3), `streamable-http`, bearer-auth seam, hooks, permission callback, `evals.py` (3-layer correctness), `structured_output_demo.py`.
-6. **`05-deploy-remote-mcp/`** — stateless remote server (`stateless_http=True`, `json_response=True`), Vercel wrapping (`api/index.py`, `vercel.json`), **MCP App** (`app.html`, vanilla-JS `ui/initialize` handshake), `test_client.py` pre-flight. Run `test_client.py` after ANY change here.
-7. **`06-security-and-composition/`** — `security-lab/` (tool-poisoning attack/defense) + `composition/` (multi-server, subagent via the `Agent` tool, resume/fork sessions).
+5. **`04-shop-analytics-agent/`** — `agent/app.py` (FastAPI + Agent SDK: `tools=[]`, `strict_mcp_config`, `setting_sources=[]`, `max_turns`, `max_budget_usd`, MCP status check at init → 503, limit results → friendly reply, `is_error` results → 502, one JSON log line per message with tokens + estimated cost) + `agent/static/index.html` (chat UI, usage footer) + `mcp_server/server.py` (stateless HTTP, bearer middleware, read-only SQLite, `sales` view = the one definition of revenue, `ToolError` for anticipated failures, optional `PII_GUARD` SQLite authorizer) + `compose.yaml` (ports on 127.0.0.1) + `render.yaml`. Each service has its own `pyproject.toml`/`uv.lock` (needed for Docker). Run `cd mcp_server && MCP_TOKEN=test uv run python test_server.py` after ANY server change.
+6. **`05-security-and-composition/`** — `data-exposure-lab/` (module 04's `run_sql` leaks names/emails; `PII_GUARD=1` blocks them; `exposure_check.py` is a no-spend MCP client) + `security-lab/` (tool-poisoning attack/defense) + `composition/` (multi-server, subagent via the `Agent` tool, resume/fork sessions; still starts the archived research server).
 
 - **`exercises/link-checker/`** — take-home exercise with reference solution.
-- **`archive/`** — retired demos (old 03 tabular, old 06 FastAPI+SSE Vercel, full host, OpenAI alternative). Do not modify; do not resurrect into the live flow without asking.
+- **`archive/`** — retired demos (old 03 tabular, old 04 production research agent, old 05 Vercel deploy + MCP App, old 06 FastAPI+SSE Vercel, full host, OpenAI alternative). `tests/` still covers the archived 04 research server. Do not modify; do not resurrect into the live flow without asking.
 - **`assets-resources/`** — cheatsheet, diagrams, security report.
 
 ## MCP Server Patterns
 
-**MCPServer, external (stdio or HTTP) — modules 01, 04, 05:**
+**MCPServer, external (stdio or HTTP) — modules 01, 04:**
 ```python
 #!/usr/bin/env -S uv run --script
 # /// script
@@ -47,7 +47,7 @@ Seven modules grow ONE use case — a personal research assistant — a layer at
 # ///
 from mcp.server.mcpserver import MCPServer
 
-mcp = MCPServer("server-name")          # module 05 passes to mcp.streamable_http_app(): stateless_http=True,
+mcp = MCPServer("server-name")          # HTTP servers pass to mcp.streamable_http_app(): stateless_http=True,
                                         # json_response=True, transport_security=TransportSecuritySettings(
                                         #   enable_dns_rebinding_protection=False)  # else 421 behind tunnel/Vercel
 
@@ -78,12 +78,12 @@ options = ClaudeAgentOptions(mcp_servers={"x": server})
 ```python
 # agent side
 options = ClaudeAgentOptions(mcp_servers={
-    "research": {"type": "http", "url": "http://127.0.0.1:8765/mcp",
+    "analytics": {"type": "http", "url": "http://mcp:8001/mcp",
                   "headers": {"Authorization": f"Bearer {token}"}}
 })
 ```
 
-**MCP App — module 05:** tool declares `meta={"ui": {"resourceUri": "ui://..."}}`; resource at that URI has `mime_type="text/html;profile=mcp-app"` and returns self-contained HTML implementing the `ui/initialize` postMessage handshake (protocol version "2026-01-26").
+**MCP App — `archive/05-deploy-remote-mcp`, `mcp-apps-productivity-timer`:** tool declares `meta={"ui": {"resourceUri": "ui://..."}}`; resource at that URI has `mime_type="text/html;profile=mcp-app"` and returns self-contained HTML implementing the `ui/initialize` postMessage handshake (protocol version "2026-01-26").
 
 ## Agent Integration Guidelines
 
@@ -96,24 +96,25 @@ options = ClaudeAgentOptions(mcp_servers={
 
 ## When Creating MCP Servers
 - UV inline metadata always; descriptive docstrings (the LLM reads them); type hints (schemas auto-generate).
-- Prefer **intent-grouped tools** over API mirrors (module 04's 7→3).
-- Test with `mcp dev <server>.py`; module 05 additionally with `uv run test_client.py`.
+- Prefer **intent-grouped tools** over API mirrors (archived research agent's 7→3; module 04's metric tools + one `run_sql` escape hatch).
+- Raise `ToolError` (`mcp.server.mcpserver.exceptions`) for failures the model should read; v2 shows any other exception only as "Error executing tool <name>".
+- Test with `mcp dev <server>.py`; module 04 additionally with `test_server.py`.
 - Validate paths (workspace sandboxing pattern in modules 01/04); structured dict returns.
 
 ## Testing / Verifying
 
 ```bash
 mcp dev <path-to-server.py>                     # Inspector UI
-uv run demos/05-deploy-remote-mcp/test_client.py [url]   # protocol pre-flight
+cd demos/04-shop-analytics-agent && docker compose up --build   # module 04, both containers
 claude mcp add research -- uv run $PWD/demos/01-introduction-to-mcp/mcp_server.py
 ```
 
 Claude Desktop config: macOS `~/Library/Application Support/Claude/claude_desktop_config.json`, Windows `%APPDATA%\Claude\claude_desktop_config.json`. Absolute paths; restart after edits.
 
 ## Troubleshooting
-- Module 04 401 → `MCP_AUTH_TOKEN` in BOTH terminals; port 8765 free.
-- Module 05 → server binds 8000; Claude custom connectors need a public URL (cloudflared tunnel or Vercel) and support OAuth-or-no-auth only (no bearer header field).
-- Module 05 `421 Misdirected Request` via tunnel/Vercel (localhost works) → the mcp SDK auto-enables DNS-rebinding protection when binding 127.0.0.1 and rejects non-localhost `Host` headers at the origin. `server.py` opts out via `transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False)` — keep that when editing, and pre-flight with `uv run test_client.py <public-url>/mcp` (the localhost pre-flight can't catch this).
+- Module 04 "analytics data service is unavailable" (503) → agent and server `MCP_TOKEN` differ, or the MCP server is down. Module 04 502 "model call failed: Invalid API key" → the student's `ANTHROPIC_API_KEY`.
+- Archived module 05 → server binds 8000; Claude custom connectors need a public URL (cloudflared tunnel or Vercel) and support OAuth-or-no-auth only (no bearer header field).
+- Archived module 05 `421 Misdirected Request` via tunnel/Vercel (localhost works) → the mcp SDK auto-enables DNS-rebinding protection when binding 127.0.0.1 and rejects non-localhost `Host` headers at the origin. `server.py` opts out via `transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False)` — keep that when editing, and pre-flight with `uv run test_client.py <public-url>/mcp` (the localhost pre-flight can't catch this).
 - DDGS empty results → throttling; tools degrade gracefully, retry.
 - `mcp` not found → `pip install "mcp[cli]>=2.3,<3"`.
 - `mcp dev` Inspector shows Failed / "Connection closed" → the Inspector spawns the server in a clean env. Keep `MCPServer(..., dependencies=["mcp[cli]>=2.3,<3", "ddgs"])` on stdio servers (01/02) and keep the `ddgs` import lazy so `mcp dev` can import the module before installing deps.
@@ -124,4 +125,4 @@ Claude Desktop config: macOS `~/Library/Application Support/Claude/claude_deskto
 - Spec 2025-11-25: https://modelcontextprotocol.io/specification/2025-11-25 — previous revision; v2 servers still accept its `initialize` handshake (module 01's thin client uses it)
 - Claude Agent SDK: https://code.claude.com/docs/en/agent-sdk/overview
 - MCP Apps extension: https://modelcontextprotocol.io/extensions/apps
-- Production post (basis for modules 04–05): https://claude.com/blog/building-agents-that-reach-production-systems-with-mcp
+- Production post (basis for the archived modules 04–05): https://claude.com/blog/building-agents-that-reach-production-systems-with-mcp

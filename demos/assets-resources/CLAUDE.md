@@ -10,9 +10,8 @@ demos/
 ├── 01-introduction-to-mcp/         # First MCP server + thin client + real hosts
 ├── 02-research-agent-sdk/          # Claude Agent SDK as MCP host (+ in-process servers)
 ├── 03-skills-and-mcp/              # Skills vs MCP + mcp-builder skill
-├── 04-production-research-agent/   # HTTP transport, auth seam, hooks, evals
-├── 05-deploy-remote-mcp/           # Deploy remote server (Vercel) + MCP Apps
-├── 06-security-and-composition/    # Tool-poisoning lab; multi-server, subagents, sessions
+├── 04-shop-analytics-agent/        # Agent + governed MCP server as two containers; telemetry; Render deploy
+├── 05-security-and-composition/    # Data-exposure + tool-poisoning labs; multi-server, subagents, sessions
 ├── exercises/                      # Take-home exercises (link checker)
 ├── archive/                        # Retired demos, kept for reference
 └── assets-resources/               # This folder — reference materials

@@ -1,0 +1,22 @@
+# Local production rehearsal: put your ANTHROPIC_API_KEY in .env, then `docker compose up --build`
+# and open http://localhost:8000 (any username, password from APP_PASSWORD, default "demo").
+#
+# Ports bind to 127.0.0.1 only, so nobody else on your Wi-Fi can reach the app or spend your API key.
+# That is also why the local-only defaults below are acceptable. Never reuse them for a deployment.
+services:
+  mcp:
+    build: ./mcp_server
+    environment:
+      MCP_TOKEN: ${MCP_TOKEN:-local-dev-token}
+      PII_GUARD: ${PII_GUARD:-0}  # module 05 lab: set to 1 to block customer names and emails
+    ports: ["127.0.0.1:8001:8001"]  # optional: lets Claude Code / MCP Inspector connect from your laptop
+  agent:
+    build: ./agent
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?Set ANTHROPIC_API_KEY in .env (copy .env.example)}
+      APP_PASSWORD: ${APP_PASSWORD:-demo}
+      MCP_TOKEN: ${MCP_TOKEN:-local-dev-token}
+      MCP_URL: http://mcp:8001/mcp
+      MAX_BUDGET_USD: ${MAX_BUDGET_USD:-0.50}
+    ports: ["127.0.0.1:8000:8000"]
+    depends_on: [mcp]

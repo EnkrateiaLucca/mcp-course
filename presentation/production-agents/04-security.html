@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 4: Security</title>
+<link rel="stylesheet" href="lessons.css">
+</head>
+<body>
+<nav><a href="03-agent-service.html">← Lesson 3</a><a href="05-cost-observability.html">Lesson 5 →</a></nav>
+
+<h1>Lesson 4: Security</h1>
+<p class="goal">Goal: you can explain why a research agent is a high-risk agent, and you can place each control (gateway, tool scope, container, egress proxy, credential proxy) on the system diagram.</p>
+<div class="tldr">
+<h2>TL;DR</h2>
+<p><b>The problem:</b> A research agent reads random web pages, holds private data, and can talk to the internet. Those three together let a malicious page trick it into leaking data.</p>
+<p><b>The shape of the solution:</b></p>
+<ul>
+  <li>You can't stop every trick. So shrink what a tricked agent can do.</li>
+  <li><b>Check who the user is</b> before anything reaches the agent, and make sure each user only sees their own conversations.</li>
+  <li><b>Box the agent in:</b> no extra tools, not run as admin, no unneeded permissions.</li>
+  <li><b>Cut its internet:</b> it may only talk to the AI model and your tools server. Keep passwords outside the box and add them on the way out.</li>
+</ul>
+<p class="like">Think of it like: Let a new hire read any mail, but give them a phone that can only call two numbers. Even a scam letter can't get them to call the scammer.</p>
+</div>
+
+
+<h2>1. The threat model, applied to this agent</h2>
+<p>An agent's actions depend on the content it reads. Instructions hidden in a file, a web page or a tool description can steer it (prompt injection). Model error can also cause harm without any attacker. The secure-deployment guide does not try to filter that out. It limits what a steered agent can reach.</p>
+<p>Check the research assistant against the "lethal trifecta":</p>
+<div class="tablewrap"><table>
+  <tr><th>Ingredient</th><th>Present?</th><th>Where</th></tr>
+  <tr><td>Untrusted content</td><td class="bad">Yes</td><td><code>research_topic</code> fetches arbitrary web pages and puts excerpts in the context</td></tr>
+  <tr><td>Private data</td><td class="bad">Yes</td><td>Other users' briefs, transcripts in <code>/data</code>, the API key and MCP token in the environment</td></tr>
+  <tr><td>A way to send data out</td><td class="bad">Yes, by default</td><td>Any outbound network path: a fetch, a tool argument that reaches the internet, a DNS lookup</td></tr>
+</table></div>
+<p>All three are present. So this agent needs every layer below. The aim is to remove the third ingredient, because you cannot remove the first two without removing the product.</p>
+
+<h2>2. The layers, from outside in</h2>
+<div class="flow">internet ─► [1 gateway: who is the user? does she own this session?]
+              └─► agent container  [3 hardened container, non-root, read-only]
+                    ├─ [2 tool scope: tools=[], strict_mcp_config, allowed_tools]
+                    └─ every outbound packet ─► [4 egress proxy: allowlist + credential injection + log]
+                                                   ├─► api.anthropic.com
+                                                   └─► research MCP server [5 server-side checks: token, tenant, SSRF]</div>
+<div class="tablewrap"><table>
+  <tr><th>#</th><th>Layer</th><th>What it stops</th><th>Where you built it</th></tr>
+  <tr><td>1</td><td>Gateway auth + session ownership</td><td>Strangers using your agent; Bob reading Alice's session</td><td>Cookbook k8s gateway: Bob's token on Alice's session returns 403</td></tr>
+  <tr><td>2</td><td>Tool scope</td><td>The model reading files or running commands it never needed</td><td>Lesson 3: <code>tools=[]</code>, <code>strict_mcp_config=True</code></td></tr>
+  <tr><td>3</td><td>Container isolation</td><td>Damage to the host, persistence, fork bombs</td><td>Section 3 below</td></tr>
+  <tr><td>4</td><td>Egress allowlist</td><td>Exfiltration to an attacker's server</td><td>Section 4 below</td></tr>
+  <tr><td>5</td><td>MCP server checks</td><td>Cross-tenant reads, SSRF into your cloud</td><td>Lesson 2: tenant from token, <code>_is_public()</code></td></tr>
+</table></div>
+<p>Your module 06 security lab adds a sixth: <b>tool descriptions are untrusted input</b>. If you connect an MCP server you did not write, pin its version and review its tool descriptions like code.</p>
+
+<h2>3. A hardened container</h2>
+<p>From the secure-deployment guide. Each flag removes one capability the agent never needs:</p>
+<pre><code>docker run \
+  --cap-drop ALL \
+  --security-opt no-new-privileges \
+  --read-only \
+  --tmpfs /tmp:rw,noexec,nosuid,size=100m \
+  --network none \
+  --memory 2g --cpus 2 --pids-limit 100 \
+  --user 1000:1000 \
+  -v agent-data:/data \
+  -v /var/run/proxy.sock:/var/run/proxy.sock:ro \
+  research-agent</code></pre>
+<div class="tablewrap"><table>
+  <tr><th>Flag</th><th>Effect</th></tr>
+  <tr><td><code>--cap-drop ALL</code>, <code>no-new-privileges</code></td><td>No Linux capabilities, no setuid escalation</td></tr>
+  <tr><td><code>--read-only</code> + <code>--tmpfs</code></td><td>Immutable root filesystem; scratch space is cleared at stop</td></tr>
+  <tr><td><code>--network none</code></td><td>No network interface at all. The only way out is the mounted Unix socket to a proxy on the host.</td></tr>
+  <tr><td><code>--memory</code>, <code>--pids-limit</code></td><td>Caps resource exhaustion</td></tr>
+  <tr><td><code>--user 1000:1000</code></td><td>Not root</td></tr>
+</table></div>
+<p>Pick the isolation strength from the threat model:</p>
+<div class="tablewrap"><table>
+  <tr><th>Technology</th><th>Isolation</th><th>Overhead</th><th>Use when</th></tr>
+  <tr><td><a href="https://github.com/anthropics/sandbox-runtime">sandbox-runtime</a></td><td>Good</td><td>Very low</td><td>One developer, CI jobs. No Docker needed.</td></tr>
+  <tr><td>Docker (hardened as above)</td><td>Depends on setup</td><td>Low</td><td>Single-tenant services</td></tr>
+  <tr><td>gVisor (<code>--runtime=runsc</code>)</td><td>Excellent</td><td>Medium to high; file-heavy work is much slower</td><td>Multi-tenant, untrusted content</td></tr>
+  <tr><td>Firecracker / VMs</td><td>Excellent</td><td>High</td><td>Strict tenant separation, regulated data</td></tr>
+</table></div>
+<p>A research agent with <code>tools=[]</code> does little file I/O beyond its transcripts, so gVisor's file-I/O penalty costs little here. Measure it on your workload before you commit. For a multi-tenant deployment, it is a reasonable default.</p>
+
+<h2>4. Egress: the control that holds when the others fail</h2>
+<p>Deny all outbound traffic, then allow a short list. For this agent the list has two entries:</p>
+<pre><code>api.anthropic.com:443              # the model
+research-mcp.internal:443          # your MCP server (or its public host)</code></pre>
+<p>Everything else, including the web pages the research tool fetches, leaves from the <b>MCP server</b>, not from the agent container. That split is deliberate. The agent never needs the open internet. The MCP server needs it, and it applies its own SSRF rules.</p>
+<p>How the cookbook's Kubernetes tier enforces it:</p>
+<ul>
+  <li>A <code>NetworkPolicy</code> lets agent pods reach only the egress proxy (443) and DNS (53).</li>
+  <li>The egress proxy (nginx) terminates TLS from the agent and re-encrypts to <code>api.anthropic.com</code>.</li>
+  <li>The policy works only if the cluster's CNI enforces it (Calico, Cilium, GKE Dataplane V2). kind's default CNI does not, so the quickstart installs Calico.</li>
+  <li>Known gap the cookbook documents: port 53 stays open, so DNS tunneling remains a residual channel.</li>
+</ul>
+<p>Prove it from inside a running agent pod. This should fail:</p>
+<pre><code>kubectl -n claude-agent exec "$AGENT_POD" -- python3 -c \
+  "import socket; socket.setdefaulttimeout(5); socket.create_connection(('example.com',443)); print('REACHED')"</code></pre>
+
+<h2>5. Credentials: inject them outside the boundary</h2>
+<p>The recommended pattern: a proxy outside the agent's container adds the credential to each request. The agent makes the call but never holds the secret.</p>
+<div class="tablewrap"><table>
+  <tr><th>Credential</th><th>Pattern</th></tr>
+  <tr><td>Anthropic API key</td><td>Set <code>ANTHROPIC_BASE_URL=http://proxy:8080</code>. The SDK sends model requests to the proxy in plain HTTP, and the proxy adds the key and forwards. Envoy's <code>credential_injector</code> or LiteLLM can do this.</td></tr>
+  <tr><td>Search API key, database password</td><td>Keep them in the MCP server (lesson 2). The agent calls a tool; the server makes the authenticated request.</td></tr>
+  <tr><td>MCP token</td><td>Per user, short-lived, audience-bound to the MCP server (lesson 3). If it leaks, it opens only that user's tools, and only until it expires.</td></tr>
+</table></div>
+<p>One trap: <code>HTTPS_PROXY</code> gives the proxy only an opaque TLS tunnel. A proxy can inject headers into HTTPS traffic only if it terminates TLS and the agent trusts its CA certificate. <code>ANTHROPIC_BASE_URL</code> avoids that for model calls.</p>
+
+<h2>6. Never put these in the image or a mount</h2>
+<p><code>.env</code> files, <code>~/.aws/credentials</code>, <code>~/.config/gcloud/</code>, <code>~/.kube/config</code>, <code>~/.docker/config.json</code>, <code>~/.git-credentials</code>, <code>.npmrc</code>, <code>.pypirc</code>, <code>*.pem</code>, <code>*.key</code>, <code>*-service-account.json</code>. A read-only mount still exposes them.</p>
+
+<h2>Try it</h2>
+<ol>
+  <li>Run your module 06 <code>attack_demo.py</code>. Then ask: with the lesson 3 options (<code>tools=[]</code>, MCP-only allowlist), which step of the attack still works? Which layer would stop the rest?</li>
+  <li>Run the cookbook's Kubernetes quickstart and the <code>example.com</code> test above. Then call the gateway with Bob's token on Alice's session and confirm the 403.</li>
+</ol>
+
+<h2>Check yourself</h2>
+<details><summary>Which ingredient of the lethal trifecta can you remove without breaking the research product?</summary>The exfiltration path. The agent container needs only the model API and the MCP server. Web fetching happens inside the MCP server, which applies its own rules.</details>
+<details><summary>Why is <code>--network none</code> plus a Unix socket stronger than an allowlist inside the container?</summary>The container has no network interface to misuse. All traffic must pass through a proxy that runs outside the agent's boundary, where a compromised agent cannot change the rules.</details>
+<details><summary>Why can't a plain <code>HTTPS_PROXY</code> inject an API key?</summary>The proxy sees only an encrypted CONNECT tunnel. It must terminate TLS, with its CA trusted by the agent, to modify the request.</details>
+<details><summary>The gateway authenticates Alice. What second check must it make on every request?</summary>That the <code>session_id</code> belongs to Alice. Authentication without session ownership lets any user read any session.</details>
+
+<nav class="bottom"><a href="03-agent-service.html">← Lesson 3</a><a href="05-cost-observability.html">Lesson 5: Cost and observability →</a></nav>
+</body>
+</html>

@@ -1,0 +1,9 @@
+[project]
+name = "analytics-agent"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "claude-agent-sdk>=0.2.170",
+    "fastapi>=0.156.8",
+    "uvicorn[standard]>=0.54.0",
+]

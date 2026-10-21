@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agents to Production</title>
+<link rel="stylesheet" href="lessons.css">
+</head>
+<body>
+
+<h1>Agents with custom MCP servers, in production</h1>
+<p class="sub">A practical class in six lessons. One use case all the way through: the research assistant from your MCP course. Python, Claude Agent SDK 0.2.x, <code>mcp</code> SDK 2.3, MCP spec 2026-07-28.</p>
+
+<h2>The one idea that organizes everything</h2>
+<p>A production agent with a custom MCP server is <b>two deployables</b>, and they have opposite shapes.</p>
+<div class="flow">  user / your app
+        │  HTTPS + user identity
+        ▼
+  ┌──────────── gateway ────────────┐   authenticates the user, owns session→tenant mapping
+  └───────────────┬─────────────────┘
+                  ▼
+  ┌──── DEPLOYABLE A: agent service (container) ─────┐
+  │  FastAPI  /health  /sessions/{id}/messages (SSE) │
+  │  Agent SDK query() ──stdio──► claude subprocess  │──HTTPS──► api.anthropic.com
+  │  STATEFUL: transcripts, cwd, memory on disk      │
+  └──────────────────────────┬───────────────────────┘
+                             │  MCP over Streamable HTTP + bearer/OAuth token
+                             ▼
+  ┌──── DEPLOYABLE B: MCP server (your tools) ───────┐
+  │  MCPServer.streamable_http_app()  /mcp           │──► search API, DB, object store
+  │  STATELESS: any replica answers any request      │    (credentials live HERE)
+  └──────────────────────────────────────────────────┘</div>
+<ul>
+  <li><b>The agent service is stateful.</b> The SDK spawns a <code>claude</code> CLI subprocess per session. That process owns a shell, a working directory and JSONL transcripts on local disk. You host it like a long-lived worker, not like a stateless API.</li>
+  <li><b>The MCP server is stateless.</b> Spec 2026-07-28 removed protocol-level sessions from Streamable HTTP. Every JSON-RPC message is its own POST. You host it like any web API: serverless, autoscaled, behind a load balancer.</li>
+</ul>
+<p>Your current module 05 deploys B. Nothing in the course deploys A yet. That gap is why the demos feel like "basic stuff".</p>
+
+<h2>Lessons</h2>
+<ol>
+  <li><a href="01-architecture.html"><b>The architecture</b></a>: the subprocess model, where state lives, and how to choose a session pattern.</li>
+  <li><a href="02-mcp-server.html"><b>The MCP server in production</b></a>: stateless HTTP, Host/Origin pinning, state off local disk, the auth ladder up to OAuth, SSRF guards.</li>
+  <li><a href="03-agent-service.html"><b>The agent service</b></a>: the cookbook's HTTP + SSE contract, locked-down <code>ClaudeAgentOptions</code>, per-user MCP tokens, session persistence, the Dockerfile.</li>
+  <li><a href="04-security.html"><b>Security</b></a>: the threat model for a research agent that reads the open web, container hardening, egress allowlists, the credential proxy.</li>
+  <li><a href="05-cost-observability.html"><b>Cost and observability</b></a>: reading SDK cost fields correctly, budget caps, OpenTelemetry, telemetry versus evals.</li>
+  <li><a href="06-ship-it.html"><b>Ship it</b></a>: Docker → Modal → Kubernetes, smoke tests, the production checklist, troubleshooting, and a blueprint for the merged module 04.</li>
+</ol>
+
+<h2>Where your demos 04 and 05 stand today</h2>
+<div class="tablewrap"><table>
+  <tr><th>Concern</th><th>Today</th><th>Production version (lesson)</th></tr>
+  <tr><td>Agent runtime</td><td><span class="bad">CLI script on your laptop</span> (<code>research_agent.py "prompt"</code>)</td><td>HTTP + SSE service in a container (3)</td></tr>
+  <tr><td>Sessions</td><td><span class="bad">Lost when the process exits</span></td><td><code>CLAUDE_CONFIG_DIR</code> volume or <code>SessionStore</code> (3)</td></tr>
+  <tr><td>MCP transport</td><td><span class="ok">Streamable HTTP, stateless</span> (05)</td><td>Same, plus pinned Host/Origin (2)</td></tr>
+  <tr><td>Host check</td><td><span class="bad">DNS-rebinding protection disabled</span> to stop 421s</td><td><code>allowed_hosts=[your hostname]</code>, protection on (2)</td></tr>
+  <tr><td>Tool state</td><td><span class="bad">Briefs written to <code>workspace/</code> on local disk</span></td><td>Object store or DB, keyed by tenant (2)</td></tr>
+  <tr><td>Server auth</td><td>Static bearer, compared with <code>!=</code>; optional in 05</td><td><code>secrets.compare_digest</code>, then OAuth via <code>token_verifier</code> (2)</td></tr>
+  <tr><td>User identity</td><td><span class="bad">None</span></td><td>Gateway authenticates users; per-user MCP token per session (3, 4)</td></tr>
+  <tr><td>Built-in tools</td><td>Denied in <code>can_use_tool</code></td><td>Removed with <code>tools=[]</code> + <code>strict_mcp_config=True</code> (3)</td></tr>
+  <tr><td>Runaway guard</td><td><span class="bad">None</span></td><td><code>max_turns</code> + <code>max_budget_usd</code> (5)</td></tr>
+  <tr><td>Network</td><td>Unrestricted</td><td>Egress allowlist: Anthropic API + your MCP server only (4)</td></tr>
+  <tr><td>Fetching URLs</td><td><span class="bad">Any URL, including private IPs</span></td><td>SSRF guard in <code>_fetch_page</code> (2)</td></tr>
+  <tr><td>Cost</td><td><code>ExecutionTracker</code> prints a total</td><td>Per-session cost records + OTEL export (5)</td></tr>
+  <tr><td>Model ID</td><td><code>claude-sonnet-5-5</code> in <code>research_agent.py</code></td><td>Not in the current model list. Use <code>claude-sonnet-5</code> from an env var (3)</td></tr>
+</table></div>
+
+<h2>How to use these lessons</h2>
+<ul>
+  <li>Read one lesson, then answer the "Check yourself" questions before you open the answers.</li>
+  <li>Each lesson ends with a "Try it" task you can run against the existing demos. You do not need the merged folder to do them.</li>
+  <li>Lesson 6 has the proposed layout for the merged module 04. Treat it as a plan to review, not as built code.</li>
+</ul>
+
+<h2>Sources</h2>
+<ul class="src">
+  <li><a href="https://code.claude.com/docs/en/agent-sdk/hosting">Hosting the Agent SDK</a></li>
+  <li><a href="https://github.com/anthropics/claude-cookbooks/tree/main/claude_agent_sdk/hosting">claude-cookbooks / claude_agent_sdk / hosting</a> (Docker, Modal, Kubernetes)</li>
+  <li><a href="https://code.claude.com/docs/en/agent-sdk/secure-deployment">Securely deploying AI agents</a></li>
+  <li><a href="https://code.claude.com/docs/en/agent-sdk/cost-tracking">Track cost and usage</a></li>
+  <li><a href="https://modelcontextprotocol.io/docs/2026-07-28/getting-started/">MCP 2026-07-28 docs</a>, plus the <a href="https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http">Streamable HTTP spec</a> and the <a href="https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/authorization">authorization tutorial</a></li>
+  <li>Your repo: <code>demos/archive/04-production-research-agent/</code>, <code>demos/archive/05-deploy-remote-mcp/</code></li>
+</ul>
+
+<nav class="bottom"><span></span><a href="01-architecture.html">Lesson 1: The architecture →</a></nav>
+</body>
+</html>

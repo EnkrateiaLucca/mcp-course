@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 3: Agent Service</title>
+<link rel="stylesheet" href="lessons.css">
+</head>
+<body>
+<nav><a href="02-mcp-server.html">← Lesson 2</a><a href="04-security.html">Lesson 4 →</a></nav>
+
+<h1>Lesson 3: The agent service</h1>
+<p class="goal">Goal: you can turn <code>research_agent.py</code> (a CLI script) into a containerized HTTP service that streams turns, resumes conversations after a restart, and connects to your MCP server with a locked-down configuration.</p>
+<div class="tldr">
+<h2>TL;DR</h2>
+<p><b>The problem:</b> Today the agent is a script you run by hand. It forgets everything when it stops, and it can use any tool it finds lying around.</p>
+<p><b>The shape of the solution:</b></p>
+<ul>
+  <li><b>Give it a front desk:</b> wrap the agent in a small web service. Users send a message to a conversation ID and get the reply streamed back.</li>
+  <li><b>Take away what it doesn't need:</b> no shell, no file access, only your MCP tools. Add a turn limit and a spending limit.</li>
+  <li><b>Give it a memory that survives restarts:</b> store its notes on a mounted drive or in a database, so the conversation picks up where it left off.</li>
+  <li><b>Pack it in a box:</b> one Docker image that runs the same on your laptop and in the cloud.</li>
+</ul>
+<p class="like">Think of it like: Turning a freelancer you phone directly into an employee at a reception desk, with a locked toolbox, a notebook kept in the office, and an expense limit.</p>
+</div>
+
+
+<h2>1. The interface contract</h2>
+<p>The hosting cookbook defines one contract and keeps it the same across Docker, Modal and Kubernetes. Only the machinery around the container changes. Adopt it as-is:</p>
+<pre><code>GET  /health                          → 200 {"status": "ok"}     (no auth: orchestrators probe it)
+
+POST /sessions/{session_id}/messages  body: {"prompt": "..."}
+     → 200 text/event-stream
+       event: message   data = one serialized SDK message (System / Assistant / Result)
+       event: done      turn complete
+       event: error     data = {"message": "..."}
+     Creates the session on first use, resumes it after that.
+     The stream carries only the new turn, not the history.
+
+session_id must match ^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$   (else 400)
+Port 8000. Required env: ANTHROPIC_API_KEY. Persist CLAUDE_CONFIG_DIR (/data).</code></pre>
+<div class="key"><b>The cookbook's own warning:</b> this server has no user authentication. It must sit behind a gateway that (1) authenticates callers and (2) forwards only the <code>session_id</code> values that belong to the caller. Never expose port 8000 to the internet. The hosting docs say the same thing: the agent receives pre-authenticated requests and does not validate user tokens.</div>
+
+<h2>2. Lock down the options</h2>
+<p>This function replaces <code>build_options()</code> in module 04. Every line answers a production concern.</p>
+<pre><code>def build_options(*, tenant: str, mcp_token: str, resume: str | None) -> ClaudeAgentOptions:
+    return ClaudeAgentOptions(
+        model=os.environ.get("MODEL", "claude-sonnet-5"),
+        system_prompt=SYSTEM_PROMPT,
+
+        # Tools: ONLY our MCP server. No Bash, Read or Write inside the container.
+        tools=[],                                   # removes every built-in tool
+        mcp_servers={"research": {
+            "type": "http",
+            "url": os.environ["RESEARCH_MCP_URL"],  # internal URL in production
+            "headers": {"Authorization": f"Bearer {mcp_token}"},   # per user (section 3)
+        }},
+        strict_mcp_config=True,                     # ignore any .mcp.json or plugin servers on disk
+        allowed_tools=["mcp__research__*"],         # MCP tools are not auto-approved otherwise
+
+        # Isolation: nothing from the filesystem leaks into the prompt
+        setting_sources=[],                         # no settings files, no CLAUDE.md
+        cwd=f"/data/work/{tenant}",                 # stable per tenant: resume depends on it
+        env={
+            "CLAUDE_CONFIG_DIR": f"/data/config/{tenant}",
+            "CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1", # auto memory ignores setting_sources
+        },
+
+        # Runaway guards: a session has no timeout of its own
+        max_turns=12,
+        max_budget_usd=float(os.environ.get("MAX_BUDGET_USD", "0.50")),
+
+        resume=resume,
+    )</code></pre>
+<div class="tablewrap"><table>
+  <tr><th>Option</th><th>Module 04 today</th><th>Why the change</th></tr>
+  <tr><td><code>tools=[]</code></td><td>Built-ins exist; <code>can_use_tool</code> denies them</td><td>A tool the model cannot see is safer than a tool it can request and gets denied. Keep <code>can_use_tool</code> as a second layer if you want.</td></tr>
+  <tr><td><code>strict_mcp_config</code></td><td>Off</td><td>Without it, an MCP config file in the image or in the cwd adds servers you did not review.</td></tr>
+  <tr><td><code>setting_sources=[]</code></td><td>Default</td><td>Stops one tenant's <code>CLAUDE.md</code> or settings from loading into another tenant's session.</td></tr>
+  <tr><td><code>cwd</code> per tenant</td><td>Process cwd</td><td>Separate files per tenant. Transcripts are stored by cwd, so a changed cwd makes <code>resume</code> start fresh with no error.</td></tr>
+  <tr><td><code>max_turns</code>, <code>max_budget_usd</code></td><td>None</td><td>The SDK has no session timeout. These end a loop with <code>error_max_turns</code> or <code>error_max_budget_usd</code>.</td></tr>
+  <tr><td><code>model</code> from env</td><td>Hard-coded <code>claude-sonnet-5-5</code></td><td>That ID is not in the current model list. Read the model from config so you can change it without a rebuild.</td></tr>
+</table></div>
+
+<h2>3. Per-user MCP credentials come for free</h2>
+<p>You build <code>ClaudeAgentOptions</code> on every request. So the MCP headers can differ on every request. That is the bridge between lesson 2's OAuth server and a real user:</p>
+<ol>
+  <li>The gateway authenticates Alice and forwards two trusted headers: <code>X-Tenant: alice</code> and a token whose audience is your MCP server (for example from an OAuth token exchange).</li>
+  <li>The agent service puts that token in <code>mcp_servers["research"]["headers"]</code>.</li>
+  <li>The MCP server verifies it and scopes every tool to <code>alice</code>.</li>
+</ol>
+<p>At rung 1 (one service token), read <code>mcp_token</code> from a secret instead. Either way, the token lives in the agent's process, so <code>tools=[]</code> matters: the model has no shell or file tool to read its own environment.</p>
+
+<h2>4. The endpoint, with fail-fast and resume</h2>
+<p>Condensed from the cookbook's <code>server.py</code>. Two additions come from your module 04: the tenant key and the MCP status check at <code>init</code>.</p>
+<pre><code>SESSION_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
+
+@app.post("/sessions/{session_id}/messages")
+async def post_message(session_id: str, body: MessageIn,
+                       x_tenant: str = Header(), x_mcp_token: str = Header()):
+    # The gateway sets these headers. A network policy guarantees only the gateway can reach us.
+    if not (SESSION_ID_RE.fullmatch(session_id) and SESSION_ID_RE.fullmatch(x_tenant)):
+        raise HTTPException(400, "invalid id")      # ids become file paths: this is a security check
+    key = f"{x_tenant}:{session_id}"
+    options = build_options(tenant=x_tenant, mcp_token=x_mcp_token, resume=_session_map.get(key))
+    return EventSourceResponse(_stream_turn(key, body.prompt, options))
+
+
+async def _stream_turn(key, prompt, options):
+    try:
+        async for msg in query(prompt=prompt, options=options):
+            if isinstance(msg, SystemMessage) and msg.subtype == "init":
+                bad = [s for s in msg.data.get("mcp_servers", [])
+                       if s.get("status") not in ("connected", "pending")]
+                if bad:                              # 401 or unreachable: say so now
+                    yield ServerSentEvent(event="error", data=json.dumps({"message": f"MCP down: {bad}"}))
+                    return
+            yield ServerSentEvent(event="message", data=_serialize(msg))
+            if isinstance(msg, ResultMessage):
+                await _remember(key, msg.session_id)  # learn the SDK id for the next turn
+                record_cost(key, msg)                 # lesson 5
+        yield ServerSentEvent(event="done", data="")
+    except Exception as exc:
+        yield ServerSentEvent(event="error", data=json.dumps({"message": str(exc)}))</code></pre>
+<p><b>Why a session map?</b> The SDK generates its own session IDs, and your callers use their own IDs. The cookbook stores the mapping in a small JSON file under <code>CLAUDE_CONFIG_DIR</code>, so it survives restarts with the transcripts. Two notes:</p>
+<ul>
+  <li>The cookbook's JSON file allows a race: two concurrent first turns on one ID both create sessions. Its Kubernetes tier fixes this with Redis <code>SET NX</code>. Use Redis or your database for the map in production.</li>
+  <li>Current SDK versions accept <code>session_id=</code> (a UUID) on the first turn. You can derive it with <code>uuid5(namespace, key)</code>, so the ID is predictable and the map only records "this session exists". The cookbook pins SDK 0.1.50, which predates this.</li>
+</ul>
+
+<h2>5. Make sessions survive the container</h2>
+<div class="tablewrap"><table>
+  <tr><th>Option</th><th>How</th><th>Limit</th></tr>
+  <tr><td>Volume at <code>/data</code></td><td>Compose bind mount, Modal Volume or a Kubernetes PVC, with <code>CLAUDE_CONFIG_DIR=/data</code></td><td>Ties a session to one volume, often in one zone. Concurrent writers on a network volume can lose writes.</td></tr>
+  <tr><td><code>SessionStore</code></td><td><code>ClaudeAgentOptions(session_store=MyStore())</code>. Implement <code>append(key, entries)</code> and <code>load(key)</code> against S3, Redis or Postgres.</td><td>Mirrors transcripts only. <code>CLAUDE.md</code> and cwd files need their own storage.</td></tr>
+</table></div>
+<p>Three facts about <code>SessionStore</code> to know before you rely on it:</p>
+<ul>
+  <li>It is a <b>mirror</b>. The subprocess writes to local disk first, and the SDK forwards batches to your store. A run resumed from the store deletes its local copy at the end, so after that the store holds the only durable copy.</li>
+  <li>Writes are <b>best-effort</b>. A failed batch is retried, then dropped, and the stream yields a <code>mirror_error</code> system message. Alert on it.</li>
+  <li><b>Retention is your job.</b> The SDK never deletes from your store unless you ask it to. Add a TTL or a lifecycle rule that matches your data policy.</li>
+</ul>
+
+<h2>6. The container</h2>
+<p>The cookbook Dockerfile installs Node.js and the Claude Code CLI with npm, pinned to match SDK 0.1.50. Current SDK packages bundle the native <code>claude</code> binary, so a Python image is enough:</p>
+<pre><code>FROM python:3.12-slim
+RUN useradd -m -u 1000 agent &amp;&amp; mkdir -p /data &amp;&amp; chown agent /data
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt   # pin claude-agent-sdk: it pins the CLI too
+COPY agent_service.py .
+ENV CLAUDE_CONFIG_DIR=/data PYTHONUNBUFFERED=1
+USER agent
+EXPOSE 8000
+CMD ["uvicorn", "agent_service:app", "--host", "0.0.0.0", "--port", "8000"]</code></pre>
+<ul>
+  <li><b>Pin the SDK version.</b> The bundled CLI follows the SDK version. Take patch releases. Read the changelog before a minor bump.</li>
+  <li><b>Build for the target architecture.</b> An arm64 image from your Mac fails on an amd64 node with "failed to start Claude Code". Use <code>docker build --platform linux/amd64</code>.</li>
+  <li><b>Keep secrets out of the image.</b> A <code>.dockerignore</code> excludes <code>.env</code>. The key arrives at runtime from a secret manager.</li>
+</ul>
+
+<h2>7. Size it</h2>
+<p>Start at <b>1 GiB RAM, 1 CPU and 5 GiB disk per concurrent session</b>. Memory grows with session length and tool activity, so measure the peak RSS of a realistic long session, then:</p>
+<pre><code>agents per host = (host RAM - overhead) / (per-session RAM ceiling)</code></pre>
+<p>For long-running containers behind a load balancer, pin each session to one container with consistent hashing on the session ID. A pinned session keeps reaching the same live subprocess.</p>
+
+<h2>Try it</h2>
+<ol>
+  <li>Clone the cookbook and run tier 1: <code>cd claude_agent_sdk/hosting/docker &amp;&amp; docker compose up --build</code>.</li>
+  <li>Send two turns to <code>/sessions/demo-1/messages</code> with <code>curl -N</code>. Stop the container, start it, and send a third turn. The agent still remembers, because <code>./sessions</code> persisted <code>/data</code>.</li>
+  <li>In <code>hosting/server.py</code>, add your module 04 server to <code>_build_options</code> as an HTTP MCP server (<code>host.docker.internal:8765</code>) and change <code>ALLOWED_TOOLS</code> to <code>["mcp__research__*"]</code>. You now have the core of the merged module.</li>
+</ol>
+
+<h2>Check yourself</h2>
+<details><summary>Why does the cookbook's hosted server drop the <code>Read</code> tool that its notebook agent had?</summary>In the container, <code>Read</code> can reach only the container itself: other sessions' transcripts in <code>/data</code> and <code>/proc/self/environ</code> with the API key. A prompt-injected web result could steer the agent to read and leak them.</details>
+<details><summary>A user says "the agent forgot our conversation" after a deploy. Name two likely causes.</summary><code>/data</code> was not persisted (no volume or store), or the session cwd changed between versions, so <code>resume</code> looked in a different transcript directory and started fresh.</details>
+<details><summary>Why validate <code>session_id</code> with a regex?</summary>It flows into the session map and into filesystem paths. A value like <code>../../</code> would be a path traversal. The check is a security control.</details>
+<details><summary>What happens when a session hits <code>max_budget_usd</code>?</summary>The query stops with an <code>error_max_budget_usd</code> result. The result's <code>total_cost_usd</code> includes the response that crossed the budget.</details>
+
+<nav class="bottom"><a href="02-mcp-server.html">← Lesson 2</a><a href="04-security.html">Lesson 4: Security →</a></nav>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shop Analytics Agent</title>
+<script src="https://cdn.jsdelivr.net/npm/marked@15/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+<style>
+  :root { --bg: #f7f7f5; --panel: #fff; --ink: #1d1d1b; --muted: #6b6b66; --line: #e4e4df; --accent: #2f6f4f; --user: #e9f1ec; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #161615; --panel: #1f1f1d; --ink: #ececea; --muted: #9a9a94; --line: #33332f; --accent: #6cc59a; --user: #23302a; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 system-ui, -apple-system, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; padding: 0 16px; }
+  header { padding: 24px 0 12px; border-bottom: 1px solid var(--line); }
+  h1 { font-size: 1.15rem; margin: 0; }
+  header p { margin: 2px 0 0; color: var(--muted); font-size: .9rem; }
+  #log { flex: 1; padding: 20px 0; display: flex; flex-direction: column; gap: 16px; }
+  .msg { padding: 12px 16px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); overflow-x: auto; }
+  .msg.user { background: var(--user); align-self: flex-end; max-width: 85%; }
+  .msg p:first-child { margin-top: 0; } .msg p:last-child { margin-bottom: 0; }
+  .msg table { border-collapse: collapse; font-size: .9rem; } .msg td, .msg th { border: 1px solid var(--line); padding: 4px 8px; }
+  .tools { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .tools span { font: 12px ui-monospace, monospace; color: var(--accent); border: 1px solid var(--line); border-radius: 99px; padding: 2px 8px; }
+  .usage { margin-top: 6px; font: 12px ui-monospace, monospace; color: var(--muted); }
+  .chart { position: relative; height: 280px; margin: 12px 0; }
+  .thinking { color: var(--muted); font-style: italic; }
+  #chips { display: flex; gap: 8px; flex-wrap: wrap; padding-bottom: 12px; }
+  #chips button { font: inherit; font-size: .85rem; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 99px; padding: 6px 12px; cursor: pointer; }
+  form { position: sticky; bottom: 0; background: var(--bg); padding: 12px 0 20px; display: flex; gap: 8px; }
+  input { flex: 1; font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; min-width: 0; }
+  input:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  form button { font: inherit; font-weight: 600; color: #fff; background: var(--accent); border: 0; border-radius: 10px; padding: 0 18px; cursor: pointer; }
+  form button:disabled { opacity: .5; cursor: wait; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Shop Analytics Agent</h1>
+    <p>Ask about revenue, products, customers and trends.</p>
+  </header>
+  <div id="log" aria-live="polite"></div>
+  <div id="chips">
+    <button>How did Black Friday 2025 compare to 2024?</button>
+    <button>Monthly revenue for the last 12 months</button>
+    <button>Top 5 products this year</button>
+    <button>Which country has the highest average order value?</button>
+  </div>
+  <form id="form">
+    <input id="input" placeholder="Ask a question about the shop…" autocomplete="off" aria-label="Your question">
+    <button id="send">Send</button>
+  </form>
+</main>
+<script>
+const log = document.getElementById("log"), form = document.getElementById("form"),
+      input = document.getElementById("input"), send = document.getElementById("send");
+let sessionId = null;
+
+function add(cls, html) {
+  const div = document.createElement("div");
+  div.className = "msg " + cls;
+  div.innerHTML = html;
+  log.append(div);
+  div.scrollIntoView({ behavior: "smooth", block: "end" });
+  return div;
+}
+
+function renderCharts(el) {
+  for (const code of el.querySelectorAll("code.language-chart")) {
+    try {
+      const config = JSON.parse(code.textContent);
+      config.options = { responsive: true, maintainAspectRatio: false, ...config.options };
+      const box = document.createElement("div"), canvas = document.createElement("canvas");
+      box.className = "chart";
+      box.append(canvas);
+      code.parentElement.replaceWith(box);
+      new Chart(canvas, config);
+    } catch { /* leave invalid chart JSON visible as code */ }
+  }
+}
+
+async function ask(text) {
+  document.getElementById("chips")?.remove();
+  add("user", DOMPurify.sanitize(text));
+  const pending = add("thinking", "Analyzing…");
+  send.disabled = true;
+  try {
+    const res = await fetch("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text, session_id: sessionId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || res.statusText);
+    sessionId = data.session_id;
+    pending.className = "msg";
+    pending.innerHTML = DOMPurify.sanitize(marked.parse(data.reply || ""));
+    renderCharts(pending);
+    if (data.tools_used.length) {
+      pending.insertAdjacentHTML("beforeend",
+        '<div class="tools">' + data.tools_used.map(t => `<span>⚙ ${DOMPurify.sanitize(t)}</span>`).join("") + "</div>");
+    }
+    const u = data.usage;  // telemetry for this message; cost is the SDK's estimate, not billing
+    if (u) {
+      const line = document.createElement("div");
+      line.className = "usage";
+      line.textContent = `${u.input_tokens + u.cache_read_tokens + u.cache_write_tokens} in · ${u.output_tokens} out tokens`
+        + ` · ~$${u.turn_cost_usd.toFixed(4)} (session ~$${u.session_cost_usd.toFixed(4)})`
+        + ` · ${u.agent_steps} steps · ${u.seconds}s`;
+      pending.append(line);
+    }
+  } catch (err) {
+    pending.className = "msg";
+    pending.textContent = "Something went wrong: " + err.message;
+  } finally {
+    send.disabled = false;
+    input.focus();
+  }
+}
+
+form.addEventListener("submit", e => {
+  e.preventDefault();
+  const text = input.value.trim();
+  if (text && !send.disabled) { input.value = ""; ask(text); }
+});
+document.querySelectorAll("#chips button").forEach(b => b.addEventListener("click", () => ask(b.textContent)));
+</script>
+</body>
+</html>

@@ -1,0 +1,26 @@
+# Render Blueprint: New > Blueprint > pick this repo. Render builds both images and wires them together.
+services:
+  - type: web
+    name: shop-analytics-mcp
+    runtime: docker
+    rootDir: mcp_server
+    plan: 0.5c-512mb
+    healthCheckPath: /health
+    envVars:
+      - key: MCP_TOKEN
+        generateValue: true  # random secret, shared with the agent below
+  - type: web
+    name: shop-analytics-agent
+    runtime: docker
+    rootDir: agent
+    plan: 1c-2g  # each chat turn runs a Claude Code subprocess; budget ~1 GiB per concurrent session
+    healthCheckPath: /health
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false  # Render asks for it on first deploy
+      - key: APP_PASSWORD
+        sync: false
+      - key: MCP_TOKEN
+        fromService: { type: web, name: shop-analytics-mcp, envVarKey: MCP_TOKEN }
+      - key: MCP_HOSTPORT  # private-network address: agent -> MCP traffic never leaves Render
+        fromService: { type: web, name: shop-analytics-mcp, property: hostport }

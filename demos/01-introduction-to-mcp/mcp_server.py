@@ -15,21 +15,15 @@ Run standalone (for use as a stdio MCP server):
 Inspect interactively:
     mcp dev ./mcp_server.py
 """
-
 import json
 import logging
 from pathlib import Path
-
 from mcp.server.mcpserver import MCPServer
 
-# `mcp dev` spawns the Inspector's server in a clean env (`uv run --with ... mcp
-# run ...`). dependencies= is merged into that command as extra --with flags, so
-# the spawned env gets the cli extra and ddgs too.
 mcp = MCPServer("research-assistant", dependencies=["mcp[cli]>=2.3,<3", "ddgs"])
 
 WORKSPACE = (Path(__file__).parent / "workspace").resolve()
 WORKSPACE.mkdir(exist_ok=True)
-
 
 def _safe(path: str) -> Path:
     """Resolve a relative path inside WORKSPACE, blocking traversal."""
@@ -38,33 +32,28 @@ def _safe(path: str) -> Path:
         raise ValueError(f"Path escapes workspace: {path}")
     return p
 
-
 @mcp.tool()
 def web_search(query: str, max_results: int = 5) -> str:
     """Search the web with DuckDuckGo. Returns JSON list of {title, url, snippet}."""
-    from ddgs import DDGS  # lazy: `mcp dev` imports this module before installing deps
-
+    
+    from ddgs import DDGS
+    
     hits = DDGS().text(query, max_results=max_results)
-    return json.dumps(
-        [{"title": h.get("title"), "url": h.get("href"), "snippet": h.get("body")} for h in hits],
-        indent=2,
-    )
-
-
+    return json.dumps([{"title": h.get("title"), "url": h.get("href"), "snippet": h.get("body")} for h in hits]
+                       , indent=2)
+    
 @mcp.tool()
 def read_file(path: str) -> str:
-    """Read a text file from the workspace."""
+    """Read a text file from the workspace."""    
     return _safe(path).read_text()
-
 
 @mcp.tool()
 def write_file(path: str, content: str) -> str:
-    """Create or overwrite a file in the workspace."""
+    """Creates or overwrites a text file in the workspace."""
     p = _safe(path)
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(content)
-    return f"Wrote {len(content)} chars to {path}"
-
+    return f"Wrote {len(content)} chars to {path}."
 
 @mcp.tool()
 def edit_file(path: str, old: str, new: str) -> str:
@@ -76,7 +65,6 @@ def edit_file(path: str, old: str, new: str) -> str:
     p.write_text(text.replace(old, new))
     return f"Edited {path}"
 
-
 @mcp.tool()
 def move_file(src: str, dst: str) -> str:
     """Move or rename a file inside the workspace."""
@@ -85,13 +73,11 @@ def move_file(src: str, dst: str) -> str:
     s.rename(d)
     return f"Moved {src} -> {dst}"
 
-
 @mcp.tool()
 def delete_file(path: str) -> str:
     """Delete a file from the workspace."""
     _safe(path).unlink()
     return f"Deleted {path}"
-
 
 @mcp.tool()
 def list_files(directory: str = ".") -> str:
@@ -100,14 +86,13 @@ def list_files(directory: str = ".") -> str:
     entries = sorted(str(p.relative_to(WORKSPACE)) for p in base.rglob("*"))
     return "\n".join(entries) or "(empty)"
 
-
 @mcp.resource("workspace://files")
 def workspace_index() -> str:
     """A live listing of everything currently in the workspace."""
     entries = sorted(str(p.relative_to(WORKSPACE)) for p in WORKSPACE.rglob("*"))
     return "\n".join(entries) or "(empty)"
 
-
 if __name__ == "__main__":
     logging.info("🚀 research-assistant MCP server (stdio)")
     mcp.run(transport="stdio")
+

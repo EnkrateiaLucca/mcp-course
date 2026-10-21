@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 6: Ship It</title>
+<link rel="stylesheet" href="lessons.css">
+</head>
+<body>
+<nav><a href="05-cost-observability.html">← Lesson 5</a><a href="index.html">Overview</a></nav>
+
+<h1>Lesson 6: Ship it</h1>
+<p class="goal">Goal: you can deploy both pieces at three levels of rigor, prove each deployment works with smoke tests, and review a plan for the merged module 04.</p>
+<div class="tldr">
+<h2>TL;DR</h2>
+<p><b>The problem:</b> You know what to build. Now you need to put it online step by step and prove each step works.</p>
+<p><b>The shape of the solution:</b></p>
+<ul>
+  <li><b>Same box, three homes:</b> first Docker on your laptop, then a shared cloud sandbox (Modal), then a full cluster (Kubernetes) where each conversation gets its own box.</li>
+  <li><b>Test after every deploy:</b> does it answer, does it remember after a restart, does it reject strangers, does it stop at the budget.</li>
+  <li><b>Use the checklist and the troubleshooting table</b> when something breaks.</li>
+  <li><b>The merge plan:</b> one new module 04 with a <code>mcp_server/</code> folder and an <code>agent_service/</code> folder, run together with one compose file.</li>
+</ul>
+<p class="like">Think of it like: A test kitchen at home, then a food truck, then a restaurant chain. The recipe never changes. Only the building around it gets bigger.</p>
+</div>
+
+
+<h2>1. Three tiers, one image</h2>
+<p>The cookbook's main lesson: the agent image and its HTTP contract stay the same from your laptop to Kubernetes. Only the machinery around them changes.</p>
+<div class="tablewrap"><table>
+  <tr><th>Tier</th><th>Agent service</th><th>MCP server</th><th>Who authenticates users</th><th>Use for</th></tr>
+  <tr><td>1. Docker Compose</td><td>One container, <code>./sessions</code> mounted at <code>/data</code></td><td>A second container on the compose network</td><td>Nobody. Port bound to <code>127.0.0.1</code> only.</td><td>Development, the live class demo</td></tr>
+  <tr><td>2. Modal Sandbox</td><td>Same image, Modal Volume at <code>/data</code>, public encrypted tunnel</td><td>Vercel or Cloud Run (module 05)</td><td><code>AGENT_AUTH_TOKEN</code> bearer: a stand-in with no per-user scope</td><td>A demo you share, internal pilots</td></tr>
+  <tr><td>3. Kubernetes</td><td>One pod per session, standby pool, Redis session→pod map</td><td>A Deployment + Service in the same cluster</td><td>Gateway with per-tenant tokens (swap in your IdP)</td><td>Production, multi-tenant</td></tr>
+</table></div>
+
+<h2>2. Tier 1: both deployables in one compose file</h2>
+<pre><code>services:
+  research-mcp:
+    build: ./mcp_server
+    environment:
+      MCP_AUTH_TOKEN: ${MCP_AUTH_TOKEN}
+      PUBLIC_HOST: research-mcp:8000      # the Host header the agent sends (lesson 2 pinning)
+    # no "ports": only the agent can reach it
+
+  agent:
+    build: ./agent_service
+    env_file: .env                        # ANTHROPIC_API_KEY, MCP_AUTH_TOKEN
+    environment:
+      RESEARCH_MCP_URL: http://research-mcp:8000/mcp
+      MODEL: claude-sonnet-5
+      MAX_BUDGET_USD: "0.50"
+    ports: ["127.0.0.1:8000:8000"]        # loopback only: there is no gateway in tier 1
+    volumes: ["./sessions:/data"]
+    depends_on: [research-mcp]</code></pre>
+<p>Tier 1 has no gateway, so you send the gateway's headers yourself with curl. That is acceptable only because the port is bound to loopback.</p>
+
+<h2>3. Tier 2: Modal + a public MCP server</h2>
+<pre><code># MCP server: module 05 flow, with lesson 2 changes
+vercel deploy --prod
+uv run test_client.py https://&lt;app&gt;.vercel.app/mcp
+
+# Agent: the cookbook's driver creates a Sandbox from the same Dockerfile
+python hosting/modal/modal_app.py      # prints the URL and a random AGENT_AUTH_TOKEN</code></pre>
+<p>The Modal URL is public, and the token is the only lock. The cookbook prints a warning for this reason: do not share the URL and the token together. Modal Volumes use explicit commits. With many concurrent sandboxes writing sessions, move to a <code>SessionStore</code>.</p>
+
+<h2>4. Tier 3: Kubernetes, pod per session</h2>
+<pre><code>cd claude_agent_sdk/hosting/kubernetes
+export ANTHROPIC_API_KEY=sk-ant-...
+./kind-quickstart.sh                    # builds 3 images, installs Calico, prints ALICE_TOKEN / BOB_TOKEN</code></pre>
+<p>What the gateway does for you: creates and deletes agent pods, routes <code>/sessions/{id}/messages</code> to the right pod, records the owning tenant in Redis and returns 403 to anyone else, and keeps a standby pool warm (pods take 10–30 s to start).</p>
+<p>Two additions for our system:</p>
+<ol>
+  <li>Deploy the research MCP server as a Deployment + Service in the namespace.</li>
+  <li>Allow agent pods to reach that Service in <code>network-policy.yaml</code>. The cookbook policy allows only the egress proxy and DNS, so without this change every MCP call fails, and the init status check from lesson 3 reports it.</li>
+</ol>
+<p>What tier 3 still does not give you, by the cookbook's own list: a real identity provider, durable session storage after a pod is reaped, gateway autoscaling, DNS-level egress control, and hardened supporting services.</p>
+
+<h2>5. Smoke tests after every deploy</h2>
+<div class="tablewrap"><table>
+  <tr><th>#</th><th>Test</th><th>Pass condition</th></tr>
+  <tr><td>1</td><td><code>GET /health</code></td><td>200 without a token</td></tr>
+  <tr><td>2</td><td><code>test_client.py &lt;mcp-url&gt;</code> against the real hostname</td><td>Tools listed, tool call returns <code>ok</code>; no 421</td></tr>
+  <tr><td>3</td><td>Two turns on one session, second turn refers to the first</td><td>The agent remembers</td></tr>
+  <tr><td>4</td><td>Restart the agent container or pod, then send turn three</td><td>The agent still remembers (persistence works)</td></tr>
+  <tr><td>5</td><td>Call with no token, then with another tenant's token</td><td>401, then 403</td></tr>
+  <tr><td>6</td><td>Set a wrong MCP token</td><td>An <code>error</code> SSE event at init, not a vague answer 30 s later</td></tr>
+  <tr><td>7</td><td>Connect to <code>example.com:443</code> from inside the agent</td><td>Fails (egress lockdown)</td></tr>
+  <tr><td>8</td><td>Set <code>MAX_BUDGET_USD=0.01</code></td><td>Result subtype <code>error_max_budget_usd</code>, and a cost record is logged</td></tr>
+  <tr><td>9</td><td><code>evals.py</code> against the staging URL</td><td>All cases pass</td></tr>
+</table></div>
+
+<h2>6. Production checklist</h2>
+<h3>MCP server</h3>
+<ul>
+  <li>☐ <code>stateless_http=True</code>; Host/Origin pinned with protection on</li>
+  <li>☐ Auth: constant-time bearer, or OAuth with <code>token_verifier</code> + audience check</li>
+  <li>☐ Tenant read from the token; storage keyed by tenant; no local-disk state</li>
+  <li>☐ Third-party credentials held by the server; SSRF guard on every fetch and redirect</li>
+  <li>☐ Request size and duration limits set; logs with method, tool, subject and latency</li>
+</ul>
+<h3>Agent service</h3>
+<ul>
+  <li>☐ Behind a gateway that authenticates users and checks session ownership</li>
+  <li>☐ <code>tools=[]</code>, <code>strict_mcp_config=True</code>, <code>allowed_tools=["mcp__research__*"]</code>, <code>setting_sources=[]</code></li>
+  <li>☐ Per-tenant <code>cwd</code> and <code>CLAUDE_CONFIG_DIR</code>; <code>CLAUDE_CODE_DISABLE_AUTO_MEMORY=1</code></li>
+  <li>☐ <code>max_turns</code>, <code>max_budget_usd</code>, and a per-tenant daily cap</li>
+  <li>☐ Sessions persisted (volume or <code>SessionStore</code>); alert on <code>mirror_error</code></li>
+  <li>☐ SDK version pinned; image built for the node architecture; non-root user</li>
+  <li>☐ Egress: Anthropic API + MCP server only; API key via secret manager or <code>ANTHROPIC_BASE_URL</code> proxy</li>
+  <li>☐ OTEL exported; cost records per turn; evals gate the deploy</li>
+</ul>
+
+<h2>7. Troubleshooting</h2>
+<div class="tablewrap"><table>
+  <tr><th>Symptom</th><th>Likely cause</th><th>Fix</th></tr>
+  <tr><td>"Claude Code not found" at service start</td><td>The service runs with a different <code>PATH</code> or install than your shell</td><td>Install the SDK in the image's Python; do not rely on a host CLI</td></tr>
+  <tr><td>"Failed to start Claude Code"</td><td>Binary built for another architecture or libc, or it lost its execute bit</td><td><code>--platform linux/amd64</code>; use a glibc base image such as <code>python:3.12-slim</code></td></tr>
+  <tr><td>421 through the tunnel or the platform</td><td>The public hostname is not in <code>allowed_hosts</code></td><td>Add it (lesson 2). Do not turn the protection off.</td></tr>
+  <tr><td>401 from the MCP server</td><td>Token mismatch, expired token, or wrong audience</td><td>Check the init status line; check the token's <code>aud</code></td></tr>
+  <tr><td>Resume starts a new conversation without an error</td><td>The cwd or <code>CLAUDE_CONFIG_DIR</code> changed, or <code>/data</code> was not persisted</td><td>Keep cwd stable per tenant; mount <code>/data</code> or use a <code>SessionStore</code></td></tr>
+  <tr><td>Memory climbs on long sessions</td><td>Expected growth with session length</td><td>Cap session length; recycle subprocesses; re-measure the per-session ceiling</td></tr>
+  <tr><td>Rate-limit errors during subagent work</td><td>A wide parallel fan-out</td><td>Dispatch subagents in smaller batches</td></tr>
+</table></div>
+
+<h2>8. Blueprint: the merged module 04 (plan only, not built)</h2>
+<pre><code>demos/04-production-agent/
+├── README.md                  # the two-deployables diagram + tier 1 run steps
+├── mcp_server/                # DEPLOYABLE B: from 05's server.py + 04's tools
+│   ├── server.py              #   3 intent tools + research_explorer MCP App
+│   │                          #   stateless app, pinned hosts, auth seam, SSRF guard, tenant storage
+│   ├── app.html               #   the MCP App view (unchanged)
+│   ├── test_client.py         #   pre-flight against any URL (unchanged)
+│   ├── api/index.py, vercel.json, requirements.txt
+│   └── Dockerfile             #   same server as a container (Cloud Run, compose, k8s)
+├── agent_service/             # DEPLOYABLE A: new, shaped on the cookbook's server.py
+│   ├── agent_service.py       #   /health + /sessions/{id}/messages SSE, build_options(), record_cost()
+│   ├── run_once.py            #   ephemeral mode (job-shaped work)
+│   ├── Dockerfile, requirements.txt
+├── docker-compose.yml         # tier 1: both services, ./sessions volume
+├── evals.py                   # now calls the HTTP contract, so it can gate a staging deploy
+├── smoke.sh                   # the nine smoke tests above
+└── structured_output_demo.py  # keep: typed final answers are still the gradeable form</code></pre>
+<div class="tablewrap"><table>
+  <tr><th>Current file</th><th>Fate in the merge</th></tr>
+  <tr><td><code>04/research_server.py</code></td><td>Merged into <code>mcp_server/server.py</code></td></tr>
+  <tr><td><code>05/server.py</code>, <code>app.html</code>, <code>test_client.py</code>, Vercel files</td><td>Move into <code>mcp_server/</code></td></tr>
+  <tr><td><code>04/research_agent.py</code></td><td>Its hooks, permission callback and init check move into <code>agent_service.py</code>; the CLI entry point goes</td></tr>
+  <tr><td><code>04/research_agent_builtin_tools.py</code></td><td>Candidate for <code>archive/</code>: it teaches the opposite of <code>tools=[]</code></td></tr>
+  <tr><td><code>04/workspace/briefs/</code></td><td>Becomes the local-dev storage backend only</td></tr>
+</table></div>
+<p>Open decisions for you before the merge: the auth rung for the class (static token vs. a hosted IdP), the tier 2 target (Modal vs. Cloud Run for the agent), and whether tier 3 is a live demo or a walkthrough of the cookbook.</p>
+
+<h2>Check yourself</h2>
+<details><summary>Which piece stays identical across all three tiers?</summary>The agent image and its HTTP contract. Volumes, auth, routing and network policy change around it.</details>
+<details><summary>You deploy to tier 3, and every research call fails while the model API works. First suspect?</summary>The NetworkPolicy. Agent pods may reach only the egress proxy and DNS, so they cannot reach the MCP server Service until you allow it.</details>
+<details><summary>Why is smoke test 4 (restart, then continue) the most important one for a hybrid assistant?</summary>It is the only test that proves persistence. Without it, the first rolling deploy wipes every user's conversation.</details>
+
+<nav class="bottom"><a href="05-cost-observability.html">← Lesson 5</a><a href="index.html">Back to overview</a></nav>
+</body>
+</html>

@@ -32,7 +32,7 @@ export ANTHROPIC_API_KEY=sk-...
 export MCP_AUTH_TOKEN=demo-secret
 
 # Both demos reach demo 04's research server over HTTP: start it first, in another terminal.
-uv run ../../04-production-research-agent/research_server.py
+uv run ../../archive/04-production-research-agent/research_server.py
 
 # Playwright MCP needs npx in PATH and installs itself on first use, but not
 # the browser it drives. Install that once:

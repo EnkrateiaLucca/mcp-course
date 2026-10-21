@@ -71,7 +71,7 @@ ClaudeAgentOptions(mcp_servers={           app = mcp.streamable_http_app()
 <h2>2. Live run script</h2>
 
 <h3>Terminal 1: server</h3>
-<pre><code>cd demos/04-production-research-agent
+<pre><code>cd demos/archive/04-production-research-agent
 export MCP_AUTH_TOKEN=demo-secret
 uv run research_server.py          # http://127.0.0.1:8765/mcp</code></pre>
 <p>Point at the log line that prints the token. Point at <code>SystemExit</code> if the env var is missing: fail fast, never default to a secret.</p>

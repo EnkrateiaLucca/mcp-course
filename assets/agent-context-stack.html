@@ -1,0 +1,75 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Agent Context Stack</title>
+<link rel="stylesheet" href="https://esm.sh/@excalidraw/excalidraw@0.18.0/dist/prod/index.css">
+<style>html,body,#app{margin:0;height:100%}#dl{position:fixed;bottom:16px;right:16px;z-index:10;padding:8px 14px;font:14px sans-serif;cursor:pointer}</style>
+</head><body><div id="app"></div><button id="dl">Download .excalidraw</button>
+<script>window.EXCALIDRAW_ASSET_PATH = "https://esm.sh/@excalidraw/excalidraw@0.18.0/dist/prod/";</script>
+<script type="importmap">{"imports":{"react":"https://esm.sh/react@19.0.0","react/jsx-runtime":"https://esm.sh/react@19.0.0/jsx-runtime","react-dom":"https://esm.sh/react-dom@19.0.0","react-dom/client":"https://esm.sh/react-dom@19.0.0/client"}}</script>
+<script type="module">
+import React from "react";
+import { createRoot } from "react-dom/client";
+import { Excalidraw, convertToExcalidrawElements, serializeAsJSON } from "https://esm.sh/@excalidraw/excalidraw@0.18.0?external=react,react-dom";
+const S = (o) => ({ fillStyle: "solid", roundness: { type: 3 }, ...o });
+const skel = [
+{type:"text",x:245,y:0,text:"Agent context stack: what loads, and when",fontSize:32},
+S({type:"rectangle",x:0,y:60,width:260,height:520,backgroundColor:"#e5dbff",strokeColor:"#8b5cf6",strokeWidth:1,opacity:40}),
+{type:"text",x:92,y:72,text:"Agent",fontSize:28,strokeColor:"#6d28d9"},
+S({type:"rectangle",id:"llm",x:40,y:135,width:180,height:60,backgroundColor:"#d0bfff",strokeColor:"#8b5cf6",label:{text:"LLM",fontSize:22,strokeColor:"#1e1e1e"}}),
+S({type:"rectangle",id:"tools",x:40,y:290,width:180,height:70,backgroundColor:"#ffd8a8",strokeColor:"#f59e0b",label:{text:"Tools\n(via MCP servers)",fontSize:18,strokeColor:"#1e1e1e"}}),
+{type:"arrow",x:85,y:195,width:0,height:95,points:[[0,0],[0,95]],strokeColor:"#8b5cf6",label:{text:"call",fontSize:16}},
+{type:"arrow",x:175,y:290,width:0,height:-95,points:[[0,0],[0,-95]],strokeColor:"#f59e0b",strokeStyle:"dashed",label:{text:"result",fontSize:16}},
+{type:"text",x:20,y:385,text:"LLM + tools + loop:\nrepeat until the\ntask is done",fontSize:20},
+{type:"text",x:20,y:480,text:"MCP = standard plug\nfor tools and data",fontSize:18,strokeColor:"#6d28d9"},
+S({type:"rectangle",x:290,y:60,width:280,height:520,backgroundColor:"#dbe4ff",strokeColor:"#4a9eed",strokeWidth:1,opacity:40}),
+{type:"text",x:300,y:78,text:"AGENTS.md / CLAUDE.md",fontSize:21,strokeColor:"#1d4ed8"},
+{type:"text",x:305,y:118,text:"Memory: ALWAYS in context",fontSize:18,strokeColor:"#2563eb"},
+{type:"text",x:305,y:150,text:"What the agent should know\nabout you and your work:\nbuild/test commands, style,\nconventions, gotchas",fontSize:18},
+{type:"text",x:305,y:255,text:"Layered, most specific wins:",fontSize:18,strokeColor:"#757575"},
+S({type:"rectangle",x:305,y:285,width:250,height:46,backgroundColor:"#a5d8ff",strokeColor:"#4a9eed",label:{text:"~/.claude/CLAUDE.md (user)",fontSize:18,strokeColor:"#1e1e1e"}}),
+S({type:"rectangle",x:305,y:350,width:250,height:46,backgroundColor:"#a5d8ff",strokeColor:"#4a9eed",label:{text:"./CLAUDE.md (project)",fontSize:18,strokeColor:"#1e1e1e"}}),
+S({type:"rectangle",x:305,y:415,width:250,height:46,backgroundColor:"#a5d8ff",strokeColor:"#4a9eed",label:{text:"sub/AGENTS.md (folder)",fontSize:18,strokeColor:"#1e1e1e"}}),
+{type:"arrow",x:430,y:331,width:0,height:19,points:[[0,0],[0,19]],strokeColor:"#4a9eed"},
+{type:"arrow",x:430,y:396,width:0,height:19,points:[[0,0],[0,19]],strokeColor:"#4a9eed"},
+{type:"text",x:305,y:485,text:"Keep it short: its tokens\nare paid on every turn",fontSize:18,strokeColor:"#b45309"},
+S({type:"rectangle",x:600,y:60,width:280,height:520,backgroundColor:"#d3f9d8",strokeColor:"#22c55e",strokeWidth:1,opacity:40}),
+{type:"text",x:700,y:72,text:"SKILL",fontSize:28,strokeColor:"#15803d"},
+{type:"text",x:612,y:118,text:"A folder of packaged expertise",fontSize:18,strokeColor:"#15803d"},
+S({type:"rectangle",x:615,y:150,width:250,height:135,backgroundColor:"#ffffff",strokeColor:"#22c55e"}),
+{type:"text",x:628,y:160,text:"pdf-skill/\n|- SKILL.md    must\n|- scripts/    run\n|- references/ read\n`- assets/     use",fontSize:18,fontFamily:3},
+{type:"text",x:615,y:305,text:"scripts: code the agent runs\nreferences: docs it reads\nassets: templates, data",fontSize:18},
+{type:"text",x:615,y:395,text:"Loaded ONLY when the task\nmatches its description",fontSize:18,strokeColor:"#15803d"},
+{type:"text",x:615,y:470,text:"Open standard, works across\nagents: agentskills.io",fontSize:18,strokeColor:"#757575"},
+S({type:"rectangle",x:910,y:60,width:260,height:520,backgroundColor:"#fff3bf",strokeColor:"#f59e0b",strokeWidth:1,opacity:50}),
+{type:"text",x:984,y:72,text:"SKILL.md",fontSize:28,strokeColor:"#b45309"},
+{type:"text",x:925,y:118,text:"Core instructions",fontSize:18,strokeColor:"#b45309"},
+S({type:"rectangle",x:925,y:150,width:230,height:125,backgroundColor:"#ffffff",strokeColor:"#f59e0b"}),
+{type:"text",x:938,y:157,text:"---\nname: pdf-skill\ndescription:\n  what + when\n---",fontSize:18,fontFamily:3},
+S({type:"rectangle",x:925,y:290,width:230,height:90,backgroundColor:"#ffffff",strokeColor:"#f59e0b"}),
+{type:"text",x:938,y:300,text:"# Steps\n# Examples\n# Edge cases",fontSize:18,fontFamily:3},
+{type:"text",x:925,y:400,text:"description = the trigger:\nsay WHAT it does and\nWHEN to use it",fontSize:18},
+{type:"text",x:925,y:490,text:"Body under 500 lines;\nmove detail into\nreferences/",fontSize:18,strokeColor:"#b45309"},
+{type:"text",x:0,y:612,text:"Progressive disclosure: what enters the context window, and when",fontSize:22},
+S({type:"rectangle",x:0,y:655,width:270,height:95,backgroundColor:"#a5d8ff",strokeColor:"#4a9eed",label:{text:"ALWAYS\nAGENTS.md / CLAUDE.md\nevery session",fontSize:18,strokeColor:"#1e1e1e"}}),
+{type:"arrow",x:270,y:702,width:30,height:0,points:[[0,0],[30,0]]},
+S({type:"rectangle",x:300,y:655,width:270,height:95,backgroundColor:"#b2f2bb",strokeColor:"#22c55e",label:{text:"AT STARTUP\nskill name + description\n~100 tokens per skill",fontSize:18,strokeColor:"#1e1e1e"}}),
+{type:"arrow",x:570,y:702,width:30,height:0,points:[[0,0],[30,0]]},
+S({type:"rectangle",x:600,y:655,width:270,height:95,backgroundColor:"#fff3bf",strokeColor:"#f59e0b",label:{text:"ON ACTIVATION\nfull SKILL.md body\n< 5k tokens",fontSize:18,strokeColor:"#1e1e1e"}}),
+{type:"arrow",x:870,y:702,width:30,height:0,points:[[0,0],[30,0]]},
+S({type:"rectangle",x:900,y:655,width:270,height:95,backgroundColor:"#ffd8a8",strokeColor:"#f59e0b",label:{text:"ON DEMAND\nscripts/ references/ assets/\nonly what the task needs",fontSize:18,strokeColor:"#1e1e1e"}}),
+{type:"arrow",x:0,y:785,width:1170,height:0,points:[[0,0],[1170,0]],strokeColor:"#757575",strokeStyle:"dashed",endArrowhead:"triangle",label:{text:"more detail, loaded later: cheap until needed",fontSize:18}},
+];
+let api;
+createRoot(document.getElementById("app")).render(React.createElement(Excalidraw, {
+  excalidrawAPI: (a) => { api = a; setTimeout(async () => {
+    await Promise.all(["20px Excalifont", "20px Cascadia"].map((f) => document.fonts.load(f)));
+    a.updateScene({ elements: convertToExcalidrawElements(skel) });
+    a.scrollToContent(undefined, { fitToContent: true });
+  }, 300); },
+  initialData: { appState: { viewBackgroundColor: "#ffffff" } },
+}));
+document.getElementById("dl").onclick = () => {
+  const json = serializeAsJSON(api.getSceneElements(), api.getAppState(), api.getFiles(), "local");
+  const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(new Blob([json], { type: "application/json" })), download: "agent-context-stack.excalidraw" });
+  a.click();
+};
+</script></body></html>

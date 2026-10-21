@@ -23,10 +23,12 @@ for connecting AI agents to tools, data, and external systems.
 - **Local or remote** — `stdio` for development, `streamable-http`
   (stateless) for production.
 
-## 📚 The arc — 7 modules, one use case
+## 📚 The arc — 6 modules
 
-One coherent artifact — a **personal research assistant** — grows a layer
-at a time. Every module ends on "why this is the current way."
+Modules 00–03 grow one artifact — a **personal research assistant** — a layer
+at a time. Module 04 then ships a real product end to end: a **shop analytics
+agent** with its own MCP server, deployed as two containers. Module 05 attacks
+and defends it. Every module ends on "why this is the current way."
 
 | Module | The move | Day |
 |--------|----------|-----|
@@ -34,9 +36,8 @@ at a time. Every module ends on "why this is the current way."
 | `01` | **Tools move out of the process.** Same tools behind an MCP server; thin client; connect Claude Code & Claude Desktop | 1 |
 | `02` | **The Agent SDK is an MCP host.** Loop collapses to ~15 lines; in-process servers | 1 |
 | `03` | **Skills vs MCP.** Access vs know-how — then an agent *builds* an MCP server via the mcp-builder skill | 1 |
-| `04` | **Production shape.** Remote HTTP, auth seam, intent-grouped tools, hooks, evals, structured outputs | 2 |
-| `05` | **Deploy it.** Remote server on Vercel, connected from multiple hosts — plus your first **MCP App** | 2 |
-| `06` | **Defend & scale.** Tool-poisoning attack/defense lab; multi-server composition, subagents, sessions | 2 |
+| `04` | **Ship it.** Shop analytics agent (FastAPI + Agent SDK) + governed MCP server (SQLite), Docker Compose, Render deploy, cost/token telemetry | 2 |
+| `05` | **Defend & scale.** Data-exposure lab on module 04; tool-poisoning attack/defense; multi-server composition, subagents, sessions | 2 |
 
 Take-home: `demos/exercises/link-checker/`. Retired material: `demos/archive/`.
 
@@ -50,11 +51,11 @@ git clone https://github.com/EnkrateiaLucca/mcp-course.git
 cd mcp-course
 
 # run anything directly
-uv run demos/01-introduction-to-mcp/mcp_server.py
+uv run --with mcp==2.3.0 --with mcp[cli]>=2.3,<3 --with ddgs mcp run ./demos/01-introduction-to-mcp/mcp_server.py
 
 # inspect any MCP server (install the `mcp` CLI once; uv alone doesn't put it on PATH)
 uv tool install "mcp[cli]>=2.3,<3"
-mcp dev demos/01-introduction-to-mcp/mcp_server.py
+uv run --with mcp==2.3.0 --with mcp[cli]>=2.3,<3 --with ddgs mcp dev demos/01-introduction-to-mcp/mcp_server.py
 ```
 
 ### Notebook setup (Jupyter kernel)
@@ -81,8 +82,10 @@ as long as the active Python is 3.12+ and you still run the `ipykernel install` 
 ```env
 # .env at the repo root
 ANTHROPIC_API_KEY=sk-...       # all agent demos (console: platform.claude.com)
-MCP_AUTH_TOKEN=demo-secret     # module 04 (and optionally 05)
 ```
+
+Module 04 runs from its own folder: copy `demos/04-shop-analytics-agent/.env.example`
+to `.env` there and set only `ANTHROPIC_API_KEY`.
 
 **Version pins that matter:**
 - `mcp>=2.3,<3` — the official Python SDK v2 (`from mcp.server.mcpserver
@@ -142,36 +145,30 @@ the workflow the official MCP docs now recommend. Finally,
 `skills-over-mcp/` serves that same skill over MCP through the official
 Skills extension (SEP-2640).
 
-### 04 — Production-shaped research agent
-**`demos/04-production-research-agent/`** · Intent-grouped tools (7→3),
-`streamable-http`, a real auth seam (bearer → OAuth 2.1/CIMD ladder),
-`PreToolUse`/`PostToolUse` hooks, telemetry vs evals, structured outputs.
+### 04 — Ship it: a shop analytics agent with its own MCP server
+**`demos/04-shop-analytics-agent/`** · A chat agent answers business questions
+("How did Black Friday go?") with numbers and charts. Two deployables: the
+**agent** (FastAPI + Claude Agent SDK, `tools=[]`, budget and turn caps) and a
+**governed MCP server** (read-only SQLite, one definition of revenue, bearer
+auth, stateless HTTP). Every reply shows tokens, estimated cost and steps; the
+agent logs one JSON line per message. Deploys to Render with `render.yaml`.
 
 ```bash
-export MCP_AUTH_TOKEN=demo-secret
-uv run demos/04-production-research-agent/research_server.py   # terminal 1
-uv run demos/04-production-research-agent/research_agent.py "Research MCP auth"
+cd demos/04-shop-analytics-agent
+cp .env.example .env              # set ANTHROPIC_API_KEY only
+docker compose up --build         # http://localhost:8000 · password: demo
 ```
 
-### 05 — Deploy a remote MCP server (+ MCP Apps)
-**`demos/05-deploy-remote-mcp/`** · The 2026 deployment story: don't wrap
-your agent in a web framework — deploy the **server** (stateless
-streamable HTTP) and connect every host to it. Ships an **MCP App**: an
-interactive research explorer rendered inside the Claude conversation.
-
-```bash
-cd demos/05-deploy-remote-mcp
-uv run server.py                                      # terminal 1
-uv run test_client.py                                 # pre-flight
-npx cloudflared tunnel --url http://localhost:8000    # → Claude custom connector
-vercel deploy --prod                                  # → permanent
-```
-
-### 06 — Security & composition
-**`demos/06-security-and-composition/`** · `security-lab/`: a runnable
-tool-poisoning attack and its `PreToolUse` defense. `composition/`:
+### 05 — Security & composition
+**`demos/05-security-and-composition/`** · `data-exposure-lab/`: module 04's
+read-only server still leaks customer emails through `run_sql`; a SQLite
+authorizer (`PII_GUARD=1`) fixes it at the data layer. `security-lab/`: a
+runnable tool-poisoning attack and its `PreToolUse` defense. `composition/`:
 third-party servers (Playwright, Git), a fact-checker **subagent**, and
 session **resume/fork**.
+
+The previous modules 04 (production research agent) and 05 (Vercel deploy +
+MCP App) live in `demos/archive/`.
 
 ---
 
@@ -180,8 +177,8 @@ session **resume/fork**.
 1. **External stdio server** (01) — `mcp.run(transport="stdio")`; subprocess, language-agnostic.
 2. **Agent SDK as host** (02) — `mcp_servers={...}`, `allowed_tools=["mcp__x__*"]`.
 3. **In-process server** (02b) — `create_sdk_mcp_server(tools=[...])`; no transport.
-4. **Remote HTTP + auth** (04) — `mcp.run(transport="streamable-http")` + bearer/OAuth on the wire.
-5. **Stateless remote + MCP Apps** (05) — `stateless_http=True`; tool `_meta.ui.resourceUri` → `ui://` HTML.
+4. **Remote HTTP + auth** (04) — `mcp.streamable_http_app(stateless_http=True)` + bearer middleware; agent and server as separate containers.
+5. **MCP Apps** (`archive/05-deploy-remote-mcp`, `mcp-apps-productivity-timer`) — tool `_meta.ui.resourceUri` → `ui://` HTML.
 
 ## 🛠️ Development tools
 
@@ -201,7 +198,7 @@ paths, restart after editing.
   for manual envs `pip install "mcp[cli]>=2.3,<3"`.
 - **Claude Desktop doesn't see the server** → absolute paths, `which uv`,
   run the server standalone first, restart the app.
-- **Module 04 401s** → `MCP_AUTH_TOKEN` must be set in *both* terminals.
+- **Module 04 says the data service is unavailable** → the agent's `MCP_TOKEN` doesn't match the server's, or the server is down. With Docker Compose both use the same default; outside Docker, set the same `MCP_TOKEN` in both terminals.
 - **DDGS returns nothing** → DuckDuckGo throttles; the tools degrade
   gracefully — retry, or swap in your favorite search API.
 - **Rate limits** → iterate on `claude-haiku-5-5`.

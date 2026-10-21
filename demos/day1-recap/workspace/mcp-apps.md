@@ -40,7 +40,7 @@ Claude (Desktop and web), ChatGPT, Goose, VS Code. Claude Code CLI does not rend
 
 ## Relevance to this course (module 05)
 
-`demos/05-deploy-remote-mcp/` already implements the pattern on the v2 SDK (`mcp>=2.3,<3`): the tool sets `meta={"ui": {"resourceUri": "ui://..."}}`, `app.html` is served with `mime_type="text/html;profile=mcp-app"`, and the vanilla-JS handshake uses protocol version `2026-01-26`. The v2 SDK's `apps.add_html_resource` helper could replace the hand-written resource registration.
+`demos/archive/05-deploy-remote-mcp/` already implements the pattern on the v2 SDK (`mcp>=2.3,<3`): the tool sets `meta={"ui": {"resourceUri": "ui://..."}}`, `app.html` is served with `mime_type="text/html;profile=mcp-app"`, and the vanilla-JS handshake uses protocol version `2026-01-26`. The v2 SDK's `apps.add_html_resource` helper could replace the hand-written resource registration.
 
 ## Sources
 

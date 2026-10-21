@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 2: MCP Server</title>
+<link rel="stylesheet" href="lessons.css">
+</head>
+<body>
+<nav><a href="01-architecture.html">← Lesson 1</a><a href="03-agent-service.html">Lesson 3 →</a></nav>
+
+<h1>Lesson 2: The MCP server in production</h1>
+<p class="goal">Goal: you can take <code>research_server.py</code> (module 04) and <code>server.py</code> (module 05) and list the six changes that make the server safe to run on the internet, with the code for each.</p>
+<div class="tldr">
+<h2>TL;DR</h2>
+<p><b>The problem:</b> Your tools server works on a tunnel, but it trusts every caller, saves files on a disk that disappears, and will fetch any web address it is given.</p>
+<p><b>The shape of the solution:</b></p>
+<ul>
+  <li><b>Lock the door properly:</b> list the web addresses the server answers to, instead of switching the check off.</li>
+  <li><b>Know who is calling:</b> start with one shared password, then move to real logins (OAuth). The tools read the user's name from the login, never from what the AI typed.</li>
+  <li><b>Keep data off the server's own disk:</b> save briefs in a database or file store, one folder per user.</li>
+  <li><b>Don't fetch everything:</b> refuse private and internal addresses, so a bad web page can't trick the server into reading your cloud's secrets.</li>
+</ul>
+<p class="like">Think of it like: A shop that answers only its own street address, checks ID at the door, keeps records in a central filing cabinet, and won't deliver to a back office.</p>
+</div>
+
+
+<h2>0. First question: who connects to this server?</h2>
+<div class="tablewrap"><table>
+  <tr><th>Who calls it</th><th>Where it should live</th><th>Auth</th></tr>
+  <tr><td>Only your own agent service</td><td><b>Private network.</b> Internal DNS, no public URL.</td><td>Service token or mTLS. Network policy does most of the work.</td></tr>
+  <tr><td>Your agent + Claude Code / Cursor users on your team</td><td>Public URL behind your gateway</td><td>Bearer token per user, or OAuth</td></tr>
+  <tr><td>Anyone's Claude.ai or ChatGPT (a "connector")</td><td>Public URL</td><td><b>OAuth 2.1.</b> Claude's custom connector UI supports OAuth or no auth, with no field for a static header.</td></tr>
+</table></div>
+<p>Module 05 assumes row 3 and runs open. A real research assistant usually starts in row 1. Choose the row before you write code. It decides changes 2 and 4 below.</p>
+
+<h2>Change 1: Keep the HTTP app stateless</h2>
+<p>Module 05 has this right. One function builds the ASGI app, and both uvicorn and the platform import it.</p>
+<pre><code>app = mcp.streamable_http_app(
+    stateless_http=True,    # no per-client session: any replica answers any request
+    json_response=True,     # one JSON body per request; no SSE (serverless-friendly)
+    transport_security=SECURITY,   # change 2
+)</code></pre>
+<p>Use <code>json_response=False</code> only when a tool must stream progress notifications. The 2026-07-28 spec scopes that stream to the one request, so it still needs no sticky routing. If a reverse proxy sits in front, the spec recommends the <code>X-Accel-Buffering: no</code> response header so the proxy does not buffer the stream.</p>
+
+<h2>Change 2: Pin Host and Origin instead of turning the check off</h2>
+<p>Module 05 sets <code>enable_dns_rebinding_protection=False</code> to stop the <code>421 Misdirected Request</code> behind the tunnel and Vercel. The fix works, but it removes a check the spec makes mandatory: <i>"Servers MUST validate the Origin header on all incoming connections."</i> Keep the protection on and list your real hostnames:</p>
+<pre><code>from mcp.server.transport_security import TransportSecuritySettings
+
+PUBLIC_HOST = os.environ.get("PUBLIC_HOST", "")   # e.g. research-mcp.example.com
+
+SECURITY = TransportSecuritySettings(
+    enable_dns_rebinding_protection=True,
+    allowed_hosts=["127.0.0.1:*", "localhost:*", *filter(None, [PUBLIC_HOST])],
+    allowed_origins=[],   # requests WITHOUT an Origin header pass (server-to-server);
+                          # add browser origins here only if a trusted web app calls you
+)</code></pre>
+<ul>
+  <li>The SDK matches hosts exactly. <code>name:*</code> allows any port. A Vercel preview deployment has a different hostname, so it needs its own entry.</li>
+  <li>An agent or a connector backend calls you server-to-server and sends no <code>Origin</code>. The SDK lets those requests through. A malicious web page in a user's browser sends its own <code>Origin</code> and gets rejected.</li>
+</ul>
+
+<h2>Change 3: Move tool state off local disk, and key it by tenant</h2>
+<p><code>research_topic</code> writes to <code>workspace/briefs/</code> next to the server. On Vercel the function filesystem is read-only except <code>/tmp</code>, and <code>/tmp</code> disappears between invocations. On Cloud Run or Kubernetes each replica has its own disk. Either way, <code>list_briefs</code> on replica B cannot see a brief that replica A wrote.</p>
+<pre><code>def _brief_key(tenant: str, topic: str) -> str:
+    return f"{tenant}/briefs/{_slugify(topic)}.md"
+
+# dev:  (BRIEFS_ROOT / _brief_key(...)).write_text(brief)
+# prod: object_store.put(_brief_key(...), brief)    # S3, R2, GCS, Vercel Blob, or a Postgres table</code></pre>
+<p>Two rules come with this change:</p>
+<ol>
+  <li><b>The tenant comes from the verified token, never from a tool argument.</b> If <code>tenant</code> were a parameter, a prompt-injected agent could read another user's briefs.</li>
+  <li><b>Keys replace paths.</b> The path-traversal check in <code>read_brief</code> becomes "does this key start with <code>{tenant}/briefs/</code>".</li>
+</ol>
+
+<h2>Change 4: Climb the auth ladder</h2>
+<h3>Rung 1: static bearer token (modules 04 and 05 today)</h3>
+<p>The middleware seam is right. Fix one line: compare secrets in constant time, the way the cookbook server does. A plain <code>!=</code> leaks timing information.</p>
+<pre><code>import secrets
+
+class BearerAuth(BaseHTTPMiddleware):
+    async def dispatch(self, request, call_next):
+        got = request.headers.get("authorization", "")
+        if not secrets.compare_digest(got, f"Bearer {AUTH_TOKEN}"):
+            return JSONResponse({"error": "unauthorized"}, status_code=401)
+        return await call_next(request)</code></pre>
+<p>A single shared token says "this caller is the agent service". It does not say which user. That is acceptable for row 1 of the table above.</p>
+
+<h3>Rung 2: per-user tokens with OAuth 2.1 (the spec's answer)</h3>
+<p>Your MCP server becomes an OAuth <b>resource server</b>. An authorization server (Auth0, Okta, Keycloak, your IdP) issues the tokens. The v2 Python SDK does the protocol parts for you:</p>
+<ul>
+  <li>It publishes the Protected Resource Metadata document at <code>/.well-known/oauth-protected-resource</code> (RFC 9728).</li>
+  <li>It answers an unauthenticated request with <code>401</code> and a <code>WWW-Authenticate</code> header that points at that document. Clients such as Claude Code then discover the auth server and run the login flow.</li>
+  <li>It passes every bearer token to a verifier you write.</li>
+</ul>
+<pre><code>from pydantic import AnyHttpUrl
+from mcp.server.mcpserver import MCPServer
+from mcp.server.auth.settings import AuthSettings
+from mcp.server.auth.provider import AccessToken, TokenVerifier
+from mcp.server.auth.middleware.auth_context import get_access_token
+
+SERVER_URL = os.environ["PUBLIC_URL"]        # https://research-mcp.example.com/mcp
+
+class JWTVerifier(TokenVerifier):
+    async def verify_token(self, token: str) -> AccessToken | None:
+        claims = verify_jwt(token, issuer=ISSUER, audience=SERVER_URL)  # your IdP's JWT library
+        if claims is None:
+            return None                       # SDK answers 401 with WWW-Authenticate
+        return AccessToken(
+            token=token, client_id=claims["azp"], subject=claims["sub"],
+            scopes=claims["scope"].split(), expires_at=claims["exp"], resource=SERVER_URL,
+        )
+
+mcp = MCPServer(
+    "research-assistant",
+    token_verifier=JWTVerifier(),
+    auth=AuthSettings(
+        issuer_url=AnyHttpUrl(ISSUER),
+        resource_server_url=AnyHttpUrl(SERVER_URL),
+        required_scopes=["research"],
+        validate_token_resource=True,         # reject tokens minted for another API
+    ),
+)
+
+@mcp.tool()
+def list_briefs() -> dict:
+    """List the caller's saved briefs."""
+    tenant = get_access_token().subject       # identity from the token, not from the model
+    ...</code></pre>
+<div class="key"><b>Audience is the check people skip.</b> A token minted for some other API must fail here. Without the audience check, any valid token from your IdP opens your tools. The MCP docs call this the token passthrough problem. <code>validate_token_resource=True</code> plus <code>resource=</code> in <code>AccessToken</code> enforces it.</div>
+<p>No tool body changes between rung 1 and rung 2, apart from reading the tenant. That is the seam module 04 teaches.</p>
+
+<h2>Change 5: The server holds the tool credentials, and it fetches safely</h2>
+<p><b>Credentials.</b> If <code>research_topic</code> moves from DDGS scraping to a paid search API, the API key goes in the MCP server's environment or secret manager. The agent never sees it. The secure-deployment guide recommends this pattern: the agent calls a tool, and the authenticated request happens outside the agent's boundary.</p>
+<p><b>SSRF.</b> <code>_fetch_page</code> fetches any http(s) URL that a search result contains, and it follows redirects. In a cloud deployment, a poisoned search result can point at <code>http://169.254.169.254/</code> (the cloud metadata service) or at an internal admin page. Allow only public addresses, and check every redirect hop:</p>
+<pre><code>import ipaddress, socket
+from urllib.parse import urlparse
+
+def _is_public(url: str) -> bool:
+    p = urlparse(url)
+    if p.scheme not in {"http", "https"} or not p.hostname:
+        return False
+    try:
+        infos = socket.getaddrinfo(p.hostname, p.port or 443)
+    except socket.gaierror:
+        return False
+    return all(ipaddress.ip_address(info[4][0]).is_global for info in infos)
+
+# in _fetch_page: follow_redirects=False, then loop up to 3 hops,
+# calling _is_public() on each Location before you request it.</code></pre>
+<p>This check has a known ceiling: DNS can change between the check and the request. For a hard guarantee, send all fetches through an egress proxy that enforces the same rule (lesson 4).</p>
+
+<h2>Change 6: Health, limits and a pre-flight against the public URL</h2>
+<ul>
+  <li><b>Request size.</b> <code>streamable_http_app()</code> takes <code>max_request_body_size</code> (default 4 MiB). Lower it if your tools take short arguments.</li>
+  <li><b>Time limits.</b> <code>research_topic</code> runs one search and up to five page fetches with a 10-second timeout each. Check your platform's function duration limit. On Vercel, set it in <code>vercel.json</code>. Or fetch the pages concurrently.</li>
+  <li><b>Pre-flight.</b> Run <code>uv run test_client.py https://&lt;public-host&gt;/mcp</code> after every deploy. Only a run against the public hostname catches Host-header and auth problems.</li>
+  <li><b>Logs.</b> Log <code>Mcp-Method</code>, <code>Mcp-Name</code>, the token subject and the latency for each request. Never log the token.</li>
+</ul>
+
+<h2>Where to host it</h2>
+<div class="tablewrap"><table>
+  <tr><th>Target</th><th>Good for</th><th>Watch out for</th></tr>
+  <tr><td>Vercel (module 05)</td><td>Zero-ops public server, fast demos</td><td>Read-only filesystem, function duration limits, a new hostname per preview</td></tr>
+  <tr><td>Cloud Run / Fly / Render</td><td>The same container image everywhere, longer requests</td><td>Cold starts: set minimum instances above zero for a responsive connector</td></tr>
+  <tr><td>Same Kubernetes cluster as the agent</td><td>Row 1 of the table: agent-only tools</td><td>Add the server to the agent pods' egress allowlist (lesson 4)</td></tr>
+</table></div>
+
+<h2>Try it</h2>
+<ol>
+  <li>In module 05, replace <code>enable_dns_rebinding_protection=False</code> with the <code>SECURITY</code> block above. Set <code>PUBLIC_HOST</code> to your trycloudflare hostname. Run <code>test_client.py</code> against the tunnel URL. It should pass.</li>
+  <li>Unset <code>PUBLIC_HOST</code>, restart, and run the tunnel test again. You should see the 421 return. Now you know the check works.</li>
+  <li>Call <code>read_brief</code> with <code>brief_path="../research_server.py"</code>. Confirm that the server returns <code>path_outside_briefs</code> even if the agent's hook were bypassed. The server is the last line, not the hook.</li>
+</ol>
+
+<h2>Check yourself</h2>
+<details><summary>Why must the tenant come from the token and not from a tool argument?</summary>The model fills tool arguments, and injected content can steer the model. Only the verified token is outside the model's control.</details>
+<details><summary>What does the audience (resource) check stop?</summary>A token that your IdP issued for a different API being accepted by your MCP server (token passthrough).</details>
+<details><summary>Module 05 works over the tunnel with protection disabled. What did it give up?</summary>Host and Origin validation, which stops a malicious web page in a browser from reaching the server through DNS rebinding. The spec requires Origin validation.</details>
+<details><summary>Two replicas run the module 04 server unchanged. A user creates a brief, then lists briefs, and sees nothing. Why?</summary>The brief was written to replica A's local disk, and the list request landed on replica B.</details>
+
+<nav class="bottom"><a href="01-architecture.html">← Lesson 1</a><a href="03-agent-service.html">Lesson 3: The agent service →</a></nav>
+</body>
+</html>

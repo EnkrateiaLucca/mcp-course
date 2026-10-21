@@ -50,7 +50,7 @@ load_dotenv()
 
 # Reuse the demo 04 research server over HTTP, connecting exactly the way
 # demo 04's agent does. Start it first in another terminal:
-#   uv run demos/04-production-research-agent/research_server.py
+#   uv run demos/archive/04-production-research-agent/research_server.py  (archived module 04 server)
 SERVER_URL = os.getenv("MCP_SERVER_URL", "http://127.0.0.1:8765/mcp")
 try:
     AUTH_TOKEN = os.environ["MCP_AUTH_TOKEN"]

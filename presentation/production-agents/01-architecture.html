@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson 1: Architecture</title>
+<link rel="stylesheet" href="lessons.css">
+</head>
+<body>
+<nav><a href="index.html">← Overview</a><a href="02-mcp-server.html">Lesson 2 →</a></nav>
+
+<h1>Lesson 1: The architecture</h1>
+<p class="goal">Goal: you can draw the production system from memory, name where every piece of state lives, and pick a session pattern for a given workload.</p>
+<div class="tldr">
+<h2>TL;DR</h2>
+<p><b>The problem:</b> Your agent works on your laptop, but "putting it online" is not one job. It is two jobs, and they need opposite kinds of hosting.</p>
+<p><b>The shape of the solution:</b></p>
+<ul>
+  <li><b>The agent</b> remembers the conversation. It is a program that keeps running and keeps notes on disk. Host it like a worker that stays alive, and save its notes somewhere safe.</li>
+  <li><b>The MCP server</b> (your tools) remembers nothing between requests. Host it like any simple website: copy it as many times as you want.</li>
+  <li>Before you build, choose how long each agent stays alive: one task and gone, always on, or asleep between visits and woken with its notes.</li>
+</ul>
+<p class="like">Think of it like: The agent is a chef who remembers your order. The MCP server is the kitchen tools. You can buy more knives anytime. You can't swap the chef mid-meal without handing over the notes.</p>
+</div>
+
+
+<h2>1. The SDK is not an HTTP client</h2>
+<p>When your code calls <code>query()</code>, the Agent SDK starts a separate <code>claude</code> CLI process and talks to it over stdio. The Python and TypeScript SDKs bundle that binary, so the container needs no Node.js install. The subprocess does the real work:</p>
+<div class="flow">your FastAPI handler
+   └─ query(prompt, options)
+        └─ spawns: claude  (one process per session)
+             ├─ owns a shell and a working directory (cwd)
+             ├─ writes JSONL transcripts to ~/.claude/projects/ (or $CLAUDE_CONFIG_DIR/projects/)
+             ├─ connects to your MCP servers (stdio or HTTP)
+             └─ calls api.anthropic.com over HTTPS</div>
+<p>Three consequences follow, and they drive every later lesson:</p>
+<ol>
+  <li><b>One session = one process.</b> N concurrent sessions need N processes. RAM per host limits concurrency.</li>
+  <li><b>State lives on local disk.</b> A container restart, a scale-down or a move to another node deletes it.</li>
+  <li><b>The process does not listen on the network.</b> Your application exposes the HTTP port and calls the SDK internally.</li>
+</ol>
+
+<h2>2. Where every piece of state lives</h2>
+<div class="tablewrap"><table>
+  <tr><th>State</th><th>Default location</th><th>Survives restart?</th><th>Production fix</th></tr>
+  <tr><td>Session transcripts</td><td><code>~/.claude/projects/</code> or <code>$CLAUDE_CONFIG_DIR/projects/</code></td><td class="bad">No</td><td>Mount a volume at <code>CLAUDE_CONFIG_DIR</code>, or mirror with a <code>SessionStore</code></td></tr>
+  <tr><td><code>CLAUDE.md</code> memory</td><td><code>~/.claude/CLAUDE.md</code> and the session cwd</td><td class="bad">No</td><td>Usually: turn off with <code>setting_sources=[]</code></td></tr>
+  <tr><td>Files the agent writes</td><td>The session cwd</td><td class="bad">No</td><td>Volume or object-store sync</td></tr>
+  <tr><td>Research briefs (your tool output)</td><td><code>workspace/briefs/</code> next to the MCP server</td><td class="bad">No</td><td>Move into the MCP server's own storage (lesson 2)</td></tr>
+  <tr><td>Caller session ID → SDK session ID</td><td>Nowhere yet</td><td>—</td><td>A small map in the agent service (lesson 3)</td></tr>
+</table></div>
+<div class="key"><b>Rule:</b> the agent service may hold state for the length of a conversation. The MCP server holds no conversation state at all. Tool data (briefs, records) lives in a real datastore behind the MCP server.</div>
+
+<h2>3. Why the MCP server can be stateless</h2>
+<p>Spec revision 2026-07-28 changed Streamable HTTP in two ways that matter for deployment:</p>
+<ul>
+  <li><b>No protocol sessions.</b> The <code>Mcp-Session-Id</code> handshake is gone. The client sends every JSON-RPC message as its own POST to one endpoint, for example <code>https://research.example.com/mcp</code>.</li>
+  <li><b>No GET stream.</b> The server answers each request with JSON or with an SSE stream scoped to that one request. Server-to-client requests (sampling, elicitation) travel inside results as "input required" results (MRTR).</li>
+  <li><b>Routing headers.</b> Clients send <code>MCP-Protocol-Version</code>, <code>Mcp-Method</code> (for example <code>tools/call</code>) and <code>Mcp-Name</code> (for example <code>research_topic</code>) on every POST. A gateway or load balancer can route, rate-limit and log by tool name without parsing the body.</li>
+</ul>
+<p>Result: any replica can answer any request. Your module 05 server already runs this way with <code>stateless_http=True, json_response=True</code>. Keep those flags: the v2 SDK still accepts older 2025-11-25 clients, and the flags keep those clients stateless too.</p>
+
+<h2>4. Decision 0: do you need to host the agent loop at all?</h2>
+<p>The hosting docs name an alternative first. With <b>Managed Agents</b>, Anthropic hosts the agent loop. Your application sends events and receives streamed results through the client SDKs or REST API. Tools run in an Anthropic-managed sandbox or in a self-hosted sandbox.</p>
+<div class="tablewrap"><table>
+  <tr><th>Choose</th><th>When</th></tr>
+  <tr><td>Managed Agents</td><td>You want the agent loop as a service. You have no need to control the container, the network path or the session storage.</td></tr>
+  <tr><td>Self-host the Agent SDK (this class)</td><td>Regulated data, an existing platform team, custom networking, per-tenant isolation you must prove, or MCP servers inside a private network.</td></tr>
+</table></div>
+<p>Your custom MCP server deploys the same way in both cases. Only deployable A changes.</p>
+
+<h2>5. Decision 1: pick a session pattern</h2>
+<p>A session pattern says how long a container lives relative to the sessions it serves.</p>
+<div class="tablewrap"><table>
+  <tr><th>Pattern</th><th>Container lifetime</th><th>Fits</th><th>Research assistant example</th></tr>
+  <tr><td><b>Ephemeral</b></td><td>One container per task. It exits when the task ends.</td><td>One-shot jobs: extraction, translation, a bug fix</td><td>"Write a brief on X" from a queue or a cron job. The cookbook's <code>run_once.py</code>.</td></tr>
+  <tr><td><b>Long-running</b></td><td>Persistent containers. Each holds many live sessions.</td><td>High-volume chat, email triage, Slack bots</td><td>A team Slack bot that answers research questions all day</td></tr>
+  <tr><td><b>Hybrid</b></td><td>Ephemeral containers that load the transcript on start and save it back</td><td>Sessions with long idle gaps</td><td>"Research X." Two hours later: "Now compare it with Y." The cookbook's <code>server.py</code> + a volume.</td></tr>
+  <tr><td><b>Multi-agent</b></td><td>Several SDK processes in one container</td><td>Agents that collaborate in a shared environment</td><td>Researcher + fact-checker sharing a workspace (your module 06 composition demo)</td></tr>
+</table></div>
+<div class="key"><b>Default for this class:</b> hybrid. It is the most common real shape for an assistant, and it forces you to solve persistence. A hybrid container without persistence loses the transcript at shutdown, so the store is required in this pattern.</div>
+
+<h2>6. One request, end to end</h2>
+<ol>
+  <li>The user's app sends <code>POST /sessions/alice-42/messages {"prompt": "..."}</code> with a user token.</li>
+  <li>The <b>gateway</b> validates the token, finds tenant <code>alice</code>, checks that <code>alice</code> owns session <code>alice-42</code>, and forwards the request to an agent container.</li>
+  <li>The <b>agent service</b> looks up the SDK session ID for <code>alice-42</code>, builds <code>ClaudeAgentOptions</code> with <code>resume=</code> that ID and a per-user MCP token, and calls <code>query()</code>.</li>
+  <li>The <b>claude subprocess</b> reloads the transcript, calls the model, and decides to call <code>mcp__research__research_topic</code>.</li>
+  <li>The subprocess POSTs <code>tools/call</code> to the <b>MCP server</b> with <code>Authorization: Bearer &lt;alice's token&gt;</code>. The server verifies the token, runs the tool, saves the brief under <code>alice/</code> in object storage, and returns structured JSON.</li>
+  <li>The agent service streams every SDK message to the user as SSE events, records the cost from the <code>ResultMessage</code>, and saves the session ID mapping.</li>
+</ol>
+
+<h2>Try it</h2>
+<p>Run your module 04 agent twice in a row with a follow-up question. The second run has no memory of the first. Name the two missing pieces that would fix it. (Answer in lesson 3: a stable session map and <code>resume=</code>.)</p>
+
+<h2>Check yourself</h2>
+<details><summary>Why can't you run the agent service on Vercel functions the way you run the MCP server?</summary>Each session is a long-lived subprocess that writes transcripts to local disk. A serverless function has an ephemeral filesystem, short time limits and no process that outlives the request. The MCP server holds no session state, so serverless suits it.</details>
+<details><summary>A container restarts. What does the user lose if you did nothing special?</summary>The transcripts, any <code>CLAUDE.md</code> memory and any files in the session cwd. The next message starts a fresh conversation.</details>
+<details><summary>What do the <code>Mcp-Method</code> and <code>Mcp-Name</code> headers let your infrastructure do?</summary>Route, rate-limit, authorize and log per method and per tool at the gateway, without parsing the JSON-RPC body.</details>
+<details><summary>Which session pattern fits "process 10,000 invoices overnight"?</summary>Ephemeral: one container per task, no conversation to resume.</details>
+
+<nav class="bottom"><a href="index.html">← Overview</a><a href="02-mcp-server.html">Lesson 2: The MCP server →</a></nav>
+</body>
+</html>
